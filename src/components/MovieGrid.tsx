@@ -103,7 +103,7 @@ export const MovieGrid = ({
               <SelectValue placeholder="All Genres" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Genres</SelectItem>
+              <SelectItem value="all">All Genres</SelectItem>
               {genres.map(genre => (
                 <SelectItem key={genre.id} value={genre.id.toString()}>
                   {genre.name}
@@ -117,7 +117,7 @@ export const MovieGrid = ({
               <SelectValue placeholder="All Years" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Years</SelectItem>
+              <SelectItem value="all">All Years</SelectItem>
               {years.map(year => (
                 <SelectItem key={year} value={year}>
                   {year}

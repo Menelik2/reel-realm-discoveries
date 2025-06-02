@@ -7,8 +7,8 @@ import { Footer } from '@/components/Footer';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('');
-  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('all');
+  const [selectedYear, setSelectedYear] = useState('all');
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   return (
