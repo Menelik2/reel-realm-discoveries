@@ -11,6 +11,7 @@ interface Movie {
   vote_average: number;
   release_date: string;
   genre_ids: number[];
+  overview?: string;
 }
 
 interface MovieGridProps {
@@ -28,9 +29,17 @@ const genres = [
   { id: 27, name: 'Horror' },
   { id: 878, name: 'Sci-Fi' },
   { id: 53, name: 'Thriller' },
+  { id: 16, name: 'Animation' },
+  { id: 12, name: 'Adventure' },
+  { id: 80, name: 'Crime' },
+  { id: 99, name: 'Documentary' },
 ];
 
-const years = ['2024', '2023', '2022', '2021', '2020', '2010s', '2000s', '1990s'];
+const years = ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
+
+// TMDB API key - In production, this should be stored securely in backend
+const TMDB_API_KEY = 'T1177de48cd44943e60240337bac80877';
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 export const MovieGrid = ({ 
   searchQuery, 
@@ -45,41 +54,71 @@ export const MovieGrid = ({
 
   useEffect(() => {
     fetchMovies();
-  }, [currentCategory, searchQuery, selectedGenre, selectedYear]);
+  }, [currentCategory, selectedGenre, selectedYear]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      searchMovies();
+    } else {
+      fetchMovies();
+    }
+  }, [searchQuery]);
 
   const fetchMovies = async () => {
     setLoading(true);
     try {
-      // Mock data for demonstration
-      const mockMovies: Movie[] = Array.from({ length: 20 }, (_, i) => ({
-        id: i + 1,
-        title: `Movie ${i + 1}`,
-        poster_path: `/placeholder-poster-${(i % 6) + 1}.jpg`,
-        vote_average: 7.5 + Math.random() * 2,
-        release_date: `202${Math.floor(Math.random() * 4)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-15`,
-        genre_ids: [28, 35, 18][Math.floor(Math.random() * 3)] as any
-      }));
+      let url = `${TMDB_BASE_URL}/movie/${currentCategory}?api_key=${TMDB_API_KEY}&page=1`;
       
-      setMovies(mockMovies);
-      setLoading(false);
+      // Add genre filter if selected
+      if (selectedGenre !== 'all') {
+        url += `&with_genres=${selectedGenre}`;
+      }
+      
+      // Add year filter if selected
+      if (selectedYear !== 'all') {
+        url += `&primary_release_year=${selectedYear}`;
+      }
+
+      console.log('Fetching movies from:', url);
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      console.log('TMDB Response:', data);
+      setMovies(data.results || []);
     } catch (error) {
       console.error('Error fetching movies:', error);
+      setMovies([]);
+    } finally {
       setLoading(false);
     }
   };
 
-  const filteredMovies = movies.filter(movie => {
-    if (searchQuery && !movie.title.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+  const searchMovies = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setLoading(true);
+    try {
+      const url = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchQuery)}&page=1`;
+      console.log('Searching movies:', url);
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      console.log('Search results:', data);
+      setMovies(data.results || []);
+    } catch (error) {
+      console.error('Error searching movies:', error);
+      setMovies([]);
+    } finally {
+      setLoading(false);
     }
-    return true;
-  });
+  };
 
   return (
-    <section className="container mx-auto px-4 py-8">
+    <section className="container mx-auto px-4 py-6 md:py-8">
       {/* Category Tabs */}
-      <div className="mb-8">
-        <div className="flex flex-wrap gap-2 mb-6">
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-wrap gap-1 md:gap-2 mb-4 md:mb-6">
           {[
             { key: 'popular', label: 'Popular' },
             { key: 'top_rated', label: 'Top Rated' },
@@ -90,6 +129,7 @@ export const MovieGrid = ({
               key={category.key}
               variant={currentCategory === category.key ? 'default' : 'outline'}
               onClick={() => setCurrentCategory(category.key)}
+              className="text-xs md:text-sm px-2 md:px-4 py-1 md:py-2"
             >
               {category.label}
             </Button>
@@ -97,9 +137,9 @@ export const MovieGrid = ({
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
           <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="All Genres" />
             </SelectTrigger>
             <SelectContent>
@@ -113,7 +153,7 @@ export const MovieGrid = ({
           </Select>
 
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="All Years" />
             </SelectTrigger>
             <SelectContent>
@@ -130,16 +170,20 @@ export const MovieGrid = ({
 
       {/* Movies Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {filteredMovies.map(movie => (
+      ) : movies.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+          {movies.map(movie => (
             <MovieCard key={movie.id} movie={movie} />
           ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No movies found. Try adjusting your filters or search query.</p>
         </div>
       )}
     </section>
