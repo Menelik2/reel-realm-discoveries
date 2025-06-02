@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
@@ -13,8 +12,9 @@ interface Movie {
   release_date: string;
 }
 
-// TMDB API key - In production, this should be stored securely in backend
-const TMDB_API_KEY = 'T1177de48cd44943e60240337bac80877';
+// TMDB API credentials
+const TMDB_API_KEY = '1177de48cd44943e60240337bac80877';
+const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 export const HeroCarousel = () => {
@@ -38,10 +38,20 @@ export const HeroCarousel = () => {
 
   const fetchTrendingMovies = async () => {
     try {
-      const url = `${TMDB_BASE_URL}/trending/movie/week?api_key=${TMDB_API_KEY}`;
+      const url = `${TMDB_BASE_URL}/trending/movie/week`;
       console.log('Fetching trending movies from:', url);
       
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json;charset=utf-8'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
       console.log('Trending movies response:', data);

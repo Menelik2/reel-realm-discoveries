@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,8 +36,9 @@ const genres = [
 
 const years = ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
 
-// TMDB API key - In production, this should be stored securely in backend
-const TMDB_API_KEY = 'T1177de48cd44943e60240337bac80877';
+// TMDB API credentials
+const TMDB_API_KEY = '1177de48cd44943e60240337bac80877';
+const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 export const MovieGrid = ({ 
@@ -67,7 +67,7 @@ export const MovieGrid = ({
   const fetchMovies = async () => {
     setLoading(true);
     try {
-      let url = `${TMDB_BASE_URL}/movie/${currentCategory}?api_key=${TMDB_API_KEY}&page=1`;
+      let url = `${TMDB_BASE_URL}/movie/${currentCategory}?page=1`;
       
       // Add genre filter if selected
       if (selectedGenre !== 'all') {
@@ -80,7 +80,17 @@ export const MovieGrid = ({
       }
 
       console.log('Fetching movies from:', url);
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json;charset=utf-8'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
       console.log('TMDB Response:', data);
@@ -98,10 +108,20 @@ export const MovieGrid = ({
     
     setLoading(true);
     try {
-      const url = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchQuery)}&page=1`;
+      const url = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(searchQuery)}&page=1`;
       console.log('Searching movies:', url);
       
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json;charset=utf-8'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
       console.log('Search results:', data);
