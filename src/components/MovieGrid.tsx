@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +20,7 @@ interface MovieGridProps {
   setSelectedGenre: (genre: string) => void;
   selectedYear: string;
   setSelectedYear: (year: string) => void;
+  onMovieClick: (movieId: number) => void;
 }
 
 const genres = [
@@ -48,7 +48,8 @@ export const MovieGrid = ({
   selectedGenre, 
   setSelectedGenre, 
   selectedYear, 
-  setSelectedYear 
+  setSelectedYear,
+  onMovieClick
 }: MovieGridProps) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -294,7 +295,7 @@ export const MovieGrid = ({
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
             {movies.map(movie => (
-              <MovieCard key={movie.id} movie={movie} />
+              <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
             ))}
           </div>
           
