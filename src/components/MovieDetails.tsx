@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Play, Heart, Star, Calendar, Clock, Globe } from 'lucide-react';
+import { Play, Heart, Star, Calendar, Clock, Globe, Download, Eye } from 'lucide-react';
 import { SimilarMovies } from '@/components/SimilarMovies';
 import { GenreChart } from '@/components/GenreChart';
 
@@ -204,6 +205,14 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
                     </a>
                   </Button>
                 )}
+                <Button variant="outline">
+                  <Eye className="mr-2 h-4 w-4" />
+                  Live Watch
+                </Button>
+                <Button variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
                 <Button variant="outline">
                   <Heart className="mr-2 h-4 w-4" />
                   Add to Favorites
