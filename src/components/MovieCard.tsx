@@ -13,15 +13,22 @@ interface Movie {
 
 interface MovieCardProps {
   movie: Movie;
+  onMovieClick?: (movieId: number) => void;
 }
 
-export const MovieCard = ({ movie }: MovieCardProps) => {
+export const MovieCard = ({ movie, onMovieClick }: MovieCardProps) => {
   const posterUrl = movie.poster_path 
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : '/placeholder.svg';
 
+  const handleCardClick = () => {
+    if (onMovieClick) {
+      onMovieClick(movie.id);
+    }
+  };
+
   return (
-    <Card className="group hover:scale-105 transition-all duration-300 overflow-hidden">
+    <Card className="group hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer" onClick={handleCardClick}>
       <CardContent className="p-0">
         <div className="relative aspect-[2/3] overflow-hidden">
           <img
@@ -37,11 +44,27 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <div className="flex space-x-1 md:space-x-2">
-              <Button size="sm" variant="secondary" className="text-xs px-2 py-1">
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                className="text-xs px-2 py-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Handle trailer click
+                }}
+              >
                 <Play className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                 <span className="hidden sm:inline">Trailer</span>
               </Button>
-              <Button size="sm" variant="secondary" className="px-2 py-1">
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                className="px-2 py-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Handle favorite click
+                }}
+              >
                 <Heart className="h-3 w-3 md:h-4 md:w-4" />
               </Button>
             </div>

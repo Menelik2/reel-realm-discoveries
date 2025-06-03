@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Header } from '@/components/Header';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { MovieGrid } from '@/components/MovieGrid';
+import { MovieDetails } from '@/components/MovieDetails';
 import { Footer } from '@/components/Footer';
 
 const Index = () => {
@@ -10,6 +11,15 @@ const Index = () => {
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
+
+  const handleMovieClick = (movieId: number) => {
+    setSelectedMovieId(movieId);
+  };
+
+  const handleCloseMovieDetails = () => {
+    setSelectedMovieId(null);
+  };
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
@@ -30,10 +40,19 @@ const Index = () => {
             setSelectedGenre={setSelectedGenre}
             selectedYear={selectedYear}
             setSelectedYear={setSelectedYear}
+            onMovieClick={handleMovieClick}
           />
         </main>
 
         <Footer />
+
+        {/* Movie Details Modal */}
+        {selectedMovieId && (
+          <MovieDetails 
+            movieId={selectedMovieId} 
+            onClose={handleCloseMovieDetails}
+          />
+        )}
       </div>
     </div>
   );
