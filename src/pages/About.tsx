@@ -1,8 +1,8 @@
-
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Film, Users, Star, Globe } from 'lucide-react';
+import { AdBanner } from '@/components/AdBanner';
 import { useEffect } from 'react';
 
 const About = () => {
@@ -34,14 +34,8 @@ const About = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-center mb-8">About CineDB</h1>
           
-          {/* Google Ads Placeholder */}
-          <div className="bg-muted p-4 rounded-lg text-center mb-8">
-            <p className="text-sm text-muted-foreground">Advertisement</p>
-            {/* Replace with actual Google Ads code */}
-            <div className="h-32 bg-gray-200 rounded flex items-center justify-center">
-              <span>Google Ads Placeholder</span>
-            </div>
-          </div>
+          {/* AdSense Banner */}
+          <AdBanner slot="5471985426" className="mb-8" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <Card>
@@ -109,13 +103,8 @@ const About = () => {
             </Card>
           </div>
 
-          {/* Another Google Ads Placeholder */}
-          <div className="bg-muted p-4 rounded-lg text-center mb-8">
-            <p className="text-sm text-muted-foreground">Advertisement</p>
-            <div className="h-24 bg-gray-200 rounded flex items-center justify-center">
-              <span>Google Ads Banner</span>
-            </div>
-          </div>
+          {/* Another AdSense Banner */}
+          <AdBanner slot="5471985426" className="mb-8" />
 
           <div className="text-center">
             <h2 className="text-2xl font-semibold mb-4">Join Our Community</h2>

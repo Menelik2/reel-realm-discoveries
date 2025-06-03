@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { GenreChart } from '@/components/GenreChart';
+import { AdBanner } from '@/components/AdBanner';
 
 interface Movie {
   id: number;
@@ -60,6 +62,7 @@ export const MovieGrid = ({
   const [currentCategory, setCurrentCategory] = useState('popular');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showMeanChart, setShowMeanChart] = useState(false);
   const [stats, setStats] = useState({
     totalMovies: 0,
     averageRating: 0,
@@ -204,181 +207,205 @@ export const MovieGrid = ({
 
   return (
     <section className="container mx-auto px-4 py-6 md:py-8">
-      {/* Statistics Panel */}
-      <div className="mb-6 p-4 bg-muted rounded-lg">
-        <h3 className="text-lg font-semibold mb-3">Statistics</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-primary">{stats.totalMovies}</p>
-            <p className="text-sm text-muted-foreground">Movies on this page</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-primary">{stats.averageRating}/10</p>
-            <p className="text-sm text-muted-foreground">Average Rating</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-primary">{currentPage * 20}/1000+</p>
-            <p className="text-sm text-muted-foreground">Movies Loaded</p>
-          </div>
-        </div>
-        
-        {Object.keys(stats.genreStats).length > 0 && (
-          <div className="mt-4">
-            <h4 className="font-medium mb-2">Genre Statistics:</h4>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(stats.genreStats).map(([genre, stat]) => (
-                <div key={genre} className="bg-background px-3 py-1 rounded-full text-sm">
-                  {genre}: {stat.avgRating}/10 ({stat.count} movies)
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Content Type Toggle */}
+      {/* Mean Chart Toggle Buttons */}
       <div className="mb-6">
         <div className="flex gap-2 mb-4">
           <Button
-            variant={contentType === 'movie' ? 'default' : 'outline'}
-            onClick={() => setContentType('movie')}
+            variant={showMeanChart && contentType === 'movie' ? 'default' : 'outline'}
+            onClick={() => {
+              setContentType('movie');
+              setShowMeanChart(true);
+            }}
           >
-            Movies
+            Mean Movies
           </Button>
           <Button
-            variant={contentType === 'tv' ? 'default' : 'outline'}
-            onClick={() => setContentType('tv')}
+            variant={showMeanChart && contentType === 'tv' ? 'default' : 'outline'}
+            onClick={() => {
+              setContentType('tv');
+              setShowMeanChart(true);
+            }}
           >
-            TV Series
+            Mean TV Series
+          </Button>
+          <Button
+            variant={!showMeanChart ? 'default' : 'outline'}
+            onClick={() => setShowMeanChart(false)}
+          >
+            Browse Content
           </Button>
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex flex-wrap gap-1 md:gap-2 mb-4 md:mb-6">
-          {[
-            { key: 'popular', label: 'Popular' },
-            { key: 'top_rated', label: 'Top Rated' },
-            { key: 'upcoming', label: contentType === 'movie' ? 'Upcoming' : 'On The Air' },
-            { key: 'now_playing', label: contentType === 'movie' ? 'Now Playing' : 'Airing Today' }
-          ].map(category => (
+      {/* AdSense Banner */}
+      <AdBanner 
+        slot="5471985426"
+        className="mb-6"
+      />
+
+      {/* Show Genre Chart when Mean buttons are clicked */}
+      {showMeanChart && Object.keys(stats.genreStats).length > 0 && (
+        <div className="mb-8">
+          <GenreChart genreStats={stats.genreStats} />
+        </div>
+      )}
+
+      {/* Content Type Toggle - only show when not in mean mode */}
+      {!showMeanChart && (
+        <div className="mb-6">
+          <div className="flex gap-2 mb-4">
             <Button
-              key={category.key}
-              variant={currentCategory === category.key ? 'default' : 'outline'}
-              onClick={() => setCurrentCategory(category.key)}
-              className="text-xs md:text-sm px-2 md:px-4 py-1 md:py-2"
+              variant={contentType === 'movie' ? 'default' : 'outline'}
+              onClick={() => setContentType('movie')}
             >
-              {category.label}
+              Movies
             </Button>
-          ))}
+            <Button
+              variant={contentType === 'tv' ? 'default' : 'outline'}
+              onClick={() => setContentType('tv')}
+            >
+              TV Series
+            </Button>
+          </div>
         </div>
+      )}
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
-          <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="All Genres" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Genres</SelectItem>
-              {genres.map(genre => (
-                <SelectItem key={genre.id} value={genre.id.toString()}>
-                  {genre.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="All Years" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Years</SelectItem>
-              {years.map(year => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Content Grid */}
-      {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
-          ))}
-        </div>
-      ) : movies.length > 0 ? (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
-            {movies.map(movie => (
-              <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
+      {/* Category Tabs - only show when not in mean mode */}
+      {!showMeanChart && (
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-wrap gap-1 md:gap-2 mb-4 md:mb-6">
+            {[
+              { key: 'popular', label: 'Popular' },
+              { key: 'top_rated', label: 'Top Rated' },
+              { key: 'upcoming', label: contentType === 'movie' ? 'Upcoming' : 'On The Air' },
+              { key: 'now_playing', label: contentType === 'movie' ? 'Now Playing' : 'Airing Today' }
+            ].map(category => (
+              <Button
+                key={category.key}
+                variant={currentCategory === category.key ? 'default' : 'outline'}
+                onClick={() => setCurrentCategory(category.key)}
+                className="text-xs md:text-sm px-2 md:px-4 py-1 md:py-2"
+              >
+                {category.label}
+              </Button>
             ))}
           </div>
-          
-          {/* Pagination */}
-          <div className="mt-8">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage - 1);
-                    }}
-                    className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
-                  />
-                </PaginationItem>
-                
-                {/* Page numbers */}
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = Math.max(1, currentPage - 2) + i;
-                  if (pageNum > totalPages) return null;
-                  
-                  return (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
+            <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="All Genres" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Genres</SelectItem>
+                {genres.map(genre => (
+                  <SelectItem key={genre.id} value={genre.id.toString()}>
+                    {genre.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="All Years" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {years.map(year => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {/* Content Grid - only show when not in mean mode */}
+      {!showMeanChart && (
+        <>
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
+              ))}
+            </div>
+          ) : movies.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+                {movies.map(movie => (
+                  <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
+                ))}
+              </div>
+              
+              {/* AdSense Banner between content and pagination */}
+              <div className="my-8">
+                <AdBanner slot="5471985426" />
+              </div>
+              
+              {/* Pagination */}
+              <div className="mt-8">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
                         href="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          handlePageChange(pageNum);
+                          handlePageChange(currentPage - 1);
                         }}
-                        isActive={pageNum === currentPage}
-                      >
-                        {pageNum}
-                      </PaginationLink>
+                        className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                      />
                     </PaginationItem>
-                  );
-                })}
+                    
+                    {/* Page numbers */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = Math.max(1, currentPage - 2) + i;
+                      if (pageNum > totalPages) return null;
+                      
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePageChange(pageNum);
+                            }}
+                            isActive={pageNum === currentPage}
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(currentPage + 1);
+                        }}
+                        className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
                 
-                <PaginationItem>
-                  <PaginationNext 
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage + 1);
-                    }}
-                    className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-            
-            <div className="text-center mt-4 text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} (Showing up to 2000 {contentType === 'movie' ? 'movies' : 'series'})
+                <div className="text-center mt-4 text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages} (Showing up to 2000 {contentType === 'movie' ? 'movies' : 'series'})
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No {contentType === 'movie' ? 'movies' : 'series'} found. Try adjusting your filters or search query.</p>
             </div>
-          </div>
+          )}
         </>
-      ) : (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No {contentType === 'movie' ? 'movies' : 'series'} found. Try adjusting your filters or search query.</p>
-        </div>
       )}
     </section>
   );
