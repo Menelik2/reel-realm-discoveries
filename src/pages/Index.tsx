@@ -12,6 +12,7 @@ const Index = () => {
   const [selectedYear, setSelectedYear] = useState('all');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
+  const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
 
   const handleMovieClick = (movieId: number) => {
     setSelectedMovieId(movieId);
@@ -41,6 +42,8 @@ const Index = () => {
             selectedYear={selectedYear}
             setSelectedYear={setSelectedYear}
             onMovieClick={handleMovieClick}
+            contentType={contentType}
+            setContentType={setContentType}
           />
         </main>
 

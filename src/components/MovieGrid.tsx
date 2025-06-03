@@ -21,6 +21,8 @@ interface MovieGridProps {
   selectedYear: string;
   setSelectedYear: (year: string) => void;
   onMovieClick: (movieId: number) => void;
+  contentType: 'movie' | 'tv';
+  setContentType: (type: 'movie' | 'tv') => void;
 }
 
 const genres = [
@@ -49,7 +51,9 @@ export const MovieGrid = ({
   setSelectedGenre, 
   selectedYear, 
   setSelectedYear,
-  onMovieClick
+  onMovieClick,
+  contentType,
+  setContentType
 }: MovieGridProps) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,17 +92,18 @@ export const MovieGrid = ({
   const fetchMovies = async (page: number) => {
     setLoading(true);
     try {
-      let url = `${TMDB_BASE_URL}/movie/${currentCategory}?page=${page}`;
+      let url = `${TMDB_BASE_URL}/${contentType}/${currentCategory}?page=${page}`;
       
       if (selectedGenre !== 'all') {
         url += `&with_genres=${selectedGenre}`;
       }
       
       if (selectedYear !== 'all') {
-        url += `&primary_release_year=${selectedYear}`;
+        const yearParam = contentType === 'movie' ? 'primary_release_year' : 'first_air_date_year';
+        url += `&${yearParam}=${selectedYear}`;
       }
 
-      console.log('Fetching movies from:', url);
+      console.log('Fetching content from:', url);
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
@@ -114,12 +119,11 @@ export const MovieGrid = ({
       
       console.log('TMDB Response:', data);
       setMovies(data.results || []);
-      setTotalPages(Math.min(data.total_pages || 1, 50)); // Limit to 50 pages (1000 movies)
+      setTotalPages(Math.min(data.total_pages || 1, 100)); // Increased to 100 pages (2000 items)
       
-      // Calculate statistics
       calculateStats(data.results || []);
     } catch (error) {
-      console.error('Error fetching movies:', error);
+      console.error('Error fetching content:', error);
       setMovies([]);
     } finally {
       setLoading(false);
@@ -131,8 +135,8 @@ export const MovieGrid = ({
     
     setLoading(true);
     try {
-      const url = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(searchQuery)}&page=${page}`;
-      console.log('Searching movies:', url);
+      const url = `${TMDB_BASE_URL}/search/${contentType}?query=${encodeURIComponent(searchQuery)}&page=${page}`;
+      console.log('Searching content:', url);
       
       const response = await fetch(url, {
         headers: {
@@ -149,11 +153,11 @@ export const MovieGrid = ({
       
       console.log('Search results:', data);
       setMovies(data.results || []);
-      setTotalPages(Math.min(data.total_pages || 1, 50));
+      setTotalPages(Math.min(data.total_pages || 1, 100));
       
       calculateStats(data.results || []);
     } catch (error) {
-      console.error('Error searching movies:', error);
+      console.error('Error searching content:', error);
       setMovies([]);
     } finally {
       setLoading(false);
@@ -232,14 +236,32 @@ export const MovieGrid = ({
         )}
       </div>
 
+      {/* Content Type Toggle */}
+      <div className="mb-6">
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant={contentType === 'movie' ? 'default' : 'outline'}
+            onClick={() => setContentType('movie')}
+          >
+            Movies
+          </Button>
+          <Button
+            variant={contentType === 'tv' ? 'default' : 'outline'}
+            onClick={() => setContentType('tv')}
+          >
+            TV Series
+          </Button>
+        </div>
+      </div>
+
       {/* Category Tabs */}
       <div className="mb-6 md:mb-8">
         <div className="flex flex-wrap gap-1 md:gap-2 mb-4 md:mb-6">
           {[
             { key: 'popular', label: 'Popular' },
             { key: 'top_rated', label: 'Top Rated' },
-            { key: 'upcoming', label: 'Upcoming' },
-            { key: 'now_playing', label: 'Now Playing' }
+            { key: 'upcoming', label: contentType === 'movie' ? 'Upcoming' : 'On The Air' },
+            { key: 'now_playing', label: contentType === 'movie' ? 'Now Playing' : 'Airing Today' }
           ].map(category => (
             <Button
               key={category.key}
@@ -284,7 +306,7 @@ export const MovieGrid = ({
         </div>
       </div>
 
-      {/* Movies Grid */}
+      {/* Content Grid */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -349,13 +371,13 @@ export const MovieGrid = ({
             </Pagination>
             
             <div className="text-center mt-4 text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} (Showing up to 1000 movies)
+              Page {currentPage} of {totalPages} (Showing up to 2000 {contentType === 'movie' ? 'movies' : 'series'})
             </div>
           </div>
         </>
       ) : (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">No movies found. Try adjusting your filters or search query.</p>
+          <p className="text-muted-foreground">No {contentType === 'movie' ? 'movies' : 'series'} found. Try adjusting your filters or search query.</p>
         </div>
       )}
     </section>

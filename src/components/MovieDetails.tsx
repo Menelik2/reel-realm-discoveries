@@ -1,9 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Play, Heart, Star, Calendar, Clock, Globe } from 'lucide-react';
+import { SimilarMovies } from '@/components/SimilarMovies';
+import { GenreChart } from '@/components/GenreChart';
 
 interface MovieDetailsProps {
   movieId: number;
@@ -127,9 +128,15 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
 
   if (!movie) return null;
 
+  // Calculate genre stats for chart
+  const genreStats = movie.genres.reduce((acc, genre) => {
+    acc[genre.name] = { count: 1, avgRating: movie.vote_average };
+    return acc;
+  }, {} as Record<string, { count: number; avgRating: number }>);
+
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-background max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-lg">
+      <div className="bg-background max-w-6xl w-full max-h-[90vh] overflow-y-auto rounded-lg">
         {/* Header with backdrop */}
         <div className="relative h-64 md:h-80">
           <img
@@ -148,6 +155,7 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
         </div>
 
         <div className="p-6 -mt-20 relative z-10">
+          {/* Movie Info */}
           <div className="flex flex-col md:flex-row gap-6">
             {/* Poster */}
             <img
@@ -210,6 +218,11 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Genre Chart */}
+          <div className="mt-8">
+            <GenreChart genreStats={genreStats} />
           </div>
 
           {/* Additional Info */}
@@ -283,6 +296,11 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
               </div>
             </div>
           )}
+
+          {/* Similar Movies */}
+          <div className="mt-8">
+            <SimilarMovies movieId={movieId} onMovieClick={onClose} />
+          </div>
         </div>
       </div>
     </div>
