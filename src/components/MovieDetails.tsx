@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Play, Heart, Star, Calendar, Clock, Globe, Download, Eye } from 'lucide-react';
 import { SimilarMovies } from '@/components/SimilarMovies';
-import { GenreChart } from '@/components/GenreChart';
 
 interface MovieDetailsProps {
   movieId: number;
@@ -129,12 +128,6 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
 
   if (!movie) return null;
 
-  // Calculate genre stats for chart
-  const genreStats = movie.genres.reduce((acc, genre) => {
-    acc[genre.name] = { count: 1, avgRating: movie.vote_average };
-    return acc;
-  }, {} as Record<string, { count: number; avgRating: number }>);
-
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-background max-w-6xl w-full max-h-[90vh] overflow-y-auto rounded-lg">
@@ -229,11 +222,6 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
             </div>
           </div>
 
-          {/* Genre Chart */}
-          <div className="mt-8">
-            <GenreChart genreStats={genreStats} />
-          </div>
-
           {/* Additional Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
             {/* Production Info */}
@@ -283,7 +271,12 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
             </Card>
           </div>
 
-          {/* Cast */}
+          {/* Similar Movies - Now first */}
+          <div className="mt-8">
+            <SimilarMovies movieId={movieId} onMovieClick={onClose} />
+          </div>
+
+          {/* Cast - Now second */}
           {cast.length > 0 && (
             <div className="mt-8">
               <h3 className="text-xl font-semibold mb-4">Cast</h3>
@@ -305,11 +298,6 @@ export const MovieDetails = ({ movieId, onClose }: MovieDetailsProps) => {
               </div>
             </div>
           )}
-
-          {/* Similar Movies */}
-          <div className="mt-8">
-            <SimilarMovies movieId={movieId} onMovieClick={onClose} />
-          </div>
         </div>
       </div>
     </div>

@@ -116,7 +116,8 @@ export const MovieGrid = ({
       
       console.log('TMDB Response:', data);
       setMovies(data.results || []);
-      setTotalPages(Math.min(data.total_pages || 1, 100)); // Increased to 100 pages (2000 items)
+      // Increased to 100 pages for both movies and series (2000 items each)
+      setTotalPages(Math.min(data.total_pages || 1, 100));
       
     } catch (error) {
       console.error('Error fetching content:', error);
