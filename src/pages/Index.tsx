@@ -52,7 +52,8 @@ const Index = () => {
         {/* Movie Details Modal */}
         {selectedMovieId && (
           <MovieDetails 
-            movieId={selectedMovieId} 
+            movieId={selectedMovieId}
+            contentType={contentType}
             onClose={handleCloseMovieDetails}
           />
         )}
