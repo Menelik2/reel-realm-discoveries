@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { MovieGrid } from '@/components/MovieGrid';
@@ -13,8 +13,20 @@ const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Auto-refresh every 5 minutes to get new movies from TMDB
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('Auto-refreshing content from TMDB...');
+      setRefreshKey(prev => prev + 1);
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleMovieClick = (movieId: number) => {
+    console.log('Movie clicked:', movieId);
     setSelectedMovieId(movieId);
   };
 
@@ -36,6 +48,7 @@ const Index = () => {
           <HeroCarousel />
           
           <MovieGrid 
+            key={refreshKey}
             searchQuery={searchQuery}
             selectedGenre={selectedGenre}
             setSelectedGenre={setSelectedGenre}
@@ -55,6 +68,7 @@ const Index = () => {
             movieId={selectedMovieId}
             contentType={contentType}
             onClose={handleCloseMovieDetails}
+            onMovieClick={handleMovieClick}
           />
         )}
       </div>

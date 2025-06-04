@@ -75,6 +75,11 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
     }
   };
 
+  const handleSimilarMovieClick = (movieId: number) => {
+    console.log('Similar movie clicked:', movieId);
+    onMovieClick(movieId);
+  };
+
   const title = contentType === 'movie' ? 'Similar Movies' : 'Similar TV Series';
 
   if (loading) {
@@ -115,7 +120,7 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
       <CardContent>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {similarMovies.map(movie => (
-            <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
+            <MovieCard key={movie.id} movie={movie} onMovieClick={handleSimilarMovieClick} />
           ))}
         </div>
       </CardContent>

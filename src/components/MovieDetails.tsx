@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { SimilarMovies } from '@/components/SimilarMovies';
 import { MovieDetailsHeader } from '@/components/movie-details/MovieDetailsHeader';
@@ -10,6 +9,7 @@ interface MovieDetailsProps {
   movieId: number;
   contentType?: 'movie' | 'tv';
   onClose: () => void;
+  onMovieClick: (movieId: number) => void;
 }
 
 interface MovieDetail {
@@ -55,7 +55,7 @@ interface Videos {
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-export const MovieDetails = ({ movieId, contentType = 'movie', onClose }: MovieDetailsProps) => {
+export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieClick }: MovieDetailsProps) => {
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [cast, setCast] = useState<Cast[]>([]);
   const [videos, setVideos] = useState<Videos | null>(null);
@@ -112,6 +112,11 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose }: MovieD
     return trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null;
   };
 
+  const handleSimilarMovieClick = (newMovieId: number) => {
+    console.log('Opening similar movie:', newMovieId);
+    onMovieClick(newMovieId);
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
@@ -160,16 +165,16 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose }: MovieD
             productionCompanies={movie.production_companies}
           />
 
-          {/* Similar Movies/Series - Now first */}
+          {/* Similar Movies/Series - Now with proper click handling */}
           <div className="mt-8">
             <SimilarMovies 
               movieId={movieId} 
               contentType={contentType}
-              onMovieClick={onClose} 
+              onMovieClick={handleSimilarMovieClick} 
             />
           </div>
 
-          {/* Cast - Now second */}
+          {/* Cast */}
           <MovieCast cast={cast} />
         </div>
       </div>

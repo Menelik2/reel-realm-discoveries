@@ -23,6 +23,7 @@ interface UseMovieDataProps {
   contentType: 'movie' | 'tv';
   currentCategory: string;
   currentPage: number;
+  refreshKey?: number;
 }
 
 export const useMovieData = ({
@@ -31,7 +32,8 @@ export const useMovieData = ({
   selectedYear,
   contentType,
   currentCategory,
-  currentPage
+  currentPage,
+  refreshKey = 0
 }: UseMovieDataProps) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,9 @@ export const useMovieData = ({
         const yearParam = contentType === 'movie' ? 'primary_release_year' : 'first_air_date_year';
         url += `&${yearParam}=${selectedYear}`;
       }
+
+      // Add timestamp to prevent caching and get fresh data
+      url += `&_t=${Date.now()}`;
 
       console.log('Fetching content from:', url);
       const response = await fetch(url, {
@@ -82,7 +87,7 @@ export const useMovieData = ({
     
     setLoading(true);
     try {
-      const url = `${TMDB_BASE_URL}/search/${contentType}?query=${encodeURIComponent(searchQuery)}&page=${page}`;
+      const url = `${TMDB_BASE_URL}/search/${contentType}?query=${encodeURIComponent(searchQuery)}&page=${page}&_t=${Date.now()}`;
       console.log('Searching content:', url);
       
       const response = await fetch(url, {
@@ -116,7 +121,7 @@ export const useMovieData = ({
     } else {
       fetchMovies(currentPage);
     }
-  }, [searchQuery, selectedGenre, selectedYear, contentType, currentCategory, currentPage]);
+  }, [searchQuery, selectedGenre, selectedYear, contentType, currentCategory, currentPage, refreshKey]);
 
   return { movies, loading, totalPages };
 };
