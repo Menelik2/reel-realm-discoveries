@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { MovieCard } from '@/components/MovieCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-interface Movie {
+interface TMDBMovie {
   id: number;
   title?: string;
   name?: string;
@@ -11,6 +11,15 @@ interface Movie {
   vote_average: number;
   release_date?: string;
   first_air_date?: string;
+  genre_ids: number[];
+}
+
+interface Movie {
+  id: number;
+  title: string;
+  poster_path: string;
+  vote_average: number;
+  release_date: string;
   genre_ids: number[];
 }
 
@@ -47,12 +56,15 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
       
       const data = await response.json();
       
-      // Normalize the data to have consistent title and release_date fields
-      const normalizedResults = data.results?.slice(0, 10).map((item: any) => ({
-        ...item,
-        title: item.title || item.name,
-        release_date: item.release_date || item.first_air_date
-      })) || [];
+      // Normalize the data to ensure required fields are present
+      const normalizedResults: Movie[] = data.results?.slice(0, 10).map((item: TMDBMovie) => ({
+        id: item.id,
+        title: item.title || item.name || 'Unknown Title',
+        poster_path: item.poster_path,
+        vote_average: item.vote_average,
+        release_date: item.release_date || item.first_air_date || '',
+        genre_ids: item.genre_ids
+      })).filter((item: Movie) => item.title !== 'Unknown Title') || [];
       
       setSimilarMovies(normalizedResults);
     } catch (error) {
