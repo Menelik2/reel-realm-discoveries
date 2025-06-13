@@ -1,8 +1,7 @@
 
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Play } from 'lucide-react';
+import { X, Play, ArrowLeft } from 'lucide-react';
 
 interface LiveWatchModalProps {
   isOpen: boolean;
@@ -24,42 +23,100 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
     setIsPlayerLoaded(true);
   };
 
+  // Handle escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose, isOpen]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // Reset player state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsPlayerLoaded(false);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-full h-[80vh] p-0">
-        <DialogHeader className="p-4 pb-0">
-          <DialogTitle className="flex items-center justify-between">
-            <span>Watch: {title}</span>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
+    <div className="fixed inset-0 bg-background z-50 overflow-hidden">
+      {/* Header with close button */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-b">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={onClose}
+              className="hover:bg-accent"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Back</span>
             </Button>
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="flex-1 p-4 pt-2">
-          {!isPlayerLoaded ? (
-            <div className="flex flex-col items-center justify-center h-full bg-muted rounded-lg">
-              <Play className="h-16 w-16 mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Ready to Watch</h3>
-              <p className="text-muted-foreground mb-4 text-center">
+            <h1 className="text-lg font-semibold truncate">
+              Watch: {title}
+            </h1>
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="hover:bg-accent lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Main content area */}
+      <div className="pt-16 h-full w-full">
+        {!isPlayerLoaded ? (
+          <div className="flex flex-col items-center justify-center h-full bg-muted/20">
+            <div className="text-center max-w-md mx-auto px-4">
+              <Play className="h-16 w-16 mb-4 text-primary mx-auto" />
+              <h2 className="text-xl font-semibold mb-2">Ready to Watch</h2>
+              <p className="text-muted-foreground mb-6 text-sm sm:text-base">
                 Click below to start watching {title}
               </p>
-              <Button onClick={handleLoadPlayer} size="lg">
+              <Button onClick={handleLoadPlayer} size="lg" className="w-full sm:w-auto">
                 <Play className="mr-2 h-4 w-4" />
                 Start Watching
               </Button>
             </div>
-          ) : (
-            <iframe
-              src={getEmbedUrl()}
-              className="w-full h-full rounded-lg"
-              allowFullScreen
-              allow="autoplay; encrypted-media"
-              title={`Watch ${title}`}
-            />
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        ) : (
+          <iframe
+            src={getEmbedUrl()}
+            className="w-full h-full"
+            allowFullScreen
+            allow="autoplay; encrypted-media"
+            title={`Watch ${title}`}
+            style={{ border: 'none' }}
+          />
+        )}
+      </div>
+    </div>
   );
 };
