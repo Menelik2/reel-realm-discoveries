@@ -20,6 +20,8 @@ interface MovieInfoProps {
   overview: string;
   trailerUrl: string | null;
   homepage?: string;
+  movieId: number;
+  contentType: 'movie' | 'tv';
 }
 
 export const MovieInfo = ({
@@ -33,7 +35,9 @@ export const MovieInfo = ({
   genres,
   overview,
   trailerUrl,
-  homepage
+  homepage,
+  movieId,
+  contentType
 }: MovieInfoProps) => {
   return (
     <div className="flex flex-col md:flex-row gap-6">
@@ -75,7 +79,13 @@ export const MovieInfo = ({
 
         <p className="text-muted-foreground mb-6">{overview}</p>
 
-        <MovieActions trailerUrl={trailerUrl} homepage={homepage} />
+        <MovieActions 
+          trailerUrl={trailerUrl} 
+          homepage={homepage}
+          movieId={movieId}
+          contentType={contentType}
+          title={title}
+        />
       </div>
     </div>
   );

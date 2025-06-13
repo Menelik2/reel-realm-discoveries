@@ -155,6 +155,8 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             overview={movie.overview}
             trailerUrl={getTrailerUrl()}
             homepage={movie.homepage}
+            movieId={movieId}
+            contentType={contentType}
           />
 
           <ProductionDetails 
