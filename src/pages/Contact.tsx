@@ -1,28 +1,34 @@
+
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
+import { Mail, MessageCircle, Clock, Globe } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
-import { useEffect } from 'react';
+import { useState } from 'react';
 
 const Contact = () => {
-  useEffect(() => {
-    // Google Ads compatibility
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
-    script.setAttribute('data-ad-client', 'ca-pub-XXXXXXXXXXXXXXXXX');
-    document.head.appendChild(script);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
 
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle form submission
+    console.log('Contact form submitted:', formData);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,9 +41,8 @@ const Contact = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-center mb-8">Contact Us</h1>
+          <h1 className="text-4xl font-bold text-center mb-8">Contact YENI MOVIE</h1>
           
-          {/* AdSense Banner */}
           <AdBanner slot="5471985426" className="mb-8" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -50,23 +55,23 @@ const Contact = () => {
                   <Mail className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium">Email</p>
-                    <p className="text-muted-foreground">contact@cinedb.com</p>
+                    <p className="text-muted-foreground">support@yenimovie.com</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-primary" />
+                  <Clock className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="font-medium">Phone</p>
-                    <p className="text-muted-foreground">+1 (555) 123-4567</p>
+                    <p className="font-medium">Response Time</p>
+                    <p className="text-muted-foreground">We respond within 24-48 hours</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-primary" />
+                  <Globe className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="font-medium">Address</p>
-                    <p className="text-muted-foreground">123 Movie Street<br />Cinema City, CC 12345</p>
+                    <p className="font-medium">Website</p>
+                    <p className="text-muted-foreground">yeni-movie.vercel.app</p>
                   </div>
                 </div>
                 
@@ -74,7 +79,7 @@ const Contact = () => {
                   <MessageCircle className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium">Support</p>
-                    <p className="text-muted-foreground">24/7 Customer Support</p>
+                    <p className="text-muted-foreground">Technical & General Inquiries</p>
                   </div>
                 </div>
               </CardContent>
@@ -85,27 +90,59 @@ const Contact = () => {
                 <CardTitle>Send us a Message</CardTitle>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <Input placeholder="Your Name" />
+                    <Input 
+                      name="name"
+                      placeholder="Your Name" 
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div>
-                    <Input type="email" placeholder="Your Email" />
+                    <Input 
+                      name="email"
+                      type="email" 
+                      placeholder="Your Email" 
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div>
-                    <Input placeholder="Subject" />
+                    <Input 
+                      name="subject"
+                      placeholder="Subject" 
+                      value={formData.subject}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div>
-                    <Textarea placeholder="Your Message" rows={5} />
+                    <Textarea 
+                      name="message"
+                      placeholder="Your Message" 
+                      rows={5} 
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
-                  <Button className="w-full">Send Message</Button>
+                  <Button type="submit" className="w-full">Send Message</Button>
                 </form>
               </CardContent>
             </Card>
           </div>
 
-          {/* Another AdSense Banner */}
           <AdBanner slot="5471985426" className="mt-8" />
+
+          <div className="mt-8 text-center">
+            <p className="text-muted-foreground">
+              Have questions about our movie database or need technical support? 
+              We're here to help you discover your next favorite movie or TV series.
+            </p>
+          </div>
         </div>
       </main>
 
