@@ -17,35 +17,51 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
 
   return (
     <>
-      <div className="flex flex-wrap gap-3">
-        {trailerUrl && (
-          <Button asChild>
-            <a href={trailerUrl} target="_blank" rel="noopener noreferrer">
-              <Play className="mr-2 h-4 w-4" />
-              Watch Trailer
-            </a>
-          </Button>
-        )}
-        <Button variant="outline" onClick={() => setIsLiveWatchOpen(true)}>
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+        {/* Primary action - Live Watch */}
+        <Button 
+          onClick={() => setIsLiveWatchOpen(true)}
+          size="lg"
+          className="w-full sm:w-auto order-1"
+        >
           <Eye className="mr-2 h-4 w-4" />
-          Live Watch
+          <span className="font-semibold">Watch Now</span>
         </Button>
-        <Button variant="outline">
-          <Download className="mr-2 h-4 w-4" />
-          Download
-        </Button>
-        <Button variant="outline">
-          <Heart className="mr-2 h-4 w-4" />
-          Add to Favorites
-        </Button>
-        {homepage && (
-          <Button variant="outline" asChild>
-            <a href={homepage} target="_blank" rel="noopener noreferrer">
-              <Globe className="mr-2 h-4 w-4" />
-              Official Site
-            </a>
+        
+        {/* Secondary actions */}
+        <div className="flex flex-wrap gap-2 sm:gap-3 order-2">
+          {trailerUrl && (
+            <Button asChild variant="outline" className="flex-1 sm:flex-none">
+              <a href={trailerUrl} target="_blank" rel="noopener noreferrer">
+                <Play className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Trailer</span>
+                <span className="sm:hidden">Play</span>
+              </a>
+            </Button>
+          )}
+          
+          <Button variant="outline" className="flex-1 sm:flex-none">
+            <Heart className="mr-2 h-4 w-4" />
+            <span className="hidden sm:inline">Favorite</span>
+            <span className="sm:hidden">Like</span>
           </Button>
-        )}
+          
+          <Button variant="outline" className="flex-1 sm:flex-none">
+            <Download className="mr-2 h-4 w-4" />
+            <span className="hidden sm:inline">Download</span>
+            <span className="sm:hidden">Save</span>
+          </Button>
+          
+          {homepage && (
+            <Button variant="outline" asChild className="flex-1 sm:flex-none">
+              <a href={homepage} target="_blank" rel="noopener noreferrer">
+                <Globe className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Official</span>
+                <span className="sm:hidden">Web</span>
+              </a>
+            </Button>
+          )}
+        </div>
       </div>
 
       <LiveWatchModal

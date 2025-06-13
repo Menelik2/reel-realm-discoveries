@@ -117,11 +117,31 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
     onMovieClick(newMovieId);
   };
 
+  // Handle escape key press
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div className="bg-background p-8 rounded-lg">
-          <div className="animate-pulse">Loading {contentType === 'movie' ? 'movie' : 'series'} details...</div>
+      <div className="fixed inset-0 bg-background z-50 flex items-center justify-center">
+        <div className="animate-pulse text-center">
+          <div className="text-lg">Loading {contentType === 'movie' ? 'movie' : 'series'} details...</div>
         </div>
       </div>
     );
@@ -134,15 +154,16 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
   const runtime = movie.runtime || (movie.episode_run_time?.[0]) || 0;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-background max-w-6xl w-full max-h-[90vh] overflow-y-auto rounded-lg">
+    <div className="fixed inset-0 bg-background z-50 overflow-y-auto">
+      {/* Full-size container */}
+      <div className="min-h-screen w-full">
         <MovieDetailsHeader 
           backdropPath={movie.backdrop_path}
           title={title}
           onClose={onClose}
         />
 
-        <div className="p-6 -mt-20 relative z-10">
+        <div className="container mx-auto px-4 py-6 -mt-20 relative z-10 max-w-7xl">
           <MovieInfo 
             posterPath={movie.poster_path}
             title={title}
@@ -167,7 +188,7 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             productionCompanies={movie.production_companies}
           />
 
-          {/* Similar Movies/Series - Now with proper click handling */}
+          {/* Similar Movies/Series */}
           <div className="mt-8">
             <SimilarMovies 
               movieId={movieId} 
