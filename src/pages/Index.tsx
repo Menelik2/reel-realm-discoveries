@@ -6,8 +6,6 @@ import { MovieGrid } from '@/components/MovieGrid';
 import { Footer } from '@/components/Footer';
 import { useMovieData } from '@/hooks/useMovieData';
 import { AdBanner } from '@/components/AdBanner';
-import { MovieRow } from '@/components/MovieRow';
-import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,9 +27,6 @@ const Index = () => {
     setCurrentCategory(searchParams.get('category') || 'popular');
   }, [searchParams]);
 
-  const categoryFromUrl = searchParams.get('category');
-  const isDashboardView = !searchQuery && !categoryFromUrl;
-
   const { movies, loading, totalPages } = useMovieData({
     searchQuery,
     selectedGenre,
@@ -40,7 +35,7 @@ const Index = () => {
     currentCategory,
     currentPage,
     refreshKey,
-    enabled: !isDashboardView,
+    enabled: true,
   });
 
   // Auto-refresh every day to get new movies from TMDB
@@ -101,72 +96,32 @@ const Index = () => {
         <main>
           {!searchQuery && <HeroCarousel />}
           
-          {isDashboardView ? (
-            <>
+          <>
+            {!searchQuery && currentCategory !== 'custom' && (
               <div className="container mx-auto px-4 my-8">
                 <AdBanner slot="1571190202" />
               </div>
-              <div className="container mx-auto px-4 mb-8">
-                <div className="flex gap-2">
-                    <Button
-                        variant={contentType === 'movie' ? 'default' : 'outline'}
-                        onClick={() => setContentType('movie')}
-                    >
-                        Movies
-                    </Button>
-                    <Button
-                        variant={contentType === 'tv' ? 'default' : 'outline'}
-                        onClick={() => setContentType('tv')}
-                    >
-                        Series
-                    </Button>
-                </div>
-              </div>
-
-              {contentType === 'movie' ? (
-                <>
-                  <MovieRow title="Trending Movies" fetchUrl="/trending/movie/week" contentType="movie" />
-                  <MovieRow title="Upcoming Movies" fetchUrl="/movie/upcoming" contentType="movie" />
-                  <MovieRow title="Top Rated Movies" fetchUrl="/movie/top_rated" contentType="movie" />
-                  <MovieRow title="Action Movies" fetchUrl="/discover/movie?with_genres=28&sort_by=popularity.desc" contentType="movie" />
-                </>
-              ) : (
-                <>
-                  <MovieRow title="Trending Series" fetchUrl="/trending/tv/week" contentType="tv" />
-                  <MovieRow title="Series Airing Today" fetchUrl="/tv/airing_today" contentType="tv" />
-                  <MovieRow title="Top Rated Series" fetchUrl="/tv/top_rated" contentType="tv" />
-                  <MovieRow title="Action & Adventure Series" fetchUrl="/discover/tv?with_genres=10759&sort_by=popularity.desc" contentType="tv" />
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              {!searchQuery && currentCategory !== 'custom' && (
-                <div className="container mx-auto px-4 my-8">
-                  <AdBanner slot="1571190202" />
-                </div>
-              )}
-              
-              <MovieGrid 
-                key={refreshKey}
-                searchQuery={searchQuery}
-                selectedGenre={selectedGenre}
-                setSelectedGenre={setSelectedGenre}
-                selectedYear={selectedYear}
-                setSelectedYear={setSelectedYear}
-                onMovieClick={handleMovieClick}
-                contentType={contentType}
-                setContentType={setContentType}
-                movies={movies}
-                loading={loading}
-                totalPages={totalPages}
-                currentPage={currentPage}
-                handlePageChange={handlePageChange}
-                currentCategory={currentCategory}
-                setCurrentCategory={handleSetCurrentCategory}
-              />
-            </>
-          )}
+            )}
+            
+            <MovieGrid 
+              key={refreshKey}
+              searchQuery={searchQuery}
+              selectedGenre={selectedGenre}
+              setSelectedGenre={setSelectedGenre}
+              selectedYear={selectedYear}
+              setSelectedYear={setSelectedYear}
+              onMovieClick={handleMovieClick}
+              contentType={contentType}
+              setContentType={setContentType}
+              movies={movies}
+              loading={loading}
+              totalPages={totalPages}
+              currentPage={currentPage}
+              handlePageChange={handlePageChange}
+              currentCategory={currentCategory}
+              setCurrentCategory={handleSetCurrentCategory}
+            />
+          </>
         </main>
 
         <Footer />
