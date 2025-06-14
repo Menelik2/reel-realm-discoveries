@@ -1,4 +1,6 @@
+
 import { useState, useEffect, useRef } from 'react';
++import CustomVideoPlayer from './CustomVideoPlayer';
 
 interface VideoEmbedProps {
   tmdbId?: number;
