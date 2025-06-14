@@ -1,9 +1,15 @@
-import { useState, useEffect } from 'react';
+
+import { useEffect } from 'react';
 import { SimilarMovies } from '@/components/SimilarMovies';
 import { MovieDetailsHeader } from '@/components/movie-details/MovieDetailsHeader';
 import { MovieInfo } from '@/components/movie-details/MovieInfo';
 import { ProductionDetails } from '@/components/movie-details/ProductionDetails';
 import { MovieCast } from '@/components/movie-details/MovieCast';
+import { useMovieDetails } from '@/hooks/useMovieDetails';
+import { MovieDetailsSkeleton } from './movie-details/MovieDetailsSkeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 interface MovieDetailsProps {
   movieId: number;
@@ -12,98 +18,8 @@ interface MovieDetailsProps {
   onMovieClick: (movieId: number) => void;
 }
 
-interface MovieDetail {
-  id: number;
-  title?: string;
-  name?: string;
-  overview: string;
-  poster_path: string;
-  backdrop_path: string;
-  vote_average: number;
-  vote_count: number;
-  release_date?: string;
-  first_air_date?: string;
-  runtime?: number;
-  episode_run_time?: number[];
-  genres: { id: number; name: string }[];
-  production_companies: { id: number; name: string; logo_path: string }[];
-  production_countries: { iso_3166_1: string; name: string }[];
-  spoken_languages: { english_name: string; name: string }[];
-  budget?: number;
-  revenue?: number;
-  tagline?: string;
-  homepage?: string;
-}
-
-interface Cast {
-  id: number;
-  name: string;
-  character: string;
-  profile_path: string;
-}
-
-interface Videos {
-  results: {
-    id: string;
-    key: string;
-    name: string;
-    site: string;
-    type: string;
-  }[];
-}
-
-const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-
 export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieClick }: MovieDetailsProps) => {
-  const [movie, setMovie] = useState<MovieDetail | null>(null);
-  const [cast, setCast] = useState<Cast[]>([]);
-  const [videos, setVideos] = useState<Videos | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchMovieDetails();
-  }, [movieId, contentType]);
-
-  const fetchMovieDetails = async () => {
-    setLoading(true);
-    try {
-      // Fetch movie/series details
-      const movieResponse = await fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}`, {
-        headers: {
-          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json;charset=utf-8'
-        }
-      });
-      const movieData = await movieResponse.json();
-      setMovie(movieData);
-
-      // Fetch cast
-      const creditsResponse = await fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/credits`, {
-        headers: {
-          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json;charset=utf-8'
-        }
-      });
-      const creditsData = await creditsResponse.json();
-      setCast(creditsData.cast?.slice(0, 10) || []);
-
-      // Fetch videos
-      const videosResponse = await fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/videos`, {
-        headers: {
-          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json;charset=utf-8'
-        }
-      });
-      const videosData = await videosResponse.json();
-      setVideos(videosData);
-
-    } catch (error) {
-      console.error('Error fetching content details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { movie, cast, videos, loading, error } = useMovieDetails(movieId, contentType);
 
   const getTrailerUrl = () => {
     const trailer = videos?.results?.find(video => 
@@ -138,11 +54,19 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
   }, []);
 
   if (loading) {
+    return <MovieDetailsSkeleton />;
+  }
+  
+  if (error) {
     return (
-      <div className="fixed inset-0 bg-background z-50 flex items-center justify-center">
-        <div className="animate-pulse text-center">
-          <div className="text-lg">Loading {contentType === 'movie' ? 'movie' : 'series'} details...</div>
-        </div>
+      <div className="fixed inset-0 bg-background z-50 flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-lg">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Failed to load details</AlertTitle>
+          <AlertDescription>
+            {error} Please try again later.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -179,26 +103,41 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             movieId={movieId}
             contentType={contentType}
           />
+          
+          {/* Cast */}
+          {cast.length > 0 && (
+            <div className="mt-8">
+               <Card>
+                <CardHeader>
+                  <CardTitle>Top Cast</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MovieCast cast={cast} />
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-          <ProductionDetails 
-            budget={movie.budget || 0}
-            revenue={movie.revenue || 0}
-            productionCountries={movie.production_countries}
-            spokenLanguages={movie.spoken_languages}
-            productionCompanies={movie.production_companies}
-          />
-
-          {/* Similar Movies/Series */}
           <div className="mt-8">
-            <SimilarMovies 
-              movieId={movieId} 
-              contentType={contentType}
-              onMovieClick={handleSimilarMovieClick} 
+            <ProductionDetails 
+              budget={movie.budget || 0}
+              revenue={movie.revenue || 0}
+              productionCountries={movie.production_countries}
+              spokenLanguages={movie.spoken_languages}
+              productionCompanies={movie.production_companies}
             />
           </div>
 
-          {/* Cast */}
-          <MovieCast cast={cast} />
+          {/* Similar Movies/Series */}
+          {movie.id && (
+            <div className="mt-8">
+              <SimilarMovies 
+                movieId={movie.id} 
+                contentType={contentType}
+                onMovieClick={handleSimilarMovieClick} 
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
