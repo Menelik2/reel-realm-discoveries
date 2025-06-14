@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Play, ArrowLeft, AlertTriangle } from 'lucide-react';
@@ -16,8 +15,8 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
   const [hasError, setHasError] = useState(false);
 
   const getEmbedUrl = () => {
-    // Using vidsrc.to as it might have a wider library of content.
-    const baseUrl = `https://vidsrc.to/embed/${contentType}`;
+    // Using vidsrc.in as suggested for better reliability
+    const baseUrl = `https://vidsrc.in/embed/${contentType}`;
     return `${baseUrl}?tmdb=${movieId}&autoplay=1`;
   };
 
