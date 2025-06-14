@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 
-interface Movie {
+export interface Movie {
   id: number;
   title: string;
   poster_path: string;
@@ -9,6 +8,7 @@ interface Movie {
   release_date: string;
   genre_ids: number[];
   overview?: string;
+  media_type?: 'movie' | 'tv';
 }
 
 // TMDB API credentials
@@ -99,7 +99,7 @@ export const useMovieData = ({
       params.append('page', page.toString());
       params.append('_t', Date.now().toString());
       
-      const url = `${TMDB_BASE_URL}/search/${contentType}?${params.toString()}`;
+      const url = `${TMDB_BASE_URL}/search/multi?${params.toString()}`;
       console.log('Searching content:', url);
       
       const response = await fetch(url, {
@@ -116,7 +116,21 @@ export const useMovieData = ({
       const data = await response.json();
       
       console.log('Search results:', data);
-      setMovies(data.results || []);
+      
+      const processedResults = (data.results || [])
+        .filter(item => (item.media_type === 'movie' || item.media_type === 'tv') && item.poster_path)
+        .map(item => {
+          if (item.media_type === 'tv') {
+            return {
+              ...item,
+              title: item.name,
+              release_date: item.first_air_date,
+            };
+          }
+          return item;
+        });
+
+      setMovies(processedResults);
       setTotalPages(Math.min(data.total_pages || 1, 100));
       
     } catch (error) {

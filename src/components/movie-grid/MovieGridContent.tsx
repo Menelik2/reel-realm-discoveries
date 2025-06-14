@@ -6,9 +6,11 @@ import { AdBanner } from '@/components/AdBanner';
 interface Movie {
   id: number;
   title: string;
+  name?: string;
   poster_path: string;
   vote_average: number;
   release_date: string;
+  first_air_date?: string;
   genre_ids: number[];
   overview?: string;
 }
@@ -21,6 +23,7 @@ interface MovieGridContentProps {
   onMovieClick: (movieId: number) => void;
   onPageChange: (page: number) => void;
   contentType: 'movie' | 'tv';
+  searchQuery: string;
 }
 
 export const MovieGridContent = ({ 
@@ -30,7 +33,8 @@ export const MovieGridContent = ({
   totalPages, 
   onMovieClick, 
   onPageChange,
-  contentType 
+  contentType,
+  searchQuery
 }: MovieGridContentProps) => {
   if (loading) {
     return (
@@ -45,7 +49,11 @@ export const MovieGridContent = ({
   if (movies.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">No {contentType === 'movie' ? 'movies' : 'series'} found. Try adjusting your filters or search query.</p>
+        <p className="text-muted-foreground">
+          {!!searchQuery 
+            ? `No results found for "${searchQuery}".`
+            : `No ${contentType === 'movie' ? 'movies' : 'series'} found. Try adjusting your filters.`}
+        </p>
       </div>
     );
   }
@@ -113,7 +121,7 @@ export const MovieGridContent = ({
         </Pagination>
         
         <div className="text-center mt-4 text-sm text-muted-foreground">
-          Page {currentPage} of {totalPages} (Showing up to 2000 {contentType === 'movie' ? 'movies' : 'series'})
+          Page {currentPage} of {totalPages} (Showing up to 2000 {!!searchQuery ? 'results' : (contentType === 'movie' ? 'movies' : 'series')})
         </div>
       </div>
     </>

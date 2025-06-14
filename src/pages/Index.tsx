@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { MovieGrid } from '@/components/MovieGrid';
 import { Footer } from '@/components/Footer';
+import { useMovieData } from '@/hooks/useMovieData';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -14,6 +16,19 @@ const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
 
+  const [currentCategory, setCurrentCategory] = useState('popular');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const { movies, loading, totalPages } = useMovieData({
+    searchQuery,
+    selectedGenre,
+    selectedYear,
+    contentType,
+    currentCategory,
+    currentPage,
+    refreshKey,
+  });
+
   // Auto-refresh every day to get new movies from TMDB
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,10 +38,27 @@ const Index = () => {
 
     return () => clearInterval(interval);
   }, []);
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [currentCategory, selectedGenre, selectedYear, searchQuery, contentType]);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const handleMovieClick = (movieId: number) => {
-    console.log('Movie clicked:', movieId);
-    navigate(`/${contentType}/${movieId}`);
+    let type: 'movie' | 'tv' = contentType;
+    if (searchQuery) {
+      const movie = movies.find(m => m.id === movieId);
+      if (movie && movie.media_type) {
+        type = movie.media_type;
+      }
+    }
+    console.log('Navigating to:', `/${type}/${movieId}`);
+    navigate(`/${type}/${movieId}`);
   };
 
   return (
@@ -52,6 +84,13 @@ const Index = () => {
             onMovieClick={handleMovieClick}
             contentType={contentType}
             setContentType={setContentType}
+            movies={movies}
+            loading={loading}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            handlePageChange={handlePageChange}
+            currentCategory={currentCategory}
+            setCurrentCategory={setCurrentCategory}
           />
         </main>
 

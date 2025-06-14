@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from 'react';
 import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { CategoryTabs } from '@/components/movie-grid/CategoryTabs';
 import { MovieFilters } from '@/components/movie-grid/MovieFilters';
 import { MovieGridContent } from '@/components/movie-grid/MovieGridContent';
-import { useMovieData } from '@/hooks/useMovieData';
+import type { Movie } from '@/hooks/useMovieData';
 
 interface MovieGridProps {
   searchQuery: string;
@@ -16,6 +15,13 @@ interface MovieGridProps {
   onMovieClick: (movieId: number) => void;
   contentType: 'movie' | 'tv';
   setContentType: (type: 'movie' | 'tv') => void;
+  movies: Movie[];
+  loading: boolean;
+  totalPages: number;
+  currentPage: number;
+  handlePageChange: (page: number) => void;
+  currentCategory: string;
+  setCurrentCategory: (category: string) => void;
 }
 
 export const MovieGrid = ({ 
@@ -26,30 +32,15 @@ export const MovieGrid = ({
   setSelectedYear,
   onMovieClick,
   contentType,
-  setContentType
+  setContentType,
+  movies,
+  loading,
+  totalPages,
+  currentPage,
+  handlePageChange,
+  currentCategory,
+  setCurrentCategory
 }: MovieGridProps) => {
-  const [currentCategory, setCurrentCategory] = useState('popular');
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const { movies, loading, totalPages } = useMovieData({
-    searchQuery,
-    selectedGenre,
-    selectedYear,
-    contentType,
-    currentCategory,
-    currentPage
-  });
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [currentCategory, selectedGenre, selectedYear, searchQuery]);
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
   return (
     <section className="container mx-auto px-4 py-6 md:py-8">
       {/* AdSense Banner */}
@@ -58,28 +49,38 @@ export const MovieGrid = ({
         className="mb-6"
       />
 
-      {/* Content Type Toggle */}
-      <ContentTypeToggle 
-        contentType={contentType}
-        setContentType={setContentType}
-      />
+      {!searchQuery ? (
+        <>
+          {/* Content Type Toggle */}
+          <ContentTypeToggle 
+            contentType={contentType}
+            setContentType={setContentType}
+          />
 
-      {/* Category Tabs */}
-      <div className="mb-6 md:mb-8">
-        <CategoryTabs 
-          currentCategory={currentCategory}
-          setCurrentCategory={setCurrentCategory}
-          contentType={contentType}
-        />
+          {/* Category Tabs */}
+          <div className="mb-6 md:mb-8">
+            <CategoryTabs 
+              currentCategory={currentCategory}
+              setCurrentCategory={setCurrentCategory}
+              contentType={contentType}
+            />
 
-        {/* Filters */}
-        <MovieFilters 
-          selectedGenre={selectedGenre}
-          setSelectedGenre={setSelectedGenre}
-          selectedYear={selectedYear}
-          setSelectedYear={setSelectedYear}
-        />
-      </div>
+            {/* Filters */}
+            <MovieFilters 
+              selectedGenre={selectedGenre}
+              setSelectedGenre={setSelectedGenre}
+              selectedYear={selectedYear}
+              setSelectedYear={setSelectedYear}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold">
+            Search Results for "{searchQuery}"
+          </h2>
+        </div>
+      )}
 
       {/* Content Grid */}
       <MovieGridContent 
@@ -90,6 +91,7 @@ export const MovieGrid = ({
         onMovieClick={onMovieClick}
         onPageChange={handlePageChange}
         contentType={contentType}
+        searchQuery={searchQuery}
       />
     </section>
   );
