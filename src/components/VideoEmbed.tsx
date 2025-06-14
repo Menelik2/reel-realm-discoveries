@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 
 interface VideoEmbedProps {
@@ -34,6 +35,7 @@ const VideoEmbed = ({
   const maxRetries = 3;
 
   const vidsrcDomains = [
+    'vidsrc.me', // Added for ad-free plays
     'vidsrc.in',
     'vidsrc.stream',
     'vidsrc.to',
@@ -133,7 +135,7 @@ const VideoEmbed = ({
           className={`w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}`}
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          referrerPolicy="strict-origin-when-cross-origin"
+          referrerPolicy="origin"
           title={`Watch ${title}`}
           loading="eager"
           onLoad={handleLoad}
