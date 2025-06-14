@@ -6,6 +6,7 @@ import { HeroCarousel } from '@/components/HeroCarousel';
 import { MovieGrid } from '@/components/MovieGrid';
 import { Footer } from '@/components/Footer';
 import { useMovieData } from '@/hooks/useMovieData';
+import { AdBanner } from '@/components/AdBanner';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -94,6 +95,12 @@ const Index = () => {
         
         <main>
           {!searchQuery && currentCategory !== 'custom' && <HeroCarousel />}
+          
+          {!searchQuery && currentCategory !== 'custom' && (
+            <div className="container mx-auto px-4 my-8">
+              <AdBanner slot="1571190202" />
+            </div>
+          )}
           
           <MovieGrid 
             key={refreshKey}

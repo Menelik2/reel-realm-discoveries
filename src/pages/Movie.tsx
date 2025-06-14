@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MovieDetails } from '@/components/MovieDetails';
+import { AdBanner } from '@/components/AdBanner';
 
 const MoviePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +44,8 @@ const MoviePage = () => {
           setIsDarkMode={setIsDarkMode}
         />
         
-        <main>
+        <main className="container mx-auto px-4 py-8">
+          <AdBanner slot="1571190202" className="mb-8" />
           <MovieDetails 
             movieId={parseInt(id)}
             contentType={contentType as 'movie' | 'tv'}
