@@ -1,5 +1,4 @@
-
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SimilarMovies } from '@/components/SimilarMovies';
 import { MovieDetailsHeader } from '@/components/movie-details/MovieDetailsHeader';
 import { MovieInfo } from '@/components/movie-details/MovieInfo';
@@ -10,6 +9,7 @@ import { MovieDetailsSkeleton } from './movie-details/MovieDetailsSkeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { ActorDetails } from './actor/ActorDetails';
 
 interface MovieDetailsProps {
   movieId: number;
@@ -20,6 +20,7 @@ interface MovieDetailsProps {
 
 export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieClick }: MovieDetailsProps) => {
   const { movie, cast, videos, loading, error } = useMovieDetails(movieId, contentType);
+  const [selectedActorId, setSelectedActorId] = useState<number | null>(null);
 
   const getTrailerUrl = () => {
     const trailer = videos?.results?.find(video => 
@@ -33,17 +34,29 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
     onMovieClick(newMovieId);
   };
 
+  const handleActorClick = (actorId: number) => {
+    setSelectedActorId(actorId);
+  };
+
+  const handleCloseActorDetails = () => {
+    setSelectedActorId(null);
+  };
+
   // Handle escape key press
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        if (selectedActorId) {
+          handleCloseActorDetails();
+        } else {
+          onClose();
+        }
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [onClose, selectedActorId]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -133,7 +146,7 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
                   <CardTitle>Top Cast</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <MovieCast cast={cast} />
+                  <MovieCast cast={cast} onActorClick={handleActorClick} />
                 </CardContent>
               </Card>
             </div>
@@ -141,6 +154,7 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
 
         </div>
       </div>
+      <ActorDetails actorId={selectedActorId} onClose={handleCloseActorDetails} />
     </div>
   );
 };
