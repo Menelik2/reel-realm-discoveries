@@ -112,6 +112,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
             className="w-full h-full"
             allowFullScreen
             allow="autoplay; encrypted-media"
+            referrerPolicy="origin"
             title={`Watch ${title}`}
             style={{ border: 'none' }}
           />
