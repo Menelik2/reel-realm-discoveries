@@ -32,7 +32,7 @@ const VideoEmbed = ({
   const maxRetries = 3;
 
   const vidsrcDomains = [
-    'vidsrc.me',
+    'vidsrc.xyz',
   ];
 
   const getEmbedUrl = (domainIndex = 0) => {
@@ -44,21 +44,18 @@ const VideoEmbed = ({
 
     // Append season and episode to the path for TV shows, as per the documentation
     if (type === 'tv') {
-      if (season) {
-        embedUrl += `/${season}`;
-        if (episode) {
-          embedUrl += `/${episode}`;
-        }
+      if (season && episode) {
+        embedUrl += `/${season}-${episode}`;
       }
     }
 
     const params = new URLSearchParams();
     
     // Common parameters as query strings
-    if (dsLang) params.append('dsLang', dsLang);
+    if (dsLang) params.append('ds_lang', dsLang);
     if (autoPlay !== undefined) params.append('autoplay', String(autoPlay));
-    // Corrected subtitle parameter from 'sub_url' to 'sub_file'
-    if (subUrl) params.append('sub_file', subUrl);
+    // Corrected subtitle parameter from 'sub_file' to 'sub_url'
+    if (subUrl) params.append('sub_url', subUrl);
     if (autoNext !== undefined) params.append('autonext', String(autoNext));
 
     const queryString = params.toString();
