@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 
 interface VideoEmbedProps {
@@ -32,8 +33,8 @@ const VideoEmbed = ({
   const maxRetries = 3;
 
   const vidsrcDomains = [
-    'vidsrc.to',    // Prioritized for ad-free plays
     'vidsrc.me',
+    'vidsrc.to',
     'vidsrc.in',
     'vidsrc.stream',
     'vidsrc.xyz',

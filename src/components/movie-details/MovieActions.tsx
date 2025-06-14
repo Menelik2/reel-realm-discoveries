@@ -26,7 +26,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         {/* Primary action - Live Watch */}
         <Button 
           onClick={() => setIsLiveWatchOpen(true)}
-          size="lg"
+          size="default"
           className="w-full sm:w-auto"
         >
           <Eye className="mr-2 h-4 w-4" />
