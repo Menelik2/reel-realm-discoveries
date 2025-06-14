@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Heart, Globe, Download, Eye } from 'lucide-react';
 import { LiveWatchModal } from '@/components/LiveWatchModal';
+import { ShareButton } from './ShareButton';
 
 interface MovieActionsProps {
   trailerUrl: string | null;
@@ -17,19 +18,19 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+      <div className="flex flex-col gap-4">
         {/* Primary action - Live Watch */}
         <Button 
           onClick={() => setIsLiveWatchOpen(true)}
           size="lg"
-          className="w-full sm:w-auto order-1"
+          className="w-full sm:w-auto"
         >
           <Eye className="mr-2 h-4 w-4" />
           <span className="font-semibold">Watch Now</span>
         </Button>
         
         {/* Secondary actions */}
-        <div className="flex flex-wrap gap-2 sm:gap-3 order-2">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           {trailerUrl && (
             <Button asChild variant="outline" className="flex-1 sm:flex-none">
               <a href={trailerUrl} target="_blank" rel="noopener noreferrer">
@@ -62,6 +63,13 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
             </Button>
           )}
         </div>
+
+        {/* Share section */}
+        <ShareButton 
+          movieId={movieId}
+          contentType={contentType}
+          title={title}
+        />
       </div>
 
       <LiveWatchModal

@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { MovieGrid } from '@/components/MovieGrid';
-import { MovieDetails } from '@/components/MovieDetails';
 import { Footer } from '@/components/Footer';
 
 const Index = () => {
@@ -11,9 +11,9 @@ const Index = () => {
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null);
   const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
   const [refreshKey, setRefreshKey] = useState(0);
+  const navigate = useNavigate();
 
   // Auto-refresh every 5 minutes to get new movies from TMDB
   useEffect(() => {
@@ -27,11 +27,7 @@ const Index = () => {
 
   const handleMovieClick = (movieId: number) => {
     console.log('Movie clicked:', movieId);
-    setSelectedMovieId(movieId);
-  };
-
-  const handleCloseMovieDetails = () => {
-    setSelectedMovieId(null);
+    navigate(`/${contentType}/${movieId}`);
   };
 
   return (
@@ -61,16 +57,6 @@ const Index = () => {
         </main>
 
         <Footer />
-
-        {/* Movie Details Modal */}
-        {selectedMovieId && (
-          <MovieDetails 
-            movieId={selectedMovieId}
-            contentType={contentType}
-            onClose={handleCloseMovieDetails}
-            onMovieClick={handleMovieClick}
-          />
-        )}
       </div>
     </div>
   );
