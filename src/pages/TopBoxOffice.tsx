@@ -53,7 +53,7 @@ const TopBoxOffice = () => {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error Loading Chart</AlertTitle>
             <AlertDescription>
-              We couldn't fetch the latest box office data. Please try again later.
+              {error.message || "We couldn't fetch the latest box office data. Please try again later."}
             </AlertDescription>
           </Alert>
         )}
