@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Mail, MessageCircle, Clock, Globe } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -16,11 +17,63 @@ const Contact = () => {
     subject: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Contact form submitted:', formData);
+    setIsSubmitting(true);
+
+    // IMPORTANT: Replace these with your actual Telegram Bot Token and Chat ID
+    const botToken = "YOUR_TELEGRAM_BOT_TOKEN"; 
+    const chatId = "YOUR_TELEGRAM_CHAT_ID"; // This should be the chat ID for 'medebereya'
+
+    if (botToken === "YOUR_TELEGRAM_BOT_TOKEN" || chatId === "YOUR_TELEGRAM_CHAT_ID") {
+      toast.error("Telegram integration is not configured.", {
+        description: "The developer needs to configure the bot token and chat ID.",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const messageText = `
+New message from Contact Form:
+--------------------------------------
+Name: ${formData.name}
+Email: ${formData.email}
+Subject: ${formData.subject}
+Message: ${formData.message}
+    `.trim();
+
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: messageText,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        toast.success("Your message has been sent successfully!");
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        toast.error("Failed to send message.", {
+          description: result.description || "Please try again later.",
+        });
+      }
+    } catch (error) {
+      console.error("Telegram API Error:", error);
+      toast.error("An error occurred while sending your message.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -98,6 +151,7 @@ const Contact = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -108,6 +162,7 @@ const Contact = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -117,6 +172,7 @@ const Contact = () => {
                       value={formData.subject}
                       onChange={handleInputChange}
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -127,9 +183,12 @@ const Contact = () => {
                       value={formData.message}
                       onChange={handleInputChange}
                       required
+                      disabled={isSubmitting}
                     />
                   </div>
-                  <Button type="submit" className="w-full">Send Message</Button>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                  </Button>
                 </form>
               </CardContent>
             </Card>
