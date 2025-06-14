@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { SimilarMovies } from '@/components/SimilarMovies';
 import { MovieDetailsHeader } from '@/components/movie-details/MovieDetailsHeader';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { ActorDetails } from './actor/ActorDetails';
+import { SEOMetadata } from './SEOMetadata';
 
 interface MovieDetailsProps {
   movieId: number;
@@ -92,6 +94,13 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
 
   return (
     <div className="fixed inset-0 bg-background z-50 overflow-y-auto">
+      <SEOMetadata
+        title={title}
+        description={movie.overview}
+        imageUrl={movie.poster_path}
+        contentType={contentType}
+        movieId={movie.id}
+      />
       {/* Full-size container */}
       <div className="min-h-screen w-full">
         <MovieDetailsHeader 
