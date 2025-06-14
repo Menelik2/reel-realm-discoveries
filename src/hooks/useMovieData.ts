@@ -159,8 +159,7 @@ export const useMovieData = ({
   const fetchCustomContent = async () => {
     setLoading(true);
     try {
-      const { data: customContent, error: supabaseError } = await (supabase as any)
-        .from('custom_content')
+      const { data: customContent, error: supabaseError } = await (supabase.from as any)('custom_content')
         .select('tmdb_id, content_type')
         .order('created_at', { ascending: false });
 

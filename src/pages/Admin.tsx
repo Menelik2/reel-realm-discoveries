@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -46,8 +45,7 @@ const Admin = () => {
         }
         await response.json();
 
-        const { error } = await (supabase as any)
-            .from('custom_content')
+        const { error } = await (supabase.from as any)('custom_content')
             .insert({ tmdb_id: parseInt(tmdbId), content_type: contentType });
 
         if (error) {
