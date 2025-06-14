@@ -104,6 +104,17 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             contentType={contentType}
           />
           
+          {/* Similar Movies/Series */}
+          {movie.id && (
+            <div className="mt-8">
+              <SimilarMovies 
+                movieId={movie.id} 
+                contentType={contentType}
+                onMovieClick={handleSimilarMovieClick} 
+              />
+            </div>
+          )}
+
           {/* Cast */}
           {cast.length > 0 && (
             <div className="mt-8">
@@ -127,17 +138,6 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
               productionCompanies={movie.production_companies}
             />
           </div>
-
-          {/* Similar Movies/Series */}
-          {movie.id && (
-            <div className="mt-8">
-              <SimilarMovies 
-                movieId={movie.id} 
-                contentType={contentType}
-                onMovieClick={handleSimilarMovieClick} 
-              />
-            </div>
-          )}
         </div>
       </div>
     </div>
