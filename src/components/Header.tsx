@@ -1,3 +1,5 @@
+
+```typescript
 import { useState } from 'react';
 import { Search, Menu, X, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,7 +21,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="text-2xl font-bold text-primary">
+          <Link to="/" className="font-playfair text-3xl font-bold text-primary transition-all hover:opacity-80 [text-shadow:0_1px_2px_hsl(var(--foreground)/0.1)]">
             YENI MOVIE
           </Link>
 
@@ -127,3 +129,4 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
     </header>
   );
 };
+```
