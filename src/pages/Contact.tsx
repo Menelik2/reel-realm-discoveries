@@ -1,3 +1,4 @@
+
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,61 +15,22 @@ const Contact = () => {
     name: '',
     message: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    
+    const recipientEmail = "linuxos777@gmail.com";
+    const subject = `Message from ${formData.name} via YENI MOVIE Contact Form`;
+    const body = `Name: ${formData.name}\n\nMessage: ${formData.message}`;
 
-    // IMPORTANT: Replace these with your actual Telegram Bot Token and Chat ID
-    const botToken = "YOUR_TELEGRAM_BOT_TOKEN"; 
-    const chatId = "YOUR_TELEGRAM_CHAT_ID"; // This should be the chat ID for 'medebereya'
+    const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    if (botToken === "YOUR_TELEGRAM_BOT_TOKEN" || chatId === "YOUR_TELEGRAM_CHAT_ID") {
-      toast.error("Telegram integration is not configured.", {
-        description: "The developer needs to configure the bot token and chat ID.",
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    window.location.href = mailtoLink;
 
-    const messageText = `
-New message from Contact Form:
---------------------------------------
-Name: ${formData.name}
-Message: ${formData.message}
-    `.trim();
-
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: messageText,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.ok) {
-        toast.success("Your message has been sent successfully!");
-        setFormData({ name: '', message: '' });
-      } else {
-        toast.error("Failed to send message.", {
-          description: result.description || "Please try again later.",
-        });
-      }
-    } catch (error) {
-      console.error("Telegram API Error:", error);
-      toast.error("An error occurred while sending your message.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    toast.info("Opening your email client to send the message.", {
+        description: "Please complete sending the email from your mail app."
+    });
+    setFormData({ name: '', message: '' });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -100,6 +62,16 @@ Message: ${formData.message}
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center gap-3">
+                  <Send className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium">Telegram</p>
+                    <a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                      @medebereya
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium">Email</p>
@@ -120,16 +92,6 @@ Message: ${formData.message}
                   <div>
                     <p className="font-medium">Website</p>
                     <p className="text-muted-foreground">yeni-movie.vercel.app</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Send className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Telegram</p>
-                    <a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                      @medebereya
-                    </a>
                   </div>
                 </div>
                 
@@ -156,7 +118,6 @@ Message: ${formData.message}
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      disabled={isSubmitting}
                     />
                   </div>
                   <div>
@@ -167,11 +128,10 @@ Message: ${formData.message}
                       value={formData.message}
                       onChange={handleInputChange}
                       required
-                      disabled={isSubmitting}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                  <Button type="submit" className="w-full">
+                    Send Message
                   </Button>
                 </form>
               </CardContent>
