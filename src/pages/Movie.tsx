@@ -1,31 +1,35 @@
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MovieDetails } from '@/components/MovieDetails';
 
 const MoviePage = () => {
-  const { id, type } = useParams<{ id: string; type: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Extract content type from the current path
+  const contentType = location.pathname.startsWith('/tv/') ? 'tv' : 'movie';
 
   // Validate parameters
   useEffect(() => {
-    if (!id || !type || (type !== 'movie' && type !== 'tv')) {
+    if (!id) {
       navigate('/');
     }
-  }, [id, type, navigate]);
+  }, [id, navigate]);
 
   const handleClose = () => {
     navigate('/');
   };
 
   const handleMovieClick = (movieId: number) => {
-    navigate(`/${type}/${movieId}`);
+    navigate(`/${contentType}/${movieId}`);
   };
 
-  if (!id || !type) {
+  if (!id) {
     return null;
   }
 
@@ -42,7 +46,7 @@ const MoviePage = () => {
         <main>
           <MovieDetails 
             movieId={parseInt(id)}
-            contentType={type as 'movie' | 'tv'}
+            contentType={contentType as 'movie' | 'tv'}
             onClose={handleClose}
             onMovieClick={handleMovieClick}
           />
