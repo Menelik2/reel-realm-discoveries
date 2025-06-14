@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Play, ArrowLeft, AlertTriangle } from 'lucide-react';
@@ -13,6 +14,8 @@ interface LiveWatchModalProps {
 export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }: LiveWatchModalProps) => {
   const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const getEmbedUrl = () => {
     // Switched to a more reliable embed source.
@@ -23,7 +26,24 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
   const handleLoadPlayer = () => {
     setIsPlayerLoaded(true);
     setHasError(false); // Reset error state on each attempt
+    setRetryCount(prev => prev + 1); // Force iframe to re-render with a new key
   };
+
+  // Preconnect to video source for faster loading, per your suggestion
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = 'https://vidsrc.to';
+    document.head.appendChild(link);
+    
+    return () => {
+      if (document.head.contains(link)) {
+        document.head.removeChild(link);
+      }
+    };
+  }, [isOpen]);
 
   // Handle escape key press
   useEffect(() => {
@@ -38,6 +58,20 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose, isOpen]);
+
+  // Auto-retry on error, per your suggestion
+  useEffect(() => {
+    if (hasError && !isRetrying) {
+      setIsRetrying(true);
+      const timer = setTimeout(() => {
+        console.log('Auto-retrying to load the player...');
+        handleLoadPlayer();
+        setIsRetrying(false);
+      }, 3000); // Retry after 3 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasError, isRetrying]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -57,6 +91,8 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
     if (!isOpen) {
       setIsPlayerLoaded(false);
       setHasError(false);
+      setIsRetrying(false);
+      setRetryCount(0);
     }
   }, [isOpen]);
 
@@ -114,15 +150,12 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
             <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
             <h2 className="text-xl font-semibold mb-2">Error Loading Content</h2>
             <p className="text-muted-foreground mb-6">
-              The video player failed to load. This might be a temporary issue with the source.
+              The video player failed to load. Automatically retrying...
             </p>
-            <Button onClick={handleLoadPlayer} size="lg">
-              <Play className="mr-2 h-4 w-4" />
-              Try Again
-            </Button>
           </div>
         ) : (
           <iframe
+            key={`${movieId}-${contentType}-${retryCount}`}
             src={getEmbedUrl()}
             className="w-full h-full"
             allowFullScreen
