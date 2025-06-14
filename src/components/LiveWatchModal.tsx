@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Play, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { X, Play, ArrowLeft } from 'lucide-react';
+import VideoEmbed from './VideoEmbed';
 
 interface LiveWatchModalProps {
   isOpen: boolean;
@@ -12,38 +13,7 @@ interface LiveWatchModalProps {
 }
 
 export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }: LiveWatchModalProps) => {
-  const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-
-  const getEmbedUrl = () => {
-    // Switched to a more reliable embed source.
-    const baseUrl = `https://vidsrc.to/embed/${contentType}`;
-    return `${baseUrl}/${movieId}`;
-  };
-
-  const handleLoadPlayer = () => {
-    setIsPlayerLoaded(true);
-    setHasError(false); // Reset error state on each attempt
-    setRetryCount(prev => prev + 1); // Force iframe to re-render with a new key
-  };
-
-  // Preconnect to video source for faster loading, per your suggestion
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const link = document.createElement('link');
-    link.rel = 'preconnect';
-    link.href = 'https://vidsrc.to';
-    document.head.appendChild(link);
-    
-    return () => {
-      if (document.head.contains(link)) {
-        document.head.removeChild(link);
-      }
-    };
-  }, [isOpen]);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   // Handle escape key press
   useEffect(() => {
@@ -58,20 +28,6 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose, isOpen]);
-
-  // Auto-retry on error, per your suggestion
-  useEffect(() => {
-    if (hasError && !isRetrying) {
-      setIsRetrying(true);
-      const timer = setTimeout(() => {
-        console.log('Auto-retrying to load the player...');
-        handleLoadPlayer();
-        setIsRetrying(false);
-      }, 3000); // Retry after 3 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [hasError, isRetrying]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -89,10 +45,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
   // Reset player state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setIsPlayerLoaded(false);
-      setHasError(false);
-      setIsRetrying(false);
-      setRetryCount(0);
+      setShowPlayer(false);
     }
   }, [isOpen]);
 
@@ -130,8 +83,8 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
       </div>
 
       {/* Main content area */}
-      <div className="pt-16 h-full w-full">
-        {!isPlayerLoaded ? (
+      <div className="pt-16 h-full w-full flex flex-col">
+        {!showPlayer ? (
           <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-background to-secondary">
             <div className="text-center max-w-md mx-auto px-4 animate-fade-in duration-500">
               <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
@@ -142,33 +95,20 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
               <p className="text-muted-foreground mb-8">
                 Click the button below to start streaming {title} instantly.
               </p>
-              <Button onClick={handleLoadPlayer} size="lg" className="w-full sm:w-auto animate-pulse">
+              <Button onClick={() => setShowPlayer(true)} size="lg" className="w-full sm:w-auto animate-pulse">
                 <Play className="mr-2 h-4 w-4" />
                 Start Watching
               </Button>
             </div>
           </div>
-        ) : hasError ? (
-          <div className="flex flex-col items-center justify-center h-full bg-muted/20 text-center px-4">
-            <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
-            <h2 className="text-xl font-semibold mb-2">Error Loading Content</h2>
-            <p className="text-muted-foreground mb-6">
-              The video player failed to load. Automatically retrying...
-            </p>
-          </div>
         ) : (
-          <iframe
-            key={`${movieId}-${contentType}-${retryCount}`}
-            src={getEmbedUrl()}
-            className="w-full h-full"
-            allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            referrerPolicy="origin"
-            title={`Watch ${title}`}
-            style={{ border: 'none' }}
-            loading="lazy"
-            onError={() => setHasError(true)}
-          />
+          <div className="flex-grow flex items-center justify-center p-4 md:p-8">
+            <VideoEmbed
+              tmdbId={movieId}
+              type={contentType}
+              title={title}
+            />
+          </div>
         )}
       </div>
     </div>
