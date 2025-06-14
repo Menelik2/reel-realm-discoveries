@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer';
 import { useMovieData } from '@/hooks/useMovieData';
 import { AdBanner } from '@/components/AdBanner';
 import { MovieRow } from '@/components/MovieRow';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -105,11 +106,38 @@ const Index = () => {
               <div className="container mx-auto px-4 my-8">
                 <AdBanner slot="1571190202" />
               </div>
-              <MovieRow title="Trending Now" fetchUrl="/trending/movie/week" contentType="movie" />
-              <MovieRow title="Popular Movies" fetchUrl="/movie/popular" contentType="movie" />
-              <MovieRow title="Top Rated Movies" fetchUrl="/movie/top_rated" contentType="movie" />
-              <MovieRow title="Series" fetchUrl="/tv/popular" contentType="tv" />
-              <MovieRow title="Action Movies" fetchUrl="/discover/movie?with_genres=28&sort_by=popularity.desc" contentType="movie" />
+              <div className="container mx-auto px-4 mb-8">
+                <div className="flex gap-2">
+                    <Button
+                        variant={contentType === 'movie' ? 'default' : 'outline'}
+                        onClick={() => setContentType('movie')}
+                    >
+                        Movies
+                    </Button>
+                    <Button
+                        variant={contentType === 'tv' ? 'default' : 'outline'}
+                        onClick={() => setContentType('tv')}
+                    >
+                        Series
+                    </Button>
+                </div>
+              </div>
+
+              {contentType === 'movie' ? (
+                <>
+                  <MovieRow title="Trending Movies" fetchUrl="/trending/movie/week" contentType="movie" />
+                  <MovieRow title="Popular Movies" fetchUrl="/movie/popular" contentType="movie" />
+                  <MovieRow title="Top Rated Movies" fetchUrl="/movie/top_rated" contentType="movie" />
+                  <MovieRow title="Action Movies" fetchUrl="/discover/movie?with_genres=28&sort_by=popularity.desc" contentType="movie" />
+                </>
+              ) : (
+                <>
+                  <MovieRow title="Trending Series" fetchUrl="/trending/tv/week" contentType="tv" />
+                  <MovieRow title="Popular Series" fetchUrl="/tv/popular" contentType="tv" />
+                  <MovieRow title="Top Rated Series" fetchUrl="/tv/top_rated" contentType="tv" />
+                  <MovieRow title="Action & Adventure Series" fetchUrl="/discover/tv?with_genres=10759&sort_by=popularity.desc" contentType="tv" />
+                </>
+              )}
             </>
           ) : (
             <>
