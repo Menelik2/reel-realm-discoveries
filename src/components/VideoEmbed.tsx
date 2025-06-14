@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 
 interface VideoEmbedProps {
@@ -13,17 +14,17 @@ interface VideoEmbedProps {
   autoNext?: 1 | 0;
 }
 
-const VideoEmbed = ({ 
+const VideoEmbed = ({
   tmdbId,
   imdbId,
-  type = "movie", 
-  title, 
+  type = "movie",
+  title,
   dsLang,
   autoPlay,
   season,
   episode,
   subUrl,
-  autoNext
+  autoNext,
 }: VideoEmbedProps) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,73 +32,124 @@ const VideoEmbed = ({
   const retryCount = useRef(0);
   const maxRetries = 3;
 
-  const vidsrcDomains = [
-    'vidsrc.xyz',
-  ];
+  // Only supporting vidsrc.xyz
+  const VID_SRC_DOMAIN = 'vidsrc.xyz';
 
-  const getEmbedUrl = (domainIndex = 0) => {
-    const id = tmdbId || imdbId;
-    if (!id) return null;
+  // Builds the proper embed URL for the movie or tv show using the doc requirements
+  const getEmbedUrl = () => {
+    if (!tmdbId && !imdbId) return null;
 
-    const domain = vidsrcDomains[domainIndex % vidsrcDomains.length];
-    let embedUrl = `https://${domain}/embed/${type}/${id}`;
+    let baseUrl = '';
+    let queryParams = new URLSearchParams();
 
-    // Append season and episode to the path for TV shows, as per the documentation
-    if (type === 'tv') {
-      if (season && episode) {
-        embedUrl += `/${season}-${episode}`;
+    // Prefer path style if possible, else fallback to query style if required by docs
+    if (type === 'movie') {
+      if (tmdbId) {
+        // https://vidsrc.xyz/embed/movie/385687
+        baseUrl = `https://${VID_SRC_DOMAIN}/embed/movie/${tmdbId}`;
+      } else if (imdbId) {
+        // https://vidsrc.xyz/embed/movie/tt5433140
+        baseUrl = `https://${VID_SRC_DOMAIN}/embed/movie/${imdbId}`;
       }
+
+      // If only imdbId or tmdbId supplied with query params style:
+      // https://vidsrc.xyz/embed/movie?imdb=tt5433140 or ?tmdb=385687
+      // Detect if additional options need to be set with "?"
+      const useQueryStyle =
+        (!tmdbId && !!imdbId) ||
+        (!imdbId && !!tmdbId && (dsLang || subUrl || typeof autoPlay !== "undefined"));
+
+      if (useQueryStyle) {
+        baseUrl = `https://${VID_SRC_DOMAIN}/embed/movie`;
+        if (imdbId) queryParams.append("imdb", imdbId);
+        else if (tmdbId) queryParams.append("tmdb", String(tmdbId));
+      }
+
+      if (dsLang) queryParams.append("ds_lang", dsLang);
+      if (subUrl) queryParams.append("sub_url", subUrl);
+      if (typeof autoPlay !== "undefined") queryParams.append("autoplay", String(autoPlay));
+      // Only movie: NO autonext parameter in docs for movie (ignore)
+    } else if (type === 'tv') {
+      if (season && episode) {
+        // Official episode embed: https://vidsrc.xyz/embed/tv/1399/1-1
+        if (tmdbId) {
+          baseUrl = `https://${VID_SRC_DOMAIN}/embed/tv/${tmdbId}/${season}-${episode}`;
+        } else if (imdbId) {
+          baseUrl = `https://${VID_SRC_DOMAIN}/embed/tv/${imdbId}/${season}-${episode}`;
+        }
+
+        // Also allow alternative (?tmdb=ID&season=1&episode=1), e.g. for query params mode
+        const useQueryStyle =
+          (!tmdbId && !!imdbId) ||
+          (!imdbId && !!tmdbId && (dsLang || subUrl || typeof autoPlay !== "undefined" || typeof autoNext !== "undefined"));
+
+        if (useQueryStyle) {
+          baseUrl = `https://${VID_SRC_DOMAIN}/embed/tv`;
+          if (imdbId) queryParams.append("imdb", imdbId);
+          else if (tmdbId) queryParams.append("tmdb", String(tmdbId));
+          queryParams.append("season", String(season));
+          queryParams.append("episode", String(episode));
+        }
+        if (dsLang) queryParams.append("ds_lang", dsLang);
+        if (subUrl) queryParams.append("sub_url", subUrl);
+        if (typeof autoPlay !== "undefined") queryParams.append("autoplay", String(autoPlay));
+        if (typeof autoNext !== "undefined") queryParams.append("autonext", String(autoNext));
+      } else {
+        // Official TV show embed (no episode): https://vidsrc.xyz/embed/tv/1399
+        if (tmdbId) {
+          baseUrl = `https://${VID_SRC_DOMAIN}/embed/tv/${tmdbId}`;
+        } else if (imdbId) {
+          baseUrl = `https://${VID_SRC_DOMAIN}/embed/tv/${imdbId}`;
+        }
+
+        // Or query style if needed
+        const useQueryStyle =
+          (!tmdbId && !!imdbId) ||
+          (!imdbId && !!tmdbId && (dsLang || subUrl || typeof autoPlay !== "undefined" || typeof autoNext !== "undefined"));
+
+        if (useQueryStyle) {
+          baseUrl = `https://${VID_SRC_DOMAIN}/embed/tv`;
+          if (imdbId) queryParams.append("imdb", imdbId);
+          else if (tmdbId) queryParams.append("tmdb", String(tmdbId));
+        }
+        if (dsLang) queryParams.append("ds_lang", dsLang);
+      }
+    } else {
+      return null;
     }
 
-    const params = new URLSearchParams();
-    
-    // Common parameters as query strings
-    if (dsLang) params.append('ds_lang', dsLang);
-    if (autoPlay !== undefined) params.append('autoplay', String(autoPlay));
-    // Corrected subtitle parameter from 'sub_file' to 'sub_url'
-    if (subUrl) params.append('sub_url', subUrl);
-    if (autoNext !== undefined) params.append('autonext', String(autoNext));
-
-    const queryString = params.toString();
-    if (queryString) {
-      embedUrl += `?${queryString}`;
-    }
-
-    return embedUrl;
+    // Compose full URL
+    const qs = queryParams.toString();
+    return qs ? `${baseUrl}?${qs}` : baseUrl;
   };
 
   const handleError = () => {
     setIsLoading(true);
     if (retryCount.current < maxRetries) {
       retryCount.current += 1;
-      const nextDomainIndex = retryCount.current;
-      console.log(`Error loading player. Retrying with domain: ${vidsrcDomains[nextDomainIndex % vidsrcDomains.length]}...`);
       setTimeout(() => {
         if (iframeRef.current) {
-            iframeRef.current.src = getEmbedUrl(nextDomainIndex) || '';
-            setHasError(false); // Reset for next attempt
+          iframeRef.current.src = getEmbedUrl() || '';
+          setHasError(false);
         }
-      }, 1000 * retryCount.current); // Linear backoff for retries
+      }, 1000 * retryCount.current);
     } else {
-      console.error(`Failed to load content after ${maxRetries} retries.`);
       setHasError(true);
       setIsLoading(false);
     }
   };
 
-  const handleLoad = () => {
-    setIsLoading(false);
-  };
+  const handleLoad = () => setIsLoading(false);
 
   useEffect(() => {
-    // Reset state if IDs or type changes
     setHasError(false);
     setIsLoading(true);
     retryCount.current = 0;
     if (iframeRef.current) {
-        iframeRef.current.src = getEmbedUrl(0) || '';
+      iframeRef.current.src = getEmbedUrl() || '';
     }
-  }, [tmdbId, imdbId, type, season, episode]);
+    // eslint-disable-next-line
+  }, [tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext]);
 
   return (
     <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
