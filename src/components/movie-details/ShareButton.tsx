@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Share2, Copy, Check } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface ShareButtonProps {
   movieId: number;
@@ -12,7 +11,6 @@ interface ShareButtonProps {
 
 export const ShareButton = ({ movieId, contentType, title }: ShareButtonProps) => {
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
 
   const shareUrl = `${window.location.origin}/${contentType}/${movieId}`;
 
@@ -37,13 +35,13 @@ export const ShareButton = ({ movieId, contentType, title }: ShareButtonProps) =
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      toast({
-        title: "Link copied!",
+      toast.success("Link copied!", {
         description: "Share link has been copied to clipboard",
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy link:', error);
+      toast.error("Failed to copy link.");
     }
   };
 
