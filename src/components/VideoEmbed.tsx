@@ -224,7 +224,6 @@ const VideoEmbed = ({
           loading="eager"
           onLoad={handleLoad}
           onError={handleError}
-          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
         />
       )}
     </div>
