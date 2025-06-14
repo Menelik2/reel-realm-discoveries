@@ -11,6 +11,7 @@ interface VideoEmbedProps {
   episode?: number;
   subUrl?: string;
   autoNext?: 1 | 0;
+  videoUrl?: string;
 }
 
 const VideoEmbed = ({
@@ -24,6 +25,7 @@ const VideoEmbed = ({
   episode,
   subUrl,
   autoNext,
+  videoUrl,
 }: VideoEmbedProps) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -179,6 +181,15 @@ const VideoEmbed = ({
   };
 
   const handleLoad = () => setIsLoading(false);
+
+  // If a direct videoUrl is provided, use our custom video player instead of the embed iframe
+  if (videoUrl) {
+    return (
+      <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
+        <CustomVideoPlayer src={videoUrl} title={title} />
+      </div>
+    );
+  }
 
   return (
     <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
