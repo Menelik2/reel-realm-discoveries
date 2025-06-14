@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Play, ArrowLeft, AlertTriangle } from 'lucide-react';
@@ -133,7 +132,6 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
             style={{ border: 'none' }}
             loading="lazy"
             onError={() => setHasError(true)}
-            sandbox="allow-same-origin allow-scripts allow-popups"
           />
         )}
       </div>
