@@ -21,8 +21,8 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
       // For movies, redirect to Telegram Movie Searching Bot
       window.open('https://t.me/Phonofilmbot', '_blank');
     } else {
-      // For TV series, redirect to iBOX TV
-      window.open('https://t.me/iBOX_TV', '_blank');
+      // For TV series, redirect to SeriesBayX0
+      window.open('https://t.me/SeriesBayX0', '_blank');
     }
   };
 
