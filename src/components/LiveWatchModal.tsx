@@ -15,7 +15,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
   const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
 
   const getEmbedUrl = () => {
-    const baseUrl = `https://vidsrc.xyz/embed/${contentType}`;
+    const baseUrl = `https://vidsrc.me/embed/${contentType}`;
     return `${baseUrl}?tmdb=${movieId}&autoplay=1`;
   };
 
@@ -96,9 +96,9 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
           <div className="flex flex-col items-center justify-center h-full bg-muted/20">
             <div className="text-center max-w-md mx-auto px-4">
               <Play className="h-16 w-16 mb-4 text-primary mx-auto" />
-              <h2 className="text-xl font-semibold mb-2">Ready to Watch</h2>
+              <h2 className="text-xl font-semibold mb-2">Ready for Ad-Free Experience</h2>
               <p className="text-muted-foreground mb-6 text-sm sm:text-base">
-                Click below to start watching {title}
+                Click below to start watching {title} with minimal ads
               </p>
               <Button onClick={handleLoadPlayer} size="lg" className="w-full sm:w-auto">
                 <Play className="mr-2 h-4 w-4" />

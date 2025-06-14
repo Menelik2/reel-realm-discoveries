@@ -16,6 +16,16 @@ interface MovieActionsProps {
 export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title }: MovieActionsProps) => {
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
 
+  const handleDownload = () => {
+    if (contentType === 'movie') {
+      // For movies, redirect to Telegram Movie Searching Bot
+      window.open('https://t.me/Phonofilmbot', '_blank');
+    } else {
+      // For TV series, redirect to iBOX TV
+      window.open('https://t.me/iBOX_TV', '_blank');
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -47,7 +57,11 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
             <span className="sm:hidden">Like</span>
           </Button>
           
-          <Button variant="outline" className="flex-1 sm:flex-none">
+          <Button 
+            variant="outline" 
+            className="flex-1 sm:flex-none"
+            onClick={handleDownload}
+          >
             <Download className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Download</span>
             <span className="sm:hidden">Save</span>

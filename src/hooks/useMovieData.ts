@@ -44,20 +44,27 @@ export const useMovieData = ({
     try {
       let url = `${TMDB_BASE_URL}/${contentType}/${currentCategory}?page=${page}`;
       
+      // Build query parameters array
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      
       if (selectedGenre !== 'all') {
-        url += `&with_genres=${selectedGenre}`;
+        params.append('with_genres', selectedGenre);
       }
       
       if (selectedYear !== 'all') {
         const yearParam = contentType === 'movie' ? 'primary_release_year' : 'first_air_date_year';
-        url += `&${yearParam}=${selectedYear}`;
+        params.append(yearParam, selectedYear);
       }
 
       // Add timestamp to prevent caching and get fresh data
-      url += `&_t=${Date.now()}`;
+      params.append('_t', Date.now().toString());
 
-      console.log('Fetching content from:', url);
-      const response = await fetch(url, {
+      // Construct final URL
+      const finalUrl = `${TMDB_BASE_URL}/${contentType}/${currentCategory}?${params.toString()}`;
+
+      console.log('Fetching content from:', finalUrl);
+      const response = await fetch(finalUrl, {
         headers: {
           'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
           'Content-Type': 'application/json;charset=utf-8'
@@ -87,7 +94,12 @@ export const useMovieData = ({
     
     setLoading(true);
     try {
-      const url = `${TMDB_BASE_URL}/search/${contentType}?query=${encodeURIComponent(searchQuery)}&page=${page}&_t=${Date.now()}`;
+      const params = new URLSearchParams();
+      params.append('query', searchQuery);
+      params.append('page', page.toString());
+      params.append('_t', Date.now().toString());
+      
+      const url = `${TMDB_BASE_URL}/search/${contentType}?${params.toString()}`;
       console.log('Searching content:', url);
       
       const response = await fetch(url, {
