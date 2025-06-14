@@ -132,8 +132,8 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
       {/* Main content area */}
       <div className="pt-16 h-full w-full">
         {!isPlayerLoaded ? (
-          <div className="flex flex-col items-center justify-center h-full bg-background/50">
-            <div className="text-center max-w-md mx-auto px-4">
+          <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-background to-secondary">
+            <div className="text-center max-w-md mx-auto px-4 animate-fade-in duration-500">
               <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                 <div className="absolute h-full w-full bg-primary/20 rounded-full animate-pulse"></div>
                 <Play className="h-16 w-16 text-primary z-10" fill="currentColor" />
