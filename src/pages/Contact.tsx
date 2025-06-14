@@ -43,7 +43,7 @@ const Contact = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-center mb-8">Contact YENI MOVIE</h1>
           
-          <AdBanner slot="5471985426" className="mb-8" />
+          <AdBanner slot="1571190202" className="mb-8" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card>
@@ -135,7 +135,7 @@ const Contact = () => {
             </Card>
           </div>
 
-          <AdBanner slot="5471985426" className="mt-8" />
+          <AdBanner slot="1571190202" className="mt-8" />
 
           <div className="mt-8 text-center">
             <p className="text-muted-foreground">

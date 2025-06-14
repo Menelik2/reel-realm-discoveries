@@ -21,7 +21,7 @@ const Privacy = () => {
             Last updated: {new Date().toLocaleDateString()}
           </p>
           
-          <AdBanner slot="5471985426" className="mb-8" />
+          <AdBanner slot="1571190202" className="mb-8" />
 
           <div className="space-y-6">
             <Card>
@@ -210,7 +210,7 @@ const Privacy = () => {
             </Card>
           </div>
 
-          <AdBanner slot="5471985426" className="mt-8" />
+          <AdBanner slot="1571190202" className="mt-8" />
         </div>
       </main>
 

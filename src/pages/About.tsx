@@ -19,7 +19,7 @@ const About = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-center mb-8">About YENI MOVIE</h1>
           
-          <AdBanner slot="5471985426" className="mb-8" />
+          <AdBanner slot="1571190202" className="mb-8" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <Card>
@@ -120,7 +120,7 @@ const About = () => {
             </Card>
           </div>
 
-          <AdBanner slot="5471985426" className="mb-8" />
+          <AdBanner slot="1571190202" className="mb-8" />
 
           <div className="text-center">
             <h2 className="text-2xl font-semibold mb-4">Discover Your Next Favorite</h2>

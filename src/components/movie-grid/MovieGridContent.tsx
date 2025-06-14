@@ -1,4 +1,3 @@
-
 import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { AdBanner } from '@/components/AdBanner';
@@ -68,7 +67,7 @@ export const MovieGridContent = ({
       
       {/* AdSense Banner between content and pagination */}
       <div className="my-8">
-        <AdBanner slot="5471985426" />
+        <AdBanner slot="1571190202" />
       </div>
       
       {/* Pagination */}

@@ -1,4 +1,3 @@
-
 import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { CategoryTabs } from '@/components/movie-grid/CategoryTabs';
@@ -45,7 +44,7 @@ export const MovieGrid = ({
     <section className="container mx-auto px-4 py-6 md:py-8">
       {/* AdSense Banner */}
       <AdBanner 
-        slot="5471985426"
+        slot="1571190202"
         className="mb-6"
       />
 
