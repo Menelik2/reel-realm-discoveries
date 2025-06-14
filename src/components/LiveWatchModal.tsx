@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Play, ArrowLeft, AlertTriangle } from 'lucide-react';
@@ -98,7 +99,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-background z-50 overflow-hidden">
+    <div className="fixed inset-0 bg-background z-50 overflow-hidden animate-fade-in duration-300">
       {/* Header with close button */}
       <div className="absolute top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-b">
         <div className="flex items-center justify-between p-4">
@@ -131,7 +132,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
       {/* Main content area */}
       <div className="pt-16 h-full w-full">
         {!isPlayerLoaded ? (
-          <div className="flex flex-col items-center justify-center h-full bg-background/50 animate-fade-in">
+          <div className="flex flex-col items-center justify-center h-full bg-background/50">
             <div className="text-center max-w-md mx-auto px-4">
               <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
                 <div className="absolute h-full w-full bg-primary/20 rounded-full animate-pulse"></div>
