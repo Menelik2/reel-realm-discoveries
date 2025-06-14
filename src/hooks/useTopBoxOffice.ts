@@ -20,7 +20,7 @@ interface ApiResponse {
 
 const fetchTopBoxOffice = async (): Promise<BoxOfficeMovie[]> => {
   if (!API_KEY) {
-    throw new Error('A TMDB API key is required to fetch box office data. Please get a free key from the TMDB website and provide it.');
+    throw new Error('To show the Top Box Office chart, a TMDB API key is required. Please get a free key from the TMDB website, then paste it in the chat.');
   }
 
   const response = await fetch(`${BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=en-US&page=1&region=US`);
