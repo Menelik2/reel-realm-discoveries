@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
@@ -52,6 +51,7 @@ const MoviePage = () => {
             onClose={handleClose}
             onMovieClick={handleMovieClick}
           />
+          <AdBanner slot="1571190202" className="mt-8" />
         </main>
 
         <Footer />

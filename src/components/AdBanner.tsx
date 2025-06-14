@@ -21,7 +21,7 @@ export const AdBanner = ({
     } catch (err) {
       console.error('AdSense error:', err);
     }
-  }, []);
+  }, [slot]);
 
   return (
     <div className={className}>
