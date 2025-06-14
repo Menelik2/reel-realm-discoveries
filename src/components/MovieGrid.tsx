@@ -1,3 +1,4 @@
+
 import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { CategoryTabs } from '@/components/movie-grid/CategoryTabs';
@@ -49,6 +50,14 @@ export const MovieGrid = ({
       />
 
       {!searchQuery ? (
+        currentCategory === 'custom' ? (
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-3xl font-bold tracking-tight">My List</h2>
+            <p className="text-muted-foreground mt-1">
+              A collection of your hand-picked movies and TV series.
+            </p>
+          </div>
+        ) : (
         <>
           {/* Content Type Toggle */}
           <ContentTypeToggle 
@@ -75,6 +84,7 @@ export const MovieGrid = ({
             )}
           </div>
         </>
+        )
       ) : (
         <div className="mb-6">
           <h2 className="text-2xl font-bold">
@@ -93,6 +103,7 @@ export const MovieGrid = ({
         onPageChange={handlePageChange}
         contentType={contentType}
         searchQuery={searchQuery}
+        currentCategory={currentCategory}
       />
     </section>
   );

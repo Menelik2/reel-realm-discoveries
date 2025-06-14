@@ -23,6 +23,7 @@ interface MovieGridContentProps {
   onPageChange: (page: number) => void;
   contentType: 'movie' | 'tv';
   searchQuery: string;
+  currentCategory: string;
 }
 
 export const MovieGridContent = ({ 
@@ -33,7 +34,8 @@ export const MovieGridContent = ({
   onMovieClick, 
   onPageChange,
   contentType,
-  searchQuery
+  searchQuery,
+  currentCategory,
 }: MovieGridContentProps) => {
   if (loading) {
     return (
@@ -51,6 +53,8 @@ export const MovieGridContent = ({
         <p className="text-muted-foreground">
           {!!searchQuery 
             ? `No results found for "${searchQuery}".`
+            : currentCategory === 'custom'
+            ? 'Your list is empty. Add new content from the admin page.'
             : `No ${contentType === 'movie' ? 'movies' : 'series'} found. Try adjusting your filters.`}
         </p>
       </div>
@@ -71,58 +75,60 @@ export const MovieGridContent = ({
       </div>
       
       {/* Pagination */}
-      <div className="mt-8">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(currentPage - 1);
-                }}
-                className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
-              />
-            </PaginationItem>
-            
-            {/* Page numbers */}
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = Math.max(1, currentPage - 2) + i;
-              if (pageNum > totalPages) return null;
+      {totalPages > 1 && (
+        <div className="mt-8">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onPageChange(currentPage - 1);
+                  }}
+                  className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
               
-              return (
-                <PaginationItem key={pageNum}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onPageChange(pageNum);
-                    }}
-                    isActive={pageNum === currentPage}
-                  >
-                    {pageNum}
-                  </PaginationLink>
-                </PaginationItem>
-              );
-            })}
-            
-            <PaginationItem>
-              <PaginationNext 
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(currentPage + 1);
-                }}
-                className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-        
-        <div className="text-center mt-4 text-sm text-muted-foreground">
-          Page {currentPage} of {totalPages} (Showing up to 2000 {!!searchQuery ? 'results' : (contentType === 'movie' ? 'movies' : 'series')})
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, currentPage - 2) + i;
+                if (pageNum > totalPages) return null;
+                
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onPageChange(pageNum);
+                      }}
+                      isActive={pageNum === currentPage}
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onPageChange(currentPage + 1);
+                  }}
+                  className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+          
+          <div className="text-center mt-4 text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages} (Showing up to 2000 {!!searchQuery ? 'results' : (contentType === 'movie' ? 'movies' : 'series')})
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

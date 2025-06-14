@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Movie {
   id: number;
@@ -156,10 +156,62 @@ export const useMovieData = ({
     }
   };
 
+  const fetchCustomContent = async () => {
+    setLoading(true);
+    try {
+      const { data: customContent, error: supabaseError } = await supabase
+        .from('custom_content')
+        .select('tmdb_id, content_type')
+        .order('created_at', { ascending: false });
+
+      if (supabaseError) throw supabaseError;
+      
+      if (!customContent || customContent.length === 0) {
+        setMovies([]);
+        setTotalPages(1);
+        return;
+      }
+
+      const moviePromises = customContent.map(item => {
+        const url = `${TMDB_BASE_URL}/${item.content_type}/${item.tmdb_id}`;
+        return fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json;charset=utf-8'
+          }
+        }).then(res => res.ok ? res.json() : null);
+      });
+      
+      const results = (await Promise.all(moviePromises)).filter(Boolean);
+      
+      const processedResults = results.map(item => {
+        const isMovie = !!item.title;
+        return {
+          ...item,
+          title: item.title || item.name,
+          release_date: item.release_date || item.first_air_date,
+          media_type: isMovie ? 'movie' : 'tv',
+        };
+      });
+
+      setMovies(processedResults);
+      setTotalPages(1); // No pagination for custom list for now
+
+    } catch (error) {
+      console.error('Error fetching custom content:', error);
+      setMovies([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (searchQuery) {
       searchMovies(currentPage);
-    } else {
+    } else if (currentCategory === 'custom') {
+      fetchCustomContent();
+    }
+    else {
       fetchMovies(currentPage);
     }
   }, [searchQuery, selectedGenre, selectedYear, contentType, currentCategory, currentPage, refreshKey]);

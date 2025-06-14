@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { MovieGrid } from '@/components/MovieGrid';
@@ -15,9 +15,17 @@ const Index = () => {
   const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
   const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [currentCategory, setCurrentCategory] = useState('popular');
+  const [currentCategory, setCurrentCategory] = useState(
+    () => searchParams.get('category') || 'popular'
+  );
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Effect to sync category from URL to state, e.g. on back/forward
+  useEffect(() => {
+    setCurrentCategory(searchParams.get('category') || 'popular');
+  }, [searchParams]);
 
   const { movies, loading, totalPages } = useMovieData({
     searchQuery,
@@ -63,6 +71,10 @@ const Index = () => {
 
   const handleSetCurrentCategory = (category: string) => {
     setCurrentCategory(category);
+    const params = new URLSearchParams(searchParams);
+    params.set('category', category);
+    setSearchParams(params, { replace: true });
+    
     // Reset filters for categories that don't support filtering
     if (category !== 'popular' && category !== 'top_rated') {
       setSelectedGenre('all');
@@ -81,7 +93,7 @@ const Index = () => {
         />
         
         <main>
-          {!searchQuery && <HeroCarousel />}
+          {!searchQuery && currentCategory !== 'custom' && <HeroCarousel />}
           
           <MovieGrid 
             key={refreshKey}
