@@ -19,29 +19,41 @@ const Auth = () => {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    const authMethod = isSigningUp ? supabase.auth.signUp : supabase.auth.signInWithPassword;
-    
-    const { error } = await authMethod({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
-      },
-    });
+    console.log('Auth process started. isSigningUp:', isSigningUp);
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      if (isSigningUp) {
-        toast.success('Check your email for the confirmation link!');
-        setIsSigningUp(false);
+    try {
+      const authMethod = isSigningUp ? supabase.auth.signUp : supabase.auth.signInWithPassword;
+
+      console.log('Calling Supabase auth method...');
+      const { error } = await authMethod({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/admin`,
+        },
+      });
+      console.log('Supabase auth method returned.');
+
+      if (error) {
+        console.error('Supabase auth error:', error);
+        toast.error(error.message);
       } else {
-        toast.success('Logged in successfully!');
-        navigate('/admin');
+        console.log('Supabase auth success.');
+        if (isSigningUp) {
+          toast.success('Check your email for the confirmation link!');
+          setIsSigningUp(false);
+        } else {
+          toast.success('Logged in successfully!');
+          navigate('/admin');
+        }
       }
+    } catch (err) {
+      console.error('An unexpected error occurred during auth:', err);
+      toast.error(err instanceof Error ? err.message : 'An unexpected error occurred.');
+    } finally {
+      console.log('Setting loading to false in finally block.');
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
