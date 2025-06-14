@@ -131,14 +131,17 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
       {/* Main content area */}
       <div className="pt-16 h-full w-full">
         {!isPlayerLoaded ? (
-          <div className="flex flex-col items-center justify-center h-full bg-muted/20">
+          <div className="flex flex-col items-center justify-center h-full bg-background/50 animate-fade-in">
             <div className="text-center max-w-md mx-auto px-4">
-              <Play className="h-16 w-16 mb-4 text-primary mx-auto" />
-              <h2 className="text-xl font-semibold mb-2">Ready for Ad-Free Experience</h2>
-              <p className="text-muted-foreground mb-6 text-sm sm:text-base">
-                Click below to start watching {title} with minimal ads
+              <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <div className="absolute h-full w-full bg-primary/20 rounded-full animate-pulse"></div>
+                <Play className="h-16 w-16 text-primary z-10" fill="currentColor" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2 tracking-tight">Ready to Watch?</h2>
+              <p className="text-muted-foreground mb-8">
+                Click the button below to start streaming {title} instantly.
               </p>
-              <Button onClick={handleLoadPlayer} size="lg" className="w-full sm:w-auto">
+              <Button onClick={handleLoadPlayer} size="lg" className="w-full sm:w-auto animate-pulse">
                 <Play className="mr-2 h-4 w-4" />
                 Start Watching
               </Button>
