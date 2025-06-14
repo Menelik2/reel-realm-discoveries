@@ -5,7 +5,6 @@ interface VideoEmbedProps {
   imdbId?: string;
   type?: 'movie' | 'tv';
   title: string;
-  enableAdBlock?: boolean;
   dsLang?: string;
   autoPlay?: 1 | 0;
   season?: number;
@@ -19,7 +18,6 @@ const VideoEmbed = ({
   imdbId,
   type = "movie", 
   title, 
-  enableAdBlock = true,
   dsLang,
   autoPlay,
   season,
@@ -96,10 +94,6 @@ const VideoEmbed = ({
 
   const handleLoad = () => {
     setIsLoading(false);
-    if (!enableAdBlock || !iframeRef.current) return;
-
-    // The MutationObserver for ad-blocking has been disabled because it was causing
-    // cross-origin security errors that likely prevented the video from playing.
   };
 
   useEffect(() => {
