@@ -1,21 +1,38 @@
-
 import { useState, useEffect, useRef } from 'react';
 
 interface VideoEmbedProps {
-  tmdbId: number;
+  tmdbId?: number;
+  imdbId?: string;
   type?: 'movie' | 'tv';
   title: string;
   enableAdBlock?: boolean;
+  dsLang?: string;
+  autoPlay?: 1 | 0;
+  season?: number;
+  episode?: number;
+  subUrl?: string;
+  autoNext?: 1 | 0;
 }
 
-const VideoEmbed = ({ tmdbId, type = "movie", title, enableAdBlock = true }: VideoEmbedProps) => {
+const VideoEmbed = ({ 
+  tmdbId,
+  imdbId,
+  type = "movie", 
+  title, 
+  enableAdBlock = true,
+  dsLang,
+  autoPlay,
+  season,
+  episode,
+  subUrl,
+  autoNext
+}: VideoEmbedProps) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const retryCount = useRef(0);
-  const maxRetries = 3; // Using your suggested retry count
+  const maxRetries = 3;
 
-  // Using your suggested list of alternative domains
   const vidsrcDomains = [
     'vidsrc.in',
     'vidsrc.stream',
@@ -24,9 +41,32 @@ const VideoEmbed = ({ tmdbId, type = "movie", title, enableAdBlock = true }: Vid
   ];
 
   const getEmbedUrl = (domainIndex = 0) => {
-    if (!tmdbId) return null;
+    const id = tmdbId || imdbId;
+    if (!id) return null;
+
     const domain = vidsrcDomains[domainIndex % vidsrcDomains.length];
-    return `https://${domain}/embed/${type}/${tmdbId}`;
+    let embedUrl = `https://${domain}/embed/${type}/${id}`;
+
+    const params = new URLSearchParams();
+
+    // TV-specific parameters
+    if (type === 'tv') {
+      if (season) params.append('season', String(season));
+      if (episode) params.append('episode', String(episode));
+    }
+    
+    // Common parameters
+    if (dsLang) params.append('dsLang', dsLang);
+    if (autoPlay !== undefined) params.append('autoplay', String(autoPlay));
+    if (subUrl) params.append('sub_url', subUrl);
+    if (autoNext !== undefined) params.append('autonext', String(autoNext));
+
+    const queryString = params.toString();
+    if (queryString) {
+      embedUrl += `?${queryString}`;
+    }
+
+    return embedUrl;
   };
 
   const handleError = () => {
@@ -77,14 +117,14 @@ const VideoEmbed = ({ tmdbId, type = "movie", title, enableAdBlock = true }: Vid
   };
 
   useEffect(() => {
-    // Reset state if tmdbId changes
+    // Reset state if IDs or type changes
     setHasError(false);
     setIsLoading(true);
     retryCount.current = 0;
     if (iframeRef.current) {
         iframeRef.current.src = getEmbedUrl(0) || '';
     }
-  }, [tmdbId, type]);
+  }, [tmdbId, imdbId, type, season, episode]);
 
   return (
     <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
