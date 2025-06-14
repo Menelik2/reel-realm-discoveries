@@ -1,5 +1,10 @@
+
 import { useState, useEffect, useRef } from 'react';
 import CustomVideoPlayer from './CustomVideoPlayer';
+import { getEmbedUrl } from '@/utils/videoEmbedUtils';
+import VideoPlayerLoader from './video-embed/VideoPlayerLoader';
+import VideoPlayerError from './video-embed/VideoPlayerError';
+import VideoIframe from './video-embed/VideoIframe';
 
 interface VideoEmbedProps {
   tmdbId?: number;
@@ -35,120 +40,9 @@ const VideoEmbed = ({
   const retryCount = useRef(0);
   const maxRetries = 3;
 
-  // === Strictly follow the official docs for vidsrc.xyz embed URLs ===
-  function getEmbedUrl(): string | null {
-    // MOVIE
-    if (type === "movie") {
-      // Use /embed/movie/{tmdbId} if available (preferred)
-      if (tmdbId) {
-        if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
-          return `https://vidsrc.xyz/embed/movie/${tmdbId}`;
-        } else {
-          // query version
-          const params = new URLSearchParams({ tmdb: String(tmdbId) });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined")
-            params.append("autoplay", String(autoPlay));
-          return `https://vidsrc.xyz/embed/movie?${params.toString()}`;
-        }
-      }
-      // Otherwise, fallback to imdbId
-      if (imdbId) {
-        if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
-          return `https://vidsrc.xyz/embed/movie/${imdbId}`;
-        } else {
-          // query version
-          const params = new URLSearchParams({ imdb: imdbId });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined")
-            params.append("autoplay", String(autoPlay));
-          return `https://vidsrc.xyz/embed/movie?${params.toString()}`;
-        }
-      }
-      return null;
-    }
-
-    // TV SHOW
-    if (type === "tv" && !season && !episode) {
-      if (tmdbId) {
-        if (!dsLang) {
-          return `https://vidsrc.xyz/embed/tv/${tmdbId}`;
-        } else {
-          const params = new URLSearchParams({ tmdb: String(tmdbId) });
-          params.append("ds_lang", dsLang);
-          return `https://vidsrc.xyz/embed/tv?${params.toString()}`;
-        }
-      }
-      if (imdbId) {
-        if (!dsLang) {
-          return `https://vidsrc.xyz/embed/tv/${imdbId}`;
-        } else {
-          const params = new URLSearchParams({ imdb: imdbId });
-          params.append("ds_lang", dsLang);
-          return `https://vidsrc.xyz/embed/tv?${params.toString()}`;
-        }
-      }
-      return null;
-    }
-
-    // EPISODE
-    if (type === "tv" && season && episode) {
-      if (tmdbId) {
-        if (
-          !dsLang &&
-          !subUrl &&
-          typeof autoPlay === "undefined" &&
-          typeof autoNext === "undefined"
-        ) {
-          return `https://vidsrc.xyz/embed/tv/${tmdbId}/${season}-${episode}`;
-        } else {
-          const params = new URLSearchParams({
-            tmdb: String(tmdbId),
-            season: String(season),
-            episode: String(episode),
-          });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined")
-            params.append("autoplay", String(autoPlay));
-          if (typeof autoNext !== "undefined")
-            params.append("autonext", String(autoNext));
-          return `https://vidsrc.xyz/embed/tv?${params.toString()}`;
-        }
-      }
-      if (imdbId) {
-        if (
-          !dsLang &&
-          !subUrl &&
-          typeof autoPlay === "undefined" &&
-          typeof autoNext === "undefined"
-        ) {
-          return `https://vidsrc.xyz/embed/tv/${imdbId}/${season}-${episode}`;
-        } else {
-          const params = new URLSearchParams({
-            imdb: imdbId,
-            season: String(season),
-            episode: String(episode),
-          });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined")
-            params.append("autoplay", String(autoPlay));
-          if (typeof autoNext !== "undefined")
-            params.append("autonext", String(autoNext));
-          return `https://vidsrc.xyz/embed/tv?${params.toString()}`;
-        }
-      }
-      return null;
-    }
-    return null;
-  }
-
   // Debug: log embed url and render in UI
   useEffect(() => {
-    const url = getEmbedUrl();
+    const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext });
     setDebugUrl(url || '');
     if (!url) {
       setHasError(true);
@@ -170,7 +64,7 @@ const VideoEmbed = ({
       retryCount.current += 1;
       setTimeout(() => {
         if (iframeRef.current) {
-          const url = getEmbedUrl();
+          const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext });
           iframeRef.current.src = url || '';
           setHasError(false);
         }
@@ -199,29 +93,17 @@ const VideoEmbed = ({
         <span className="font-mono">Embed URL:&nbsp;</span>
         <a href={debugUrl} target="_blank" rel="noopener noreferrer" className="underline">{debugUrl}</a>
       </div>
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
-          <div className="animate-pulse text-white">Loading player...</div>
-        </div>
-      )}
+      
+      {isLoading && <VideoPlayerLoader />}
 
       {hasError && !isLoading ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4 text-center">
-          <p className="font-semibold mb-2">Failed to Load Content</p>
-          <p className="text-sm text-gray-400">
-            Could not load the video after {maxRetries} retries.<br/>This content might be unavailable.<br/>Check the URL above or TMDB/IMDB ID.
-          </p>
-        </div>
+        <VideoPlayerError maxRetries={maxRetries} />
       ) : (
-        <iframe
+        <VideoIframe
           ref={iframeRef}
           src={debugUrl}
-          className={`w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}`}
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          referrerPolicy="origin"
-          title={`Watch ${title}`}
-          loading="eager"
+          title={title}
+          isLoading={isLoading}
           onLoad={handleLoad}
           onError={handleError}
         />
