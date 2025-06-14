@@ -106,8 +106,10 @@ const Index = () => {
                 <AdBanner slot="1571190202" />
               </div>
               <MovieRow title="Trending Now" fetchUrl="/trending/movie/week" contentType="movie" />
-              <MovieRow title="Popular TV Shows" fetchUrl="/tv/popular" contentType="tv" />
-              <MovieRow title="Romance Movies" fetchUrl="/discover/movie?with_genres=10749&sort_by=popularity.desc" contentType="movie" />
+              <MovieRow title="Popular Movies" fetchUrl="/movie/popular" contentType="movie" />
+              <MovieRow title="Top Rated Movies" fetchUrl="/movie/top_rated" contentType="movie" />
+              <MovieRow title="Series" fetchUrl="/tv/popular" contentType="tv" />
+              <MovieRow title="Action Movies" fetchUrl="/discover/movie?with_genres=28&sort_by=popularity.desc" contentType="movie" />
             </>
           ) : (
             <>
