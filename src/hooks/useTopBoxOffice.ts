@@ -1,7 +1,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+// You need to get your own API key from https://www.themoviedb.org/settings/api
+// Once you have it, you can provide it to me.
+const API_KEY = ""; 
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 export interface BoxOfficeMovie {
@@ -18,7 +20,7 @@ interface ApiResponse {
 
 const fetchTopBoxOffice = async (): Promise<BoxOfficeMovie[]> => {
   if (!API_KEY) {
-    throw new Error('VITE_TMDB_API_KEY is not configured. Please add it to your environment variables.');
+    throw new Error('A TMDB API key is required to fetch box office data. Please get a free key from the TMDB website and provide it.');
   }
 
   const response = await fetch(`${BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=en-US&page=1&region=US`);
