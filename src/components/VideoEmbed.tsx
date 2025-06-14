@@ -13,13 +13,14 @@ const VideoEmbed = ({ tmdbId, type = "movie", title, enableAdBlock = true }: Vid
   const [isLoading, setIsLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const retryCount = useRef(0);
-  const maxRetries = 2; // Total 3 attempts (initial + 2 retries)
+  const maxRetries = 3; // Using your suggested retry count
 
-  // List of alternative domains for fallback
+  // Using your suggested list of alternative domains
   const vidsrcDomains = [
-    'vidsrc.to',
     'vidsrc.in',
     'vidsrc.stream',
+    'vidsrc.to',
+    'vidsrc.xyz',
   ];
 
   const getEmbedUrl = (domainIndex = 0) => {
@@ -39,17 +40,16 @@ const VideoEmbed = ({ tmdbId, type = "movie", title, enableAdBlock = true }: Vid
             iframeRef.current.src = getEmbedUrl(nextDomainIndex) || '';
             setHasError(false); // Reset for next attempt
         }
-      }, 1000 * retryCount.current); // Simple backoff
+      }, 1000 * retryCount.current); // Linear backoff for retries
     } else {
-      console.error(`Failed to load content after ${maxRetries + 1} attempts.`);
+      console.error(`Failed to load content after ${maxRetries} retries.`);
       setHasError(true);
       setIsLoading(false);
     }
   };
 
-  // Ad-blocking: this is a best-effort approach and might not catch all ads
-  // due to cross-origin restrictions on iframes.
-  useEffect(() => {
+  const handleLoad = () => {
+    setIsLoading(false);
     if (!enableAdBlock || !iframeRef.current) return;
 
     const iframe = iframeRef.current;
@@ -67,23 +67,14 @@ const VideoEmbed = ({ tmdbId, type = "movie", title, enableAdBlock = true }: Vid
       });
     });
 
-    const handleIframeLoad = () => {
-      setIsLoading(false);
-      try {
-        if (iframe.contentDocument) {
-          observer.observe(iframe.contentDocument.body, { childList: true, subtree: true });
-        }
-      } catch (e) {
-        console.warn('Could not attach MutationObserver to iframe due to cross-origin policy. Ad-blocking may be limited.');
+    try {
+      if (iframe.contentDocument) {
+        observer.observe(iframe.contentDocument.body, { childList: true, subtree: true });
       }
-    };
-
-    iframe.addEventListener('load', handleIframeLoad);
-    return () => {
-      iframe.removeEventListener('load', handleIframeLoad);
-      observer.disconnect();
-    };
-  }, [enableAdBlock]);
+    } catch (e) {
+      console.warn('Could not attach MutationObserver to iframe due to cross-origin policy. Ad-blocking may be limited.');
+    }
+  };
 
   useEffect(() => {
     // Reset state if tmdbId changes
@@ -103,26 +94,28 @@ const VideoEmbed = ({ tmdbId, type = "movie", title, enableAdBlock = true }: Vid
         </div>
       )}
 
-      {hasError && !isLoading && (
+      {hasError && !isLoading ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4 text-center">
           <p className="font-semibold mb-2">Failed to Load Content</p>
           <p className="text-sm text-gray-400">
-            Could not load the video after several attempts. This content might be unavailable.
+            Could not load the video after {maxRetries} retries. This content might be unavailable.
           </p>
         </div>
-      )}
+      ) : (
         <iframe
           ref={iframeRef}
           src={getEmbedUrl() || ''}
-          className={`w-full h-full ${isLoading || hasError ? 'opacity-0' : 'opacity-100 transition-opacity'}`}
+          className={`w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}`}
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          referrerPolicy="origin"
+          referrerPolicy="strict-origin-when-cross-origin"
           title={`Watch ${title}`}
           loading="eager"
+          onLoad={handleLoad}
           onError={handleError}
-          sandbox="allow-same-origin allow-scripts"
+          sandbox="allow-same-origin allow-scripts allow-popups"
         />
+      )}
     </div>
   );
 };
