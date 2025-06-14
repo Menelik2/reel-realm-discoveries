@@ -6,6 +6,7 @@ import { MovieGrid } from '@/components/MovieGrid';
 import { Footer } from '@/components/Footer';
 import { useMovieData } from '@/hooks/useMovieData';
 import { AdBanner } from '@/components/AdBanner';
+import { RecentlyAddedRow } from '@/components/RecentlyAddedRow';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,6 +96,13 @@ const Index = () => {
         
         <main>
           {!searchQuery && <HeroCarousel />}
+          
+          {!searchQuery && (
+            <>
+              <RecentlyAddedRow title="Recently Added Movies" contentType="movie" />
+              <RecentlyAddedRow title="Recently Added TV Shows" contentType="tv" />
+            </>
+          )}
           
           <>
             {!searchQuery && currentCategory !== 'custom' && (

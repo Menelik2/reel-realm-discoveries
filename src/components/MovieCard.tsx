@@ -14,10 +14,13 @@ interface Movie {
 interface MovieCardProps {
   movie: Movie;
   onMovieClick?: (movieId: number) => void;
+  fullPosterUrl?: string;
 }
 
-export const MovieCard = ({ movie, onMovieClick }: MovieCardProps) => {
-  const posterUrl = movie.poster_path 
+export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps) => {
+  const posterUrl = fullPosterUrl
+    ? fullPosterUrl
+    : movie.poster_path 
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : '/placeholder.svg';
 
@@ -76,7 +79,11 @@ export const MovieCard = ({ movie, onMovieClick }: MovieCardProps) => {
             {movie.title}
           </h3>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>⭐ {movie.vote_average.toFixed(1)}</span>
+            {movie.vote_average > 0 ? (
+              <span>⭐ {movie.vote_average.toFixed(1)}</span>
+            ) : (
+              <span />
+            )}
             <span>{movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A'}</span>
           </div>
         </div>
