@@ -25,6 +25,9 @@ export const Footer = () => {
               <Link to="/" className="block hover:text-primary transition-colors">
                 Home
               </Link>
+              <Link to="/top-box-office" className="block hover:text-primary transition-colors">
+                Top Box Office
+              </Link>
               <Link to="/about" className="block hover:text-primary transition-colors">
                 About Us
               </Link>

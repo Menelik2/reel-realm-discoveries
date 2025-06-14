@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Search, Menu, X, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,6 +26,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link to="/top-box-office" className="hover:text-primary transition-colors">Top Box Office</Link>
             <Link to="/about" className="hover:text-primary transition-colors">About</Link>
             <Link to="/contact" className="hover:text-primary transition-colors">Contact</Link>
             <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
@@ -91,6 +91,13 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Home
+              </Link>
+              <Link 
+                to="/top-box-office" 
+                className="hover:text-primary transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Top Box Office
               </Link>
               <Link 
                 to="/about" 
