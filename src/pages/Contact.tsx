@@ -1,11 +1,10 @@
-
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, MessageCircle, Clock, Globe } from 'lucide-react';
+import { Mail, MessageCircle, Clock, Globe, Send } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -13,8 +12,6 @@ import { toast } from 'sonner';
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    subject: '',
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,8 +36,6 @@ const Contact = () => {
 New message from Contact Form:
 --------------------------------------
 Name: ${formData.name}
-Email: ${formData.email}
-Subject: ${formData.subject}
 Message: ${formData.message}
     `.trim();
 
@@ -62,7 +57,7 @@ Message: ${formData.message}
 
       if (result.ok) {
         toast.success("Your message has been sent successfully!");
-        setFormData({ name: '', email: '', subject: '', message: '' });
+        setFormData({ name: '', message: '' });
       } else {
         toast.error("Failed to send message.", {
           description: result.description || "Please try again later.",
@@ -129,6 +124,16 @@ Message: ${formData.message}
                 </div>
                 
                 <div className="flex items-center gap-3">
+                  <Send className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium">Telegram</p>
+                    <a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                      @medebereya
+                    </a>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
                   <MessageCircle className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium">Support</p>
@@ -149,27 +154,6 @@ Message: ${formData.message}
                       name="name"
                       placeholder="Your Name" 
                       value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div>
-                    <Input 
-                      name="email"
-                      type="email" 
-                      placeholder="Your Email" 
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div>
-                    <Input 
-                      name="subject"
-                      placeholder="Subject" 
-                      value={formData.subject}
                       onChange={handleInputChange}
                       required
                       disabled={isSubmitting}
