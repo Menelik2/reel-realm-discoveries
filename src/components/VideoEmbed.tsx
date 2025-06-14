@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 
 interface VideoEmbedProps {
@@ -98,28 +97,8 @@ const VideoEmbed = ({
     setIsLoading(false);
     if (!enableAdBlock || !iframeRef.current) return;
 
-    const iframe = iframeRef.current;
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeName === 'IFRAME') {
-            const adIframe = node as HTMLIFrameElement;
-            if (/ads?|doubleclick|adservice/i.test(adIframe.src)) {
-              console.log('Ad-blocking: removing suspected ad iframe:', adIframe.src);
-              adIframe.remove();
-            }
-          }
-        });
-      });
-    });
-
-    try {
-      if (iframe.contentDocument) {
-        observer.observe(iframe.contentDocument.body, { childList: true, subtree: true });
-      }
-    } catch (e) {
-      console.warn('Could not attach MutationObserver to iframe due to cross-origin policy. Ad-blocking may be limited.');
-    }
+    // The MutationObserver for ad-blocking has been disabled because it was causing
+    // cross-origin security errors that likely prevented the video from playing.
   };
 
   useEffect(() => {
@@ -159,7 +138,7 @@ const VideoEmbed = ({
           loading="eager"
           onLoad={handleLoad}
           onError={handleError}
-          sandbox="allow-same-origin allow-scripts allow-popups"
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
         />
       )}
     </div>
