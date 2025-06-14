@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -15,12 +14,12 @@ const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
 
-  // Auto-refresh every 5 minutes to get new movies from TMDB
+  // Auto-refresh every day to get new movies from TMDB
   useEffect(() => {
     const interval = setInterval(() => {
       console.log('Auto-refreshing content from TMDB...');
       setRefreshKey(prev => prev + 1);
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 24 * 60 * 60 * 1000); // 24 hours
 
     return () => clearInterval(interval);
   }, []);
