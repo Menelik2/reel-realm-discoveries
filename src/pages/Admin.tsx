@@ -46,7 +46,7 @@ const Admin = () => {
         }
         await response.json();
 
-        const { error } = await supabase
+        const { error } = await (supabase as any)
             .from('custom_content')
             .insert({ tmdb_id: parseInt(tmdbId), content_type: contentType });
 

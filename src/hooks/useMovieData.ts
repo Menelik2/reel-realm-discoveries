@@ -159,7 +159,7 @@ export const useMovieData = ({
   const fetchCustomContent = async () => {
     setLoading(true);
     try {
-      const { data: customContent, error: supabaseError } = await supabase
+      const { data: customContent, error: supabaseError } = await (supabase as any)
         .from('custom_content')
         .select('tmdb_id, content_type')
         .order('created_at', { ascending: false });
@@ -172,7 +172,7 @@ export const useMovieData = ({
         return;
       }
 
-      const moviePromises = customContent.map(item => {
+      const moviePromises = customContent.map((item: { tmdb_id: number; content_type: 'movie' | 'tv' }) => {
         const url = `${TMDB_BASE_URL}/${item.content_type}/${item.tmdb_id}`;
         return fetch(url, {
           headers: {
