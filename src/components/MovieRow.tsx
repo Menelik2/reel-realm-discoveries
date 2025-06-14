@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MovieCard } from '@/components/MovieCard';
 import { useNavigate } from 'react-router-dom';
@@ -64,13 +63,11 @@ export const MovieRow = ({ title, fetchUrl, contentType }: MovieRowProps) => {
 
   if (loading) {
     return (
-      <section className="py-6 md:py-8">
-        <h2 className="text-2xl font-bold mb-4 container mx-auto px-4">{title}</h2>
-        <div className="flex space-x-2 md:space-x-4 overflow-x-auto pb-4 px-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-[150px] sm:w-[180px]">
-              <div className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
-            </div>
+      <section className="py-6 md:py-8 container mx-auto px-4">
+        <h2 className="text-2xl font-bold mb-4">{title}</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
       </section>
@@ -82,13 +79,11 @@ export const MovieRow = ({ title, fetchUrl, contentType }: MovieRowProps) => {
   }
 
   return (
-    <section className="py-6 md:py-8">
-      <h2 className="text-2xl font-bold mb-4 container mx-auto px-4">{title}</h2>
-      <div className="flex space-x-2 md:space-x-4 overflow-x-auto pb-4 -mx-4 px-4">
+    <section className="py-6 md:py-8 container mx-auto px-4">
+      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
         {items.map(item => (
-          <div key={item.id} className="flex-shrink-0 w-[150px] sm:w-[180px]">
-             <MovieCard movie={item} onMovieClick={handleMovieClick} />
-          </div>
+          <MovieCard key={item.id} movie={item} onMovieClick={handleMovieClick} />
         ))}
       </div>
     </section>
