@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 
 interface VideoEmbedProps {
@@ -34,12 +33,6 @@ const VideoEmbed = ({
 
   const vidsrcDomains = [
     'vidsrc.me',
-    'vidsrc.to',
-    'vidsrc.in',
-    'vidsrc.stream',
-    'vidsrc.xyz',
-    'vidsrc.pro',
-    'vidsrc.net',
   ];
 
   const getEmbedUrl = (domainIndex = 0) => {
