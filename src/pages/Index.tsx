@@ -126,14 +126,14 @@ const Index = () => {
               {contentType === 'movie' ? (
                 <>
                   <MovieRow title="Trending Movies" fetchUrl="/trending/movie/week" contentType="movie" />
-                  <MovieRow title="Popular Movies" fetchUrl="/movie/popular" contentType="movie" />
+                  <MovieRow title="Upcoming Movies" fetchUrl="/movie/upcoming" contentType="movie" />
                   <MovieRow title="Top Rated Movies" fetchUrl="/movie/top_rated" contentType="movie" />
                   <MovieRow title="Action Movies" fetchUrl="/discover/movie?with_genres=28&sort_by=popularity.desc" contentType="movie" />
                 </>
               ) : (
                 <>
                   <MovieRow title="Trending Series" fetchUrl="/trending/tv/week" contentType="tv" />
-                  <MovieRow title="Popular Series" fetchUrl="/tv/popular" contentType="tv" />
+                  <MovieRow title="Series Airing Today" fetchUrl="/tv/airing_today" contentType="tv" />
                   <MovieRow title="Top Rated Series" fetchUrl="/tv/top_rated" contentType="tv" />
                   <MovieRow title="Action & Adventure Series" fetchUrl="/discover/tv?with_genres=10759&sort_by=popularity.desc" contentType="tv" />
                 </>
