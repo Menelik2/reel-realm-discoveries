@@ -38,6 +38,8 @@ const VideoEmbed = ({
     'vidsrc.in',
     'vidsrc.stream',
     'vidsrc.xyz',
+    'vidsrc.pro',
+    'vidsrc.net',
   ];
 
   const getEmbedUrl = (domainIndex = 0) => {
