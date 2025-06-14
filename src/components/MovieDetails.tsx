@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { SimilarMovies } from '@/components/SimilarMovies';
 import { MovieDetailsHeader } from '@/components/movie-details/MovieDetailsHeader';
@@ -12,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { ActorDetails } from './actor/ActorDetails';
 import { SEOMetadata } from './SEOMetadata';
+import { AdBanner } from '@/components/AdBanner';
 
 interface MovieDetailsProps {
   movieId: number;
@@ -136,6 +136,8 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             />
           </div>
           
+          <AdBanner slot="1571190202" className="my-8" />
+
           {/* Similar Movies/Series */}
           {movie.id && (
             <div className="mt-8">

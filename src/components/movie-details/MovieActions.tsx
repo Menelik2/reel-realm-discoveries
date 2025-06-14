@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Heart, Globe, Download, Eye } from 'lucide-react';
 import { LiveWatchModal } from '@/components/LiveWatchModal';
-import { ShareButton } from './ShareButton';
 
 interface MovieActionsProps {
   trailerUrl: string | null;
@@ -72,13 +71,6 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
             </Button>
           )}
         </div>
-
-        {/* Share section */}
-        <ShareButton 
-          movieId={movieId}
-          contentType={contentType}
-          title={title}
-        />
       </div>
 
       <LiveWatchModal
