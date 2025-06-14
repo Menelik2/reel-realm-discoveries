@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -61,6 +60,15 @@ const Index = () => {
     navigate(`/${type}/${movieId}`);
   };
 
+  const handleSetCurrentCategory = (category: string) => {
+    setCurrentCategory(category);
+    // Reset filters for categories that don't support filtering
+    if (category !== 'popular' && category !== 'top_rated') {
+      setSelectedGenre('all');
+      setSelectedYear('all');
+    }
+  };
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
       <div className="bg-background text-foreground transition-colors">
@@ -90,7 +98,7 @@ const Index = () => {
             currentPage={currentPage}
             handlePageChange={handlePageChange}
             currentCategory={currentCategory}
-            setCurrentCategory={setCurrentCategory}
+            setCurrentCategory={handleSetCurrentCategory}
           />
         </main>
 

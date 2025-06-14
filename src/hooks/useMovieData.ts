@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 export interface Movie {
@@ -42,26 +43,40 @@ export const useMovieData = ({
   const fetchMovies = async (page: number) => {
     setLoading(true);
     try {
-      let url = `${TMDB_BASE_URL}/${contentType}/${currentCategory}?page=${page}`;
-      
-      // Build query parameters array
+      const supportsFiltering = currentCategory === 'popular' || currentCategory === 'top_rated';
+      const useDiscover = (selectedGenre !== 'all' || selectedYear !== 'all') && supportsFiltering;
+
+      let url;
       const params = new URLSearchParams();
       params.append('page', page.toString());
       
-      if (selectedGenre !== 'all') {
-        params.append('with_genres', selectedGenre);
-      }
-      
-      if (selectedYear !== 'all') {
-        const yearParam = contentType === 'movie' ? 'primary_release_year' : 'first_air_date_year';
-        params.append(yearParam, selectedYear);
+      if (useDiscover) {
+        url = `${TMDB_BASE_URL}/discover/${contentType}`;
+        
+        if (selectedGenre !== 'all') {
+          params.append('with_genres', selectedGenre);
+        }
+        
+        if (selectedYear !== 'all') {
+          const yearParam = contentType === 'movie' ? 'primary_release_year' : 'first_air_date_year';
+          params.append(yearParam, selectedYear);
+        }
+
+        if (currentCategory === 'popular') {
+          params.append('sort_by', 'popularity.desc');
+        } else if (currentCategory === 'top_rated') {
+          params.append('sort_by', 'vote_average.desc');
+          params.append('vote_count.gte', '300');
+        }
+      } else {
+        url = `${TMDB_BASE_URL}/${contentType}/${currentCategory}`;
       }
 
       // Add timestamp to prevent caching and get fresh data
       params.append('_t', Date.now().toString());
 
       // Construct final URL
-      const finalUrl = `${TMDB_BASE_URL}/${contentType}/${currentCategory}?${params.toString()}`;
+      const finalUrl = `${url}?${params.toString()}`;
 
       console.log('Fetching content from:', finalUrl);
       const response = await fetch(finalUrl, {

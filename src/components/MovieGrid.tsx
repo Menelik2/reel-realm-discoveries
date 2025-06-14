@@ -65,13 +65,15 @@ export const MovieGrid = ({
               contentType={contentType}
             />
 
-            {/* Filters */}
-            <MovieFilters 
-              selectedGenre={selectedGenre}
-              setSelectedGenre={setSelectedGenre}
-              selectedYear={selectedYear}
-              setSelectedYear={setSelectedYear}
-            />
+            {/* Filters - only for popular and top_rated */}
+            {(currentCategory === 'popular' || currentCategory === 'top_rated') && (
+              <MovieFilters 
+                selectedGenre={selectedGenre}
+                setSelectedGenre={setSelectedGenre}
+                selectedYear={selectedYear}
+                setSelectedYear={setSelectedYear}
+              />
+            )}
           </div>
         </>
       ) : (
