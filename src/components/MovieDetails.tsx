@@ -103,6 +103,16 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             movieId={movieId}
             contentType={contentType}
           />
+
+          <div className="mt-8">
+            <ProductionDetails 
+              budget={movie.budget || 0}
+              revenue={movie.revenue || 0}
+              productionCountries={movie.production_countries}
+              spokenLanguages={movie.spoken_languages}
+              productionCompanies={movie.production_companies}
+            />
+          </div>
           
           {/* Similar Movies/Series */}
           {movie.id && (
@@ -129,15 +139,6 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             </div>
           )}
 
-          <div className="mt-8">
-            <ProductionDetails 
-              budget={movie.budget || 0}
-              revenue={movie.revenue || 0}
-              productionCountries={movie.production_countries}
-              spokenLanguages={movie.spoken_languages}
-              productionCompanies={movie.production_companies}
-            />
-          </div>
         </div>
       </div>
     </div>
