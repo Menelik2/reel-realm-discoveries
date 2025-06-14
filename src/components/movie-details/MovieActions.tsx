@@ -17,13 +17,8 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
 
   const handleDownload = () => {
-    if (contentType === 'movie') {
-      // For movies, redirect to Telegram Movie Searching Bot
-      window.open('https://t.me/Phonofilmbot', '_blank');
-    } else {
-      // For TV series, redirect to SeriesBayX0
-      window.open('https://t.me/SeriesBayX0', '_blank');
-    }
+    // Redirect to IMDBot on Telegram, which handles both movies and series
+    window.open('https://t.me/imdbot', '_blank');
   };
 
   return (
