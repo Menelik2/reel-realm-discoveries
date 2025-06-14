@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 
 interface VideoEmbedProps {
@@ -47,18 +48,23 @@ const VideoEmbed = ({
     const domain = vidsrcDomains[domainIndex % vidsrcDomains.length];
     let embedUrl = `https://${domain}/embed/${type}/${id}`;
 
-    const params = new URLSearchParams();
-
-    // TV-specific parameters
+    // Append season and episode to the path for TV shows, as per the documentation
     if (type === 'tv') {
-      if (season) params.append('season', String(season));
-      if (episode) params.append('episode', String(episode));
+      if (season) {
+        embedUrl += `/${season}`;
+        if (episode) {
+          embedUrl += `/${episode}`;
+        }
+      }
     }
+
+    const params = new URLSearchParams();
     
-    // Common parameters
+    // Common parameters as query strings
     if (dsLang) params.append('dsLang', dsLang);
     if (autoPlay !== undefined) params.append('autoplay', String(autoPlay));
-    if (subUrl) params.append('sub_url', subUrl);
+    // Corrected subtitle parameter from 'sub_url' to 'sub_file'
+    if (subUrl) params.append('sub_file', subUrl);
     if (autoNext !== undefined) params.append('autonext', String(autoNext));
 
     const queryString = params.toString();
