@@ -1,9 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-// You need to get your own API key from https://www.themoviedb.org/settings/api
-// Once you have it, you can provide it to me.
-const API_KEY = ""; 
+const API_KEY = "1177de48cd44943e60240337bac80877";
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 export interface BoxOfficeMovie {
@@ -19,10 +17,6 @@ interface ApiResponse {
 }
 
 const fetchTopBoxOffice = async (): Promise<BoxOfficeMovie[]> => {
-  if (!API_KEY) {
-    throw new Error('To show the Top Box Office chart, a TMDB API key is required. Please get a free key from the TMDB website, then paste it in the chat.');
-  }
-
   const response = await fetch(`${BASE_URL}/movie/now_playing?api_key=${API_KEY}&language=en-US&page=1&region=US`);
   
   if (!response.ok) {
