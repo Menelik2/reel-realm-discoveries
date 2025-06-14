@@ -1,6 +1,5 @@
-
 import { Link } from 'react-router-dom';
-import { Github, Film, Youtube, Send } from 'lucide-react';
+import { Github, Film, Youtube, Send, User } from 'lucide-react';
 
 export const Footer = () => {
   return (
@@ -59,7 +58,7 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Social */}
+          {/* Social and Admin */}
           <div className="space-y-4">
             <h4 className="font-semibold">Follow Us</h4>
             <div className="flex space-x-3">
@@ -75,6 +74,13 @@ export const Footer = () => {
               <a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                 <Send className="h-5 w-5" />
               </a>
+            </div>
+            <div className="mt-4">
+                <h4 className="font-semibold">Admin</h4>
+                <Link to="/auth" className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <User className="h-4 w-4" />
+                  <span>Admin Login</span>
+                </Link>
             </div>
           </div>
         </div>

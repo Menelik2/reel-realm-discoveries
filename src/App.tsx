@@ -12,6 +12,9 @@ import NotFound from "./pages/NotFound";
 import MoviePage from "./pages/Movie";
 import TopBoxOffice from "./pages/TopBoxOffice";
 import { HelmetProvider } from "react-helmet-async";
+import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +33,15 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/top-box-office" element={<TopBoxOffice />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
