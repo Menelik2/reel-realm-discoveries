@@ -25,6 +25,7 @@ interface UseMovieDataProps {
   currentCategory: string;
   currentPage: number;
   refreshKey?: number;
+  enabled?: boolean;
 }
 
 export const useMovieData = ({
@@ -34,7 +35,8 @@ export const useMovieData = ({
   contentType,
   currentCategory,
   currentPage,
-  refreshKey = 0
+  refreshKey = 0,
+  enabled = true,
 }: UseMovieDataProps) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,6 +207,12 @@ export const useMovieData = ({
   };
 
   useEffect(() => {
+    if (!enabled) {
+      setMovies([]);
+      setLoading(false);
+      return;
+    }
+
     if (searchQuery) {
       searchMovies(currentPage);
     } else if (currentCategory === 'custom') {
@@ -213,7 +221,7 @@ export const useMovieData = ({
     else {
       fetchMovies(currentPage);
     }
-  }, [searchQuery, selectedGenre, selectedYear, contentType, currentCategory, currentPage, refreshKey]);
+  }, [searchQuery, selectedGenre, selectedYear, contentType, currentCategory, currentPage, refreshKey, enabled]);
 
   return { movies, loading, totalPages };
 };

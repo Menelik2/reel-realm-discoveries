@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -7,6 +6,7 @@ import { MovieGrid } from '@/components/MovieGrid';
 import { Footer } from '@/components/Footer';
 import { useMovieData } from '@/hooks/useMovieData';
 import { AdBanner } from '@/components/AdBanner';
+import { MovieRow } from '@/components/MovieRow';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +28,9 @@ const Index = () => {
     setCurrentCategory(searchParams.get('category') || 'popular');
   }, [searchParams]);
 
+  const categoryFromUrl = searchParams.get('category');
+  const isDashboardView = !searchQuery && !categoryFromUrl;
+
   const { movies, loading, totalPages } = useMovieData({
     searchQuery,
     selectedGenre,
@@ -36,6 +39,7 @@ const Index = () => {
     currentCategory,
     currentPage,
     refreshKey,
+    enabled: !isDashboardView,
   });
 
   // Auto-refresh every day to get new movies from TMDB
@@ -94,32 +98,45 @@ const Index = () => {
         />
         
         <main>
-          {!searchQuery && currentCategory !== 'custom' && <HeroCarousel />}
+          {!searchQuery && <HeroCarousel />}
           
-          {!searchQuery && currentCategory !== 'custom' && (
-            <div className="container mx-auto px-4 my-8">
-              <AdBanner slot="1571190202" />
-            </div>
+          {isDashboardView ? (
+            <>
+              <div className="container mx-auto px-4 my-8">
+                <AdBanner slot="1571190202" />
+              </div>
+              <MovieRow title="Trending Now" fetchUrl="/trending/movie/week" contentType="movie" />
+              <MovieRow title="Popular TV Shows" fetchUrl="/tv/popular" contentType="tv" />
+              <MovieRow title="Romance Movies" fetchUrl="/discover/movie?with_genres=10749&sort_by=popularity.desc" contentType="movie" />
+            </>
+          ) : (
+            <>
+              {!searchQuery && currentCategory !== 'custom' && (
+                <div className="container mx-auto px-4 my-8">
+                  <AdBanner slot="1571190202" />
+                </div>
+              )}
+              
+              <MovieGrid 
+                key={refreshKey}
+                searchQuery={searchQuery}
+                selectedGenre={selectedGenre}
+                setSelectedGenre={setSelectedGenre}
+                selectedYear={selectedYear}
+                setSelectedYear={setSelectedYear}
+                onMovieClick={handleMovieClick}
+                contentType={contentType}
+                setContentType={setContentType}
+                movies={movies}
+                loading={loading}
+                totalPages={totalPages}
+                currentPage={currentPage}
+                handlePageChange={handlePageChange}
+                currentCategory={currentCategory}
+                setCurrentCategory={handleSetCurrentCategory}
+              />
+            </>
           )}
-          
-          <MovieGrid 
-            key={refreshKey}
-            searchQuery={searchQuery}
-            selectedGenre={selectedGenre}
-            setSelectedGenre={setSelectedGenre}
-            selectedYear={selectedYear}
-            setSelectedYear={setSelectedYear}
-            onMovieClick={handleMovieClick}
-            contentType={contentType}
-            setContentType={setContentType}
-            movies={movies}
-            loading={loading}
-            totalPages={totalPages}
-            currentPage={currentPage}
-            handlePageChange={handlePageChange}
-            currentCategory={currentCategory}
-            setCurrentCategory={handleSetCurrentCategory}
-          />
         </main>
 
         <Footer />
