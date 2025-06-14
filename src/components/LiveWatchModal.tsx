@@ -16,8 +16,8 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
   const [hasError, setHasError] = useState(false);
 
   const getEmbedUrl = () => {
-    // Using vidsrc.in as suggested for better reliability
-    const baseUrl = `https://vidsrc.in/embed/${contentType}`;
+    // Using vidsrc.to as it might have a wider library of content.
+    const baseUrl = `https://vidsrc.to/embed/${contentType}`;
     return `${baseUrl}?tmdb=${movieId}&autoplay=1`;
   };
 
