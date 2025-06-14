@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { Github, Film, Youtube } from 'lucide-react';
+import { Github, Film, Youtube, Telegram } from 'lucide-react';
 
 export const Footer = () => {
   return (
@@ -71,6 +71,9 @@ export const Footer = () => {
               </a>
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                 <Film className="h-5 w-5" />
+              </a>
+              <a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                <Telegram className="h-5 w-5" />
               </a>
             </div>
           </div>
