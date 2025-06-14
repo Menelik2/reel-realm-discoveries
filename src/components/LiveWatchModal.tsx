@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Play, ArrowLeft, AlertTriangle } from 'lucide-react';
@@ -159,7 +158,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
             src={getEmbedUrl()}
             className="w-full h-full"
             allowFullScreen
-            allow="autoplay; encrypted-media"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             referrerPolicy="origin"
             title={`Watch ${title}`}
             style={{ border: 'none' }}
