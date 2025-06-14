@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Play, ArrowLeft } from 'lucide-react';
+import { X, Play, ArrowLeft, AlertTriangle } from 'lucide-react';
 
 interface LiveWatchModalProps {
   isOpen: boolean;
@@ -13,14 +13,17 @@ interface LiveWatchModalProps {
 
 export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }: LiveWatchModalProps) => {
   const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const getEmbedUrl = () => {
-    const baseUrl = `https://vidsrc.me/embed/${contentType}`;
+    // Using vidsrc.in as suggested for better reliability
+    const baseUrl = `https://vidsrc.in/embed/${contentType}`;
     return `${baseUrl}?tmdb=${movieId}&autoplay=1`;
   };
 
   const handleLoadPlayer = () => {
     setIsPlayerLoaded(true);
+    setHasError(false); // Reset error state on each attempt
   };
 
   // Handle escape key press
@@ -54,6 +57,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
   useEffect(() => {
     if (!isOpen) {
       setIsPlayerLoaded(false);
+      setHasError(false);
     }
   }, [isOpen]);
 
@@ -106,6 +110,18 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
               </Button>
             </div>
           </div>
+        ) : hasError ? (
+          <div className="flex flex-col items-center justify-center h-full bg-muted/20 text-center px-4">
+            <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
+            <h2 className="text-xl font-semibold mb-2">Error Loading Content</h2>
+            <p className="text-muted-foreground mb-6">
+              The video player failed to load. This might be a temporary issue with the source.
+            </p>
+            <Button onClick={handleLoadPlayer} size="lg">
+              <Play className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+          </div>
         ) : (
           <iframe
             src={getEmbedUrl()}
@@ -115,6 +131,9 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title }:
             referrerPolicy="origin"
             title={`Watch ${title}`}
             style={{ border: 'none' }}
+            loading="lazy"
+            onError={() => setHasError(true)}
+            sandbox="allow-same-origin allow-scripts allow-popups"
           />
         )}
       </div>
