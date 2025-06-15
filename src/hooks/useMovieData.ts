@@ -52,6 +52,16 @@ export const useMovieData = ({
       const params = new URLSearchParams();
       params.append('page', page.toString());
       
+      // Map categories for TV shows
+      let apiCategory = currentCategory;
+      if (contentType === 'tv') {
+        if (apiCategory === 'upcoming') {
+          apiCategory = 'on_the_air';
+        } else if (apiCategory === 'now_playing') {
+          apiCategory = 'airing_today';
+        }
+      }
+      
       if (useDiscover) {
         url = `${TMDB_BASE_URL}/discover/${contentType}`;
         
@@ -71,7 +81,7 @@ export const useMovieData = ({
           params.append('vote_count.gte', '300');
         }
       } else {
-        url = `${TMDB_BASE_URL}/${contentType}/${currentCategory}`;
+        url = `${TMDB_BASE_URL}/${contentType}/${apiCategory}`;
       }
 
       // Add timestamp to prevent caching and get fresh data
