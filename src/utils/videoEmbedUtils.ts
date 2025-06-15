@@ -1,3 +1,4 @@
+
 interface EmbedUrlParams {
   tmdbId?: number;
   imdbId?: string;
@@ -8,6 +9,7 @@ interface EmbedUrlParams {
   subUrl?: string;
   autoPlay?: 1 | 0;
   autoNext?: 1 | 0;
+  source?: string;
 }
 
 export function getEmbedUrl({
@@ -20,8 +22,9 @@ export function getEmbedUrl({
   subUrl,
   autoPlay,
   autoNext,
+  source,
 }: EmbedUrlParams): string | null {
-  const baseUrl = "https://vidsrc.me";
+  const baseUrl = source || "https://vidsrc.to";
 
   // MOVIE
   if (type === "movie") {

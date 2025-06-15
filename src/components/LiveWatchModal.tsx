@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Play, ArrowLeft } from 'lucide-react';
@@ -25,6 +26,13 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | undefined>();
   const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState<number | undefined>();
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
+  const [selectedSource, setSelectedSource] = useState('https://vidsrc.to');
+
+  const sources = [
+    { name: 'VidSrc TO', url: 'https://vidsrc.to' },
+    { name: 'VidSrc ME', url: 'https://vidsrc.me' },
+    { name: 'VidSrc PRO', url: 'https://vidsrc.pro' },
+  ];
 
   const hasSeasons = contentType === 'tv' && seasons && seasons.filter(s => s.season_number > 0).length > 0;
 
@@ -47,6 +55,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
         setSelectedSeasonNumber(initialSeason.season_number);
         setSelectedEpisodeNumber(1);
       }
+      setSelectedSource('https://vidsrc.to'); // Reset source on open
     } else {
       document.body.style.overflow = 'unset';
       // Reset state on close
@@ -68,6 +77,24 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
       setSelectedEpisodeNumber(1);
     }
   };
+
+  const sourceSelector = (
+    <div>
+      <h3 className="text-sm font-medium mb-2">Video Source</h3>
+      <div className="flex flex-wrap gap-2">
+        {sources.map(source => (
+          <Button
+            key={source.name}
+            variant={selectedSource === source.url ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSelectedSource(source.url)}
+          >
+            {source.name}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 bg-background z-50 overflow-hidden animate-fade-in duration-300">
@@ -106,9 +133,11 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
                     season={selectedSeasonNumber}
                     episode={selectedEpisodeNumber}
                     autoPlay={1}
+                    source={selectedSource}
                   />
                 </div>
                 <div className="w-full lg:w-1/4 lg:order-1 flex flex-col gap-4">
+                  {sourceSelector}
                   <div>
                     <h3 className="text-sm font-medium mb-2">Season</h3>
                     <Select onValueChange={handleSeasonChange} value={String(selectedSeasonNumber)}>
@@ -141,8 +170,17 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
           </div>
         ) : (
           // For movies, directly show the player without the "Start Watching" screen
-          <div className="flex-grow flex items-center justify-center p-4 md:p-8">
-            <VideoEmbed tmdbId={movieId} type={contentType} title={title} autoPlay={1} />
+          <div className="flex-grow flex flex-col items-center justify-center p-4 md:p-8">
+            <div className="w-full max-w-4xl space-y-4">
+              {sourceSelector}
+              <VideoEmbed 
+                tmdbId={movieId} 
+                type={contentType} 
+                title={title} 
+                autoPlay={1}
+                source={selectedSource}
+              />
+            </div>
           </div>
         )}
       </div>

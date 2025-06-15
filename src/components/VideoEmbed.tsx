@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
@@ -17,6 +18,7 @@ interface VideoEmbedProps {
   subUrl?: string;
   autoNext?: 1 | 0;
   videoUrl?: string;
+  source?: string;
 }
 
 const VideoEmbed = ({
@@ -31,6 +33,7 @@ const VideoEmbed = ({
   subUrl,
   autoNext,
   videoUrl,
+  source,
 }: VideoEmbedProps) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +44,7 @@ const VideoEmbed = ({
 
   // Debug: log embed url and render in UI
   useEffect(() => {
-    const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext });
+    const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
     setDebugUrl(url || '');
     if (!url) {
       setHasError(true);
@@ -55,7 +58,7 @@ const VideoEmbed = ({
       }
     }
     // eslint-disable-next-line
-  }, [tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext]);
+  }, [tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source]);
 
   const handleError = () => {
     setIsLoading(true);
@@ -63,7 +66,7 @@ const VideoEmbed = ({
       retryCount.current += 1;
       setTimeout(() => {
         if (iframeRef.current) {
-          const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext });
+          const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
           iframeRef.current.src = url || '';
           setHasError(false);
         }
