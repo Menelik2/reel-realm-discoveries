@@ -1,6 +1,5 @@
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface SourceSelectorProps {
   selectedSource: string;
@@ -15,27 +14,21 @@ const sources = [
 
 export const SourceSelector = ({ selectedSource, onSourceChange }: SourceSelectorProps) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">Video Source</CardTitle>
-        <CardDescription>
-          If one source doesn't work, try another.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
-          {sources.map(source => (
-            <Button
-              key={source.name}
-              variant={selectedSource === source.url ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onSourceChange(source.url)}
-            >
-              {source.name}
-            </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-lg bg-card/50 p-3 ring-1 ring-inset ring-white/10">
+      <p className="text-sm font-medium text-muted-foreground flex-shrink-0">Video Source:</p>
+      <div className="flex flex-wrap gap-2">
+        {sources.map(source => (
+          <Button
+            key={source.name}
+            variant={selectedSource === source.url ? 'default' : 'secondary'}
+            size="sm"
+            onClick={() => onSourceChange(source.url)}
+            className="transition-all"
+          >
+            {source.name}
+          </Button>
+        ))}
+      </div>
+    </div>
   );
 };
