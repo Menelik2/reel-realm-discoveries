@@ -21,12 +21,14 @@ export function getEmbedUrl({
   autoPlay,
   autoNext,
 }: EmbedUrlParams): string | null {
+  const baseUrl = "https://vidsrc.to";
+
   // MOVIE
   if (type === "movie") {
     // Use /embed/movie/{tmdbId} if available (preferred)
     if (tmdbId) {
       if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
-        return `https://vidsrc.xyz/embed/movie/${tmdbId}`;
+        return `${baseUrl}/embed/movie/${tmdbId}`;
       } else {
         // query version
         const params = new URLSearchParams({ tmdb: String(tmdbId) });
@@ -34,13 +36,13 @@ export function getEmbedUrl({
         if (subUrl) params.append("sub_url", subUrl);
         if (typeof autoPlay !== "undefined")
           params.append("autoplay", String(autoPlay));
-        return `https://vidsrc.xyz/embed/movie?${params.toString()}`;
+        return `${baseUrl}/embed/movie?${params.toString()}`;
       }
     }
     // Otherwise, fallback to imdbId
     if (imdbId) {
       if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
-        return `https://vidsrc.xyz/embed/movie/${imdbId}`;
+        return `${baseUrl}/embed/movie/${imdbId}`;
       } else {
         // query version
         const params = new URLSearchParams({ imdb: imdbId });
@@ -48,7 +50,7 @@ export function getEmbedUrl({
         if (subUrl) params.append("sub_url", subUrl);
         if (typeof autoPlay !== "undefined")
           params.append("autoplay", String(autoPlay));
-        return `https://vidsrc.xyz/embed/movie?${params.toString()}`;
+        return `${baseUrl}/embed/movie?${params.toString()}`;
       }
     }
     return null;
@@ -58,20 +60,20 @@ export function getEmbedUrl({
   if (type === "tv" && !season && !episode) {
     if (tmdbId) {
       if (!dsLang) {
-        return `https://vidsrc.xyz/embed/tv/${tmdbId}`;
+        return `${baseUrl}/embed/tv/${tmdbId}`;
       } else {
         const params = new URLSearchParams({ tmdb: String(tmdbId) });
         params.append("ds_lang", dsLang);
-        return `https://vidsrc.xyz/embed/tv?${params.toString()}`;
+        return `${baseUrl}/embed/tv?${params.toString()}`;
       }
     }
     if (imdbId) {
       if (!dsLang) {
-        return `https://vidsrc.xyz/embed/tv/${imdbId}`;
+        return `${baseUrl}/embed/tv/${imdbId}`;
       } else {
         const params = new URLSearchParams({ imdb: imdbId });
         params.append("ds_lang", dsLang);
-        return `https://vidsrc.xyz/embed/tv?${params.toString()}`;
+        return `${baseUrl}/embed/tv?${params.toString()}`;
       }
     }
     return null;
@@ -86,7 +88,7 @@ export function getEmbedUrl({
         typeof autoPlay === "undefined" &&
         typeof autoNext === "undefined"
       ) {
-        return `https://vidsrc.xyz/embed/tv/${tmdbId}/${season}-${episode}`;
+        return `${baseUrl}/embed/tv/${tmdbId}/${season}-${episode}`;
       } else {
         const params = new URLSearchParams({
           tmdb: String(tmdbId),
@@ -99,7 +101,7 @@ export function getEmbedUrl({
           params.append("autoplay", String(autoPlay));
         if (typeof autoNext !== "undefined")
           params.append("autonext", String(autoNext));
-        return `https://vidsrc.xyz/embed/tv?${params.toString()}`;
+        return `${baseUrl}/embed/tv?${params.toString()}`;
       }
     }
     if (imdbId) {
@@ -109,7 +111,7 @@ export function getEmbedUrl({
         typeof autoPlay === "undefined" &&
         typeof autoNext === "undefined"
       ) {
-        return `https://vidsrc.xyz/embed/tv/${imdbId}/${season}-${episode}`;
+        return `${baseUrl}/embed/tv/${imdbId}/${season}-${episode}`;
       } else {
         const params = new URLSearchParams({
           imdb: imdbId,
@@ -122,7 +124,7 @@ export function getEmbedUrl({
           params.append("autoplay", String(autoPlay));
         if (typeof autoNext !== "undefined")
           params.append("autonext", String(autoNext));
-        return `https://vidsrc.xyz/embed/tv?${params.toString()}`;
+        return `${baseUrl}/embed/tv?${params.toString()}`;
       }
     }
     return null;

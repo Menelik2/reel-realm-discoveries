@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Heart, Globe, Download, Eye } from 'lucide-react';
@@ -10,9 +9,10 @@ interface MovieActionsProps {
   movieId: number;
   contentType: 'movie' | 'tv';
   title: string;
+  seasons?: any[];
 }
 
-export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title }: MovieActionsProps) => {
+export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title, seasons }: MovieActionsProps) => {
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
 
   const handleDownload = () => {
@@ -79,6 +79,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         movieId={movieId}
         contentType={contentType}
         title={title}
+        seasons={seasons}
       />
     </>
   );

@@ -1,4 +1,3 @@
-
 import { Badge } from '@/components/ui/badge';
 import { Star, Calendar, Clock } from 'lucide-react';
 import { MovieActions } from './MovieActions';
@@ -22,6 +21,7 @@ interface MovieInfoProps {
   homepage?: string;
   movieId: number;
   contentType: 'movie' | 'tv';
+  seasons?: any[];
 }
 
 export const MovieInfo = ({
@@ -37,7 +37,8 @@ export const MovieInfo = ({
   trailerUrl,
   homepage,
   movieId,
-  contentType
+  contentType,
+  seasons,
 }: MovieInfoProps) => {
   return (
     <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
@@ -100,6 +101,7 @@ export const MovieInfo = ({
           movieId={movieId}
           contentType={contentType}
           title={title}
+          seasons={seasons}
         />
       </div>
     </div>

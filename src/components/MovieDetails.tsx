@@ -143,6 +143,7 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             homepage={movie.homepage}
             movieId={movieId}
             contentType={contentType}
+            seasons={movie.seasons}
           />
 
           <div className="mt-8">
