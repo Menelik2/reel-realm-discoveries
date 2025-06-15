@@ -1,4 +1,3 @@
-
 import type { Movie } from '@/types/tmdb';
 
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
@@ -107,5 +106,16 @@ export const searchContent = async ({ searchQuery, currentPage }: SearchContentP
     return {
         movies: processTMDbResults(data.results),
         totalPages: Math.min(data.total_pages || 1, 100),
+    };
+};
+
+export const fetchMovieDetails = async (id: number, contentType: 'movie' | 'tv') => {
+    const url = `${TMDB_BASE_URL}/${contentType}/${id}?append_to_response=videos,credits`;
+    const data = await fetchFromTMDB(url);
+
+    return {
+        movie: data,
+        cast: data.credits?.cast?.slice(0, 10) || [],
+        videos: data.videos,
     };
 };
