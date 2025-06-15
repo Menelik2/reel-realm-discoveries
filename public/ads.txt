@@ -1,4 +1,7 @@
 
 google.com, pub-8938310552882401, DIRECT, f08c47fec0942fa0
-# Updated ads.txt for better AdSense compliance
-# This file helps verify ad inventory legitimacy
+
+# ads.txt for YENI MOVIE
+# This file helps verify ad inventory legitimacy and prevent ad fraud
+# Updated for Google AdSense compliance
+# Last updated: 2025-01-15

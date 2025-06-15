@@ -1,94 +1,85 @@
+
 import { Link } from 'react-router-dom';
-import { Github, Film, Youtube, Send, User } from 'lucide-react';
+import { Film } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer className="bg-muted border-t border-border">
+    <footer className="bg-muted/50 mt-auto">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Film className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">CineDB</span>
+              <Film className="h-6 w-6" />
+              <span className="font-bold text-lg">YENI MOVIE</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Your ultimate destination for movie and TV series discovery.
+              Your ultimate destination for discovering movies and TV series.
             </p>
           </div>
-
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">Quick Links</h4>
-            <div className="space-y-2 text-sm">
-              <Link to="/" className="block hover:text-primary transition-colors">
-                Home
-              </Link>
-              <Link to="/top-box-office" className="block hover:text-primary transition-colors">
-                Top Box Office
-              </Link>
-              <Link to="/about" className="block hover:text-primary transition-colors">
-                About Us
-              </Link>
-              <Link to="/contact" className="block hover:text-primary transition-colors">
-                Contact
-              </Link>
-              <Link to="/privacy" className="block hover:text-primary transition-colors">
-                Privacy Policy
-              </Link>
-            </div>
-          </div>
-
-          {/* Categories */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">Categories</h4>
-            <div className="space-y-2 text-sm">
-              <Link to="/?genre=action" className="block hover:text-primary transition-colors">
-                Action Movies
-              </Link>
-              <Link to="/?genre=comedy" className="block hover:text-primary transition-colors">
-                Comedy
-              </Link>
-              <Link to="/?genre=drama" className="block hover:text-primary transition-colors">
-                Drama
-              </Link>
-              <Link to="/?genre=horror" className="block hover:text-primary transition-colors">
-                Horror
-              </Link>
-            </div>
-          </div>
-
-          {/* Social and Admin */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">Follow Us</h4>
-            <div className="flex space-x-3">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Github className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Youtube className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Film className="h-5 w-5" />
-              </a>
-              <a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                <Send className="h-5 w-5" />
-              </a>
-            </div>
-            <div className="mt-4">
-                <h4 className="font-semibold">Admin</h4>
-                <Link to="/auth" className="flex items-center space-x-2 text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <User className="h-4 w-4" />
-                  <span>Admin Login</span>
+          
+          <div>
+            <h3 className="font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Home
                 </Link>
-            </div>
+              </li>
+              <li>
+                <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link to="/top-box-office" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Box Office
+                </Link>
+              </li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-4">Legal</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-4">Data Source</h3>
+            <p className="text-sm text-muted-foreground">
+              This product uses the TMDB API but is not endorsed or certified by TMDB.
+            </p>
+            <a 
+              href="https://www.themoviedb.org/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:underline"
+            >
+              The Movie Database
+            </a>
           </div>
         </div>
-
-        <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 CineDB. All rights reserved. Movie data provided by TMDB.</p>
+        
+        <div className="border-t border-border mt-8 pt-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} YENI MOVIE. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
   );
-};
