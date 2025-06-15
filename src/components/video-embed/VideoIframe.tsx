@@ -18,7 +18,7 @@ const VideoIframe = forwardRef<HTMLIFrameElement, VideoIframeProps>(
         className={`w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}`}
         allowFullScreen
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        referrerPolicy="origin"
+        referrerPolicy="no-referrer-when-downgrade"
         title={`Watch ${title}`}
         loading="eager"
         onLoad={onLoad}

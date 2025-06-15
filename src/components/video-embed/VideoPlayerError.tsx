@@ -11,10 +11,10 @@ const VideoPlayerError = ({ maxRetries }: VideoPlayerErrorProps) => (
         <TriangleAlert className="h-10 w-10 text-destructive" />
         <h3 className="mt-4 text-xl font-semibold">Failed to Load Content</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          We couldn't load the video after {maxRetries} attempts. This can happen if the source is offline or the content is not available.
+          We couldn't load the video after {maxRetries} attempts. This can happen if the source is offline, the content is unavailable, or an ad-blocker is active.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Please try changing the video source.
+          Please try changing the video source or disabling your ad-blocker.
         </p>
     </div>
   </div>
