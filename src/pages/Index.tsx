@@ -55,6 +55,7 @@ const Index = () => {
   // Always force white theme for now
   useEffect(() => {
     setIsDarkMode(false);
+    document.documentElement.classList.remove('dark');
     document.body.classList.remove('dark');
   }, []);
 

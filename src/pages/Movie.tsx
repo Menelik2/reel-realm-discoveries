@@ -1,68 +1,54 @@
+
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
+import { useEffect } from 'react';
 import { MovieDetails } from '@/components/MovieDetails';
-import { AdBanner } from '@/components/AdBanner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 const MoviePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Extract content type from the current path
   const contentType = location.pathname.startsWith('/tv/') ? 'tv' : 'movie';
 
   // Always force white theme for now
   useEffect(() => {
-    setIsDarkMode(false);
+    document.documentElement.classList.remove('dark');
     document.body.classList.remove('dark');
   }, []);
-
-  // Validate parameters
-  useEffect(() => {
-    if (!id) {
-      navigate('/');
-    }
-  }, [id, navigate]);
 
   const handleClose = () => {
     navigate('/');
   };
 
   const handleMovieClick = (movieId: number) => {
+    // This allows clicking on similar movies to navigate to a new movie page
     navigate(`/${contentType}/${movieId}`);
   };
 
-  if (!id) {
-    return null;
+  if (!id || isNaN(parseInt(id))) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-lg">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Invalid Content ID</AlertTitle>
+          <AlertDescription>
+            The ID in the URL is not valid. Please go back and try again.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
-    <div className={`min-h-screen`}>
-      <div className="bg-background text-foreground transition-colors">
-        <Header 
-          searchQuery=""
-          setSearchQuery={() => {}}
-          isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
-        />
-        
-        <main className="container mx-auto px-4 py-8">
-          <AdBanner slot="1571190202" className="mb-8" />
-          <MovieDetails 
-            movieId={parseInt(id)}
-            contentType={contentType as 'movie' | 'tv'}
-            onClose={handleClose}
-            onMovieClick={handleMovieClick}
-          />
-          <AdBanner slot="1571190202" className="mt-8" />
-        </main>
-
-        <Footer />
-      </div>
-    </div>
+    <MovieDetails 
+      movieId={parseInt(id)}
+      contentType={contentType as 'movie' | 'tv'}
+      onClose={handleClose}
+      onMovieClick={handleMovieClick}
+    />
   );
 };
 
