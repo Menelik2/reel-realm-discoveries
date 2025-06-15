@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -111,9 +112,13 @@ export const useMovieData = ({
             ...item,
             title: item.name,
             release_date: item.first_air_date,
+            media_type: 'tv',
           };
         }
-        return item;
+        return {
+          ...item,
+          media_type: 'movie',
+        };
       });
       setMovies(processedResults);
       setTotalPages(Math.min(data.total_pages || 1, 100));
