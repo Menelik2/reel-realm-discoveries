@@ -8,31 +8,14 @@ interface AdBannerProps {
   className?: string;
 }
 
-export const AdBanner = ({ 
-  slot, 
-  format = "auto", 
-  style = { display: "block" },
-  className = ""
-}: AdBannerProps) => {
+export const AdBanner = ({ slot }: AdBannerProps) => {
+  // Ad banners are temporarily disabled to debug a site-wide issue.
+  // This component will render nothing until the root cause is fixed.
   useEffect(() => {
-    try {
-      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-      (window as any).adsbygoogle.push({});
-    } catch (err) {
-      console.error('AdSense error:', err);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Ad banner for slot "${slot}" is disabled for debugging.`);
     }
   }, [slot]);
-
-  return (
-    <div className={className}>
-      <ins 
-        className="adsbygoogle"
-        style={style}
-        data-ad-client="ca-pub-8938310552882401"
-        data-ad-slot={slot}
-        data-ad-format={format}
-        data-full-width-responsive="true"
-      />
-    </div>
-  );
+  
+  return null;
 };
