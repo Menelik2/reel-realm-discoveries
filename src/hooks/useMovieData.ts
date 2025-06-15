@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -110,13 +109,14 @@ export const useMovieData = ({
         if (contentType === 'tv') {
           return {
             ...item,
-            title: item.name,
+            title: item.name || item.original_name,
             release_date: item.first_air_date,
             media_type: 'tv',
           };
         }
         return {
           ...item,
+          title: item.title || item.original_title,
           media_type: 'movie',
         };
       });
@@ -165,11 +165,16 @@ export const useMovieData = ({
           if (item.media_type === 'tv') {
             return {
               ...item,
-              title: item.name,
+              title: item.name || item.original_name,
               release_date: item.first_air_date,
+              media_type: 'tv',
             };
           }
-          return item;
+          return {
+            ...item,
+            title: item.title || item.original_title,
+            media_type: 'movie',
+          };
         });
 
       setMovies(processedResults);
