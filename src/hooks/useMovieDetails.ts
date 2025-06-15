@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchMovieDetails } from '@/api/tmdbService';
 
 interface MovieDetail {
@@ -43,33 +43,17 @@ interface Videos {
 }
 
 export const useMovieDetails = (movieId: number, contentType: 'movie' | 'tv') => {
-  const [movie, setMovie] = useState<MovieDetail | null>(null);
-  const [cast, setCast] = useState<Cast[]>([]);
-  const [videos, setVideos] = useState<Videos | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['movieDetails', movieId, contentType],
+    queryFn: () => fetchMovieDetails(movieId, contentType),
+    enabled: !!movieId,
+  });
 
-  useEffect(() => {
-    if (!movieId) return;
-
-    const loadMovieDetails = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const { movie, cast, videos } = await fetchMovieDetails(movieId, contentType);
-        setMovie(movie);
-        setCast(cast);
-        setVideos(videos);
-      } catch (err) {
-        console.error('Error fetching content details:', err);
-        setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMovieDetails();
-  }, [movieId, contentType]);
-
-  return { movie, cast, videos, loading, error };
+  return {
+    movie: data?.movie || null,
+    cast: data?.cast || [],
+    videos: data?.videos || null,
+    loading: isLoading,
+    error: isError ? (error as Error).message : null,
+  };
 };
