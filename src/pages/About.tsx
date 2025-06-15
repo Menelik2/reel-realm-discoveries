@@ -1,147 +1,119 @@
 
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Film, Users, Star, Globe, Database, Shield } from 'lucide-react';
+import { useState } from 'react';
+import { Film, Users, Target, Heart } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
 
 const About = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header 
-        searchQuery=""
-        setSearchQuery={() => {}}
-        isDarkMode={false}
-        setIsDarkMode={() => {}}
-      />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-center mb-8">About YENI MOVIE</h1>
-          
-          <AdBanner slot="1571190202" className="mb-8" />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Film className="h-5 w-5" />
-                  Our Mission
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  YENI MOVIE is your ultimate destination for discovering movies and TV series. 
-                  We provide comprehensive, legal information about entertainment content, 
-                  helping you find what to watch next through detailed summaries, ratings, 
-                  cast information, and user reviews.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Powered by TMDB
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Our platform utilizes The Movie Database (TMDB) API to provide accurate, 
-                  up-to-date information about movies and TV series. All content information 
-                  is sourced legally and ethically from this comprehensive entertainment database.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5" />
-                  Quality Content Discovery
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  We curate high-quality movie and series information including ratings, 
-                  cast details, plot summaries, and release information to help you make 
-                  informed viewing decisions. No pirated content, just pure discovery.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  Global Entertainment
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Discover content from around the world with support for multiple languages 
-                  and regions. Find hidden gems and international favorites, all through 
-                  legitimate streaming service recommendations.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Community Focused
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Built for movie enthusiasts by movie enthusiasts. Our platform respects 
-                  copyright laws and content creators while providing the best possible 
-                  experience for discovering your next favorite entertainment.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Legal & Ethical
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  YENI MOVIE operates within legal boundaries, providing only information 
-                  about movies and TV shows. We do not host, stream, or distribute copyrighted 
-                  content. We respect intellectual property rights.
-                </p>
-              </CardContent>
-            </Card>
+    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <div className="bg-background text-foreground transition-colors">
+        <Header 
+          searchQuery=""
+          setSearchQuery={() => {}}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
+        
+        <main className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold mb-4">About YENI MOVIE</h1>
+            <p className="text-xl text-muted-foreground">
+              Your ultimate destination for discovering movies and TV series
+            </p>
           </div>
 
-          <AdBanner slot="1571190202" className="mb-8" />
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <div className="space-y-6">
+              <div className="flex items-start space-x-4">
+                <Film className="h-8 w-8 text-primary mt-1" />
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Comprehensive Database</h3>
+                  <p className="text-muted-foreground">
+                    Access thousands of movies and TV series with detailed information, ratings, 
+                    cast details, and trailers powered by The Movie Database (TMDB).
+                  </p>
+                </div>
+              </div>
 
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-4">Discover Your Next Favorite</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
-              Whether you're a casual movie watcher or a serious cinephile, 
-              YENI MOVIE has something for everyone. Start exploring today and 
-              discover detailed information about movies and series from around the world!
-            </p>
-            <div className="bg-muted/20 p-6 rounded-lg">
-              <h3 className="font-semibold mb-2">Legal Notice</h3>
-              <p className="text-sm text-muted-foreground">
-                YENI MOVIE is a movie and TV show information platform. We provide details, 
-                ratings, and recommendations but do not host or stream any video content. 
-                All streaming should be done through legitimate, licensed platforms.
-              </p>
+              <div className="flex items-start space-x-4">
+                <Users className="h-8 w-8 text-primary mt-1" />
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Community Driven</h3>
+                  <p className="text-muted-foreground">
+                    Discover what's trending, popular, and highly rated by the global community 
+                    of movie and TV enthusiasts.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-start space-x-4">
+                <Target className="h-8 w-8 text-primary mt-1" />
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">Smart Discovery</h3>
+                  <p className="text-muted-foreground">
+                    Advanced filtering by genre, year, and content type helps you find exactly 
+                    what you're looking for or discover something new.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <Heart className="h-8 w-8 text-primary mt-1" />
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">User Experience</h3>
+                  <p className="text-muted-foreground">
+                    Clean, responsive design that works seamlessly across all devices, 
+                    from mobile phones to desktop computers.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
 
-      <Footer />
+          <AdBanner slot="1571190202" className="my-8" />
+
+          <div className="space-y-8">
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                At YENI MOVIE, we believe that great entertainment should be easily discoverable. 
+                Our mission is to help movie and TV enthusiasts find their next favorite watch 
+                through comprehensive information, user-friendly design, and powerful search capabilities.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">Features</h2>
+              <ul className="space-y-2 text-muted-foreground">
+                <li>• Extensive movie and TV series database</li>
+                <li>• Real-time search with instant results</li>
+                <li>• Detailed cast and crew information</li>
+                <li>• HD trailers and media content</li>
+                <li>• Genre-based filtering and discovery</li>
+                <li>• Responsive design for all devices</li>
+                <li>• Regular content updates</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">Data Source</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                All movie and TV series data is provided by The Movie Database (TMDB), 
+                a community-built movie and TV database. We're grateful to TMDB and its 
+                contributors for making this wealth of entertainment information available.
+              </p>
+            </section>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
     </div>
   );
 };
