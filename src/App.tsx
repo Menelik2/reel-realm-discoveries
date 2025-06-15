@@ -14,12 +14,14 @@ import TopBoxOffice from "./pages/TopBoxOffice";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { Toaster } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <Toaster />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
