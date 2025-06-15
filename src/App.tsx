@@ -14,6 +14,8 @@ import TopBoxOffice from "./pages/TopBoxOffice";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancelled from "./pages/PaymentCancelled";
 import { Toaster } from "@/components/ui/sonner";
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/top-box-office" element={<TopBoxOffice />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-cancelled" element={<PaymentCancelled />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <Admin />
