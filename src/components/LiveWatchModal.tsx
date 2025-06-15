@@ -5,6 +5,7 @@ import { X, Play, ArrowLeft } from 'lucide-react';
 import VideoEmbed from './VideoEmbed';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import VideoPlayerLoader from './video-embed/VideoPlayerLoader';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Season {
   id: number;
@@ -79,21 +80,28 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
   };
 
   const sourceSelector = (
-    <div>
-      <h3 className="text-sm font-medium mb-2">Video Source</h3>
-      <div className="flex flex-wrap gap-2">
-        {sources.map(source => (
-          <Button
-            key={source.name}
-            variant={selectedSource === source.url ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedSource(source.url)}
-          >
-            {source.name}
-          </Button>
-        ))}
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base font-semibold">Video Source</CardTitle>
+        <CardDescription>
+          If one source doesn't work, try another.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap gap-2">
+          {sources.map(source => (
+            <Button
+              key={source.name}
+              variant={selectedSource === source.url ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedSource(source.url)}
+            >
+              {source.name}
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 
   return (
@@ -120,7 +128,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
 
       <div className="pt-16 h-full w-full flex flex-col">
         {hasSeasons ? (
-          <div className="flex-grow flex flex-col lg:flex-row gap-4 p-4 container mx-auto max-w-7xl">
+          <div className="flex-grow flex flex-col lg:flex-row gap-6 p-4 container mx-auto max-w-7xl">
             {!currentSeason ? (
               <VideoPlayerLoader />
             ) : (
@@ -138,40 +146,47 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
                 </div>
                 <div className="w-full lg:w-1/4 lg:order-1 flex flex-col gap-4">
                   {sourceSelector}
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Season</h3>
-                    <Select onValueChange={handleSeasonChange} value={String(selectedSeasonNumber)}>
-                      <SelectTrigger><SelectValue placeholder="Select a season" /></SelectTrigger>
-                      <SelectContent>
-                        {seasons.filter(s => s.season_number > 0).map(s => (
-                          <SelectItem key={s.id} value={String(s.season_number)}>{s.name}</SelectItem>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base font-semibold">Season</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Select onValueChange={handleSeasonChange} value={String(selectedSeasonNumber)}>
+                        <SelectTrigger><SelectValue placeholder="Select a season" /></SelectTrigger>
+                        <SelectContent>
+                          {seasons.filter(s => s.season_number > 0).map(s => (
+                            <SelectItem key={s.id} value={String(s.season_number)}>{s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base font-semibold">Episode</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="max-h-64 lg:max-h-[calc(100vh-30rem)] overflow-y-auto">
+                        {Array.from({ length: currentSeason.episode_count }, (_, i) => i + 1).map(epNum => (
+                          <button
+                            key={epNum}
+                            onClick={() => setSelectedEpisodeNumber(epNum)}
+                            className={`w-full text-left p-3 flex items-center gap-3 text-sm transition-colors border-b last:border-b-0 ${selectedEpisodeNumber === epNum ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+                          >
+                            <Play className={`h-4 w-4 flex-shrink-0 ${selectedEpisodeNumber === epNum ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                            <span className="truncate">Episode {epNum}</span>
+                          </button>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Episode</h3>
-                    <div className="max-h-64 lg:max-h-[calc(100vh-20rem)] overflow-y-auto rounded-md border bg-background/50">
-                      {Array.from({ length: currentSeason.episode_count }, (_, i) => i + 1).map(epNum => (
-                        <button
-                          key={epNum}
-                          onClick={() => setSelectedEpisodeNumber(epNum)}
-                          className={`w-full text-left p-3 flex items-center gap-3 text-sm transition-colors ${selectedEpisodeNumber === epNum ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-                        >
-                          <Play className={`h-4 w-4 flex-shrink-0 ${selectedEpisodeNumber === epNum ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
-                          <span className="truncate">Episode {epNum}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </>
             )}
           </div>
         ) : (
-          // For movies, directly show the player without the "Start Watching" screen
-          <div className="flex-grow flex flex-col items-center justify-center p-4 md:p-8">
-            <div className="w-full max-w-4xl space-y-4">
+          <div className="flex-grow flex flex-col items-center justify-start p-4 pt-8 md:p-8">
+            <div className="w-full max-w-4xl space-y-6">
               {sourceSelector}
               <VideoEmbed 
                 tmdbId={movieId} 
