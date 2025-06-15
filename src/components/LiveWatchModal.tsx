@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Play, ArrowLeft } from 'lucide-react';
@@ -48,6 +47,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
 
   useEffect(() => {
     if (isOpen) {
+      document.documentElement.classList.add('dark');
       document.body.style.overflow = 'hidden';
       if (hasSeasons) {
         const validSeasons = seasons.filter(s => s.season_number > 0);
@@ -58,13 +58,17 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
       }
       setSelectedSource('https://vidsrc.to'); // Reset source on open
     } else {
+      document.documentElement.classList.remove('dark');
       document.body.style.overflow = 'unset';
       // Reset state on close
       setSelectedSeasonNumber(undefined);
       setSelectedEpisodeNumber(undefined);
       setCurrentSeason(null);
     }
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => { 
+      document.documentElement.classList.remove('dark');
+      document.body.style.overflow = 'unset'; 
+    };
   }, [isOpen, hasSeasons, seasons]);
 
   if (!isOpen) return null;
