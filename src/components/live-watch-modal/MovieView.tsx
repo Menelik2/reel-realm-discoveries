@@ -15,13 +15,15 @@ export const MovieView = ({ movieId, contentType, title, selectedSource, onSourc
     <div className="flex-grow flex flex-col items-center justify-start p-4 pt-8 md:p-8">
       <div className="w-full max-w-4xl space-y-6">
         <SourceSelector selectedSource={selectedSource} onSourceChange={onSourceChange} />
-        <VideoEmbed 
-          tmdbId={movieId} 
-          type={contentType} 
-          title={title} 
-          autoPlay={1}
-          source={selectedSource}
-        />
+        <div className="shadow-2xl shadow-primary/20 rounded-lg ring-1 ring-white/10 focus-within:ring-primary focus-within:ring-2 transition-all">
+          <VideoEmbed 
+            tmdbId={movieId} 
+            type={contentType} 
+            title={title} 
+            autoPlay={1}
+            source={selectedSource}
+          />
+        </div>
       </div>
     </div>
   );

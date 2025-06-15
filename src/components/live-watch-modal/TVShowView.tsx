@@ -36,15 +36,17 @@ export const TVShowView = ({
       ) : (
         <>
           <div className="w-full lg:w-3/4 lg:order-2">
-            <VideoEmbed
-              tmdbId={movieId}
-              type="tv"
-              title={`${title} - S${selectedSeasonNumber} E${selectedEpisodeNumber}`}
-              season={selectedSeasonNumber}
-              episode={selectedEpisodeNumber}
-              autoPlay={1}
-              source={selectedSource}
-            />
+            <div className="shadow-2xl shadow-primary/20 rounded-lg ring-1 ring-white/10 focus-within:ring-primary focus-within:ring-2 transition-all">
+              <VideoEmbed
+                tmdbId={movieId}
+                type="tv"
+                title={`${title} - S${selectedSeasonNumber} E${selectedEpisodeNumber}`}
+                season={selectedSeasonNumber}
+                episode={selectedEpisodeNumber}
+                autoPlay={1}
+                source={selectedSource}
+              />
+            </div>
           </div>
           <TVShowControls
             seasons={seasons}

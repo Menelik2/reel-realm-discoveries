@@ -57,7 +57,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
       />
 
       <div className="pt-16 h-full w-full flex flex-col">
-        {hasSeasons ? (
+        {contentType === 'tv' ? (
           <TVShowView
             movieId={movieId}
             title={title}
