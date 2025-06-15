@@ -73,6 +73,13 @@ export const HeroCarousel = () => {
     setCurrentIndex((prev) => (prev - 1 + movies.length) % movies.length);
   };
 
+  const getReleaseYear = (date?: string) => {
+    if (date && date.length >= 4) {
+      return date.substring(0, 4);
+    }
+    return 'N/A';
+  }
+
   if (loading || movies.length === 0) {
     return (
       <div className="relative h-[50vh] md:h-[70vh] bg-muted animate-pulse">
@@ -110,7 +117,7 @@ export const HeroCarousel = () => {
                 ⭐ {currentMovie.vote_average.toFixed(1)}/10
               </div>
               <div className="text-xs md:text-sm opacity-75">
-                {new Date(currentMovie.release_date).getFullYear()}
+                {getReleaseYear(currentMovie.release_date)}
               </div>
             </div>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">

@@ -30,6 +30,13 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
     }
   };
 
+  const getReleaseYear = (date?: string) => {
+    if (date && date.length >= 4) {
+      return date.substring(0, 4);
+    }
+    return 'N/A';
+  }
+
   return (
     <Card className="group hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer" onClick={handleCardClick}>
       <CardContent className="p-0">
@@ -84,7 +91,7 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
             ) : (
               <span />
             )}
-            <span>{movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A'}</span>
+            <span>{getReleaseYear(movie.release_date)}</span>
           </div>
         </div>
       </CardContent>
