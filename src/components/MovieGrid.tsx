@@ -4,7 +4,7 @@ import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { CategoryTabs } from '@/components/movie-grid/CategoryTabs';
 import { MovieFilters } from '@/components/movie-grid/MovieFilters';
 import { MovieGridContent } from '@/components/movie-grid/MovieGridContent';
-import type { Movie } from '@/hooks/useMovieData';
+import type { Movie } from '@/types/tmdb';
 
 interface MovieGridProps {
   searchQuery: string;

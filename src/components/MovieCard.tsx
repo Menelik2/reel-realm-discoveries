@@ -1,15 +1,7 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Heart } from 'lucide-react';
-
-interface Movie {
-  id: number;
-  title: string;
-  poster_path: string;
-  vote_average: number;
-  release_date: string;
-}
+import type { Movie } from '@/types/tmdb';
 
 interface MovieCardProps {
   movie: Movie;

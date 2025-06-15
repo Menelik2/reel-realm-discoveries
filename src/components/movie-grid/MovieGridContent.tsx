@@ -1,18 +1,7 @@
 import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { AdBanner } from '@/components/AdBanner';
-
-interface Movie {
-  id: number;
-  title: string;
-  name?: string;
-  poster_path: string;
-  vote_average: number;
-  release_date: string;
-  first_air_date?: string;
-  genre_ids: number[];
-  overview?: string;
-}
+import type { Movie } from '@/types/tmdb';
 
 interface MovieGridContentProps {
   movies: Movie[];

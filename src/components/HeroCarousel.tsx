@@ -1,16 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
-
-interface Movie {
-  id: number;
-  title: string;
-  overview: string;
-  backdrop_path: string;
-  poster_path: string;
-  vote_average: number;
-  release_date: string;
-}
+import type { Movie } from '@/types/tmdb';
 
 // TMDB API credentials
 const TMDB_API_KEY = '1177de48cd44943e60240337bac80877';
