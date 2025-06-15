@@ -19,7 +19,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | undefined>();
   const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState<number | undefined>();
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
-  const [selectedSource, setSelectedSource] = useState('https://vidsrc.xyz');
+  const [selectedSource, setSelectedSource] = useState('https://vidsrc.to');
 
   const hasSeasons = contentType === 'tv' && seasons && seasons.filter(s => s.season_number > 0).length > 0;
 
