@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
@@ -88,11 +87,7 @@ const VideoEmbed = ({
 
   return (
     <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
-      {/* DEBUG: Show the used embed URL */}
-      <div className="absolute top-2 left-2 z-20 text-xs text-white bg-black/50 p-1 rounded shadow" style={{pointerEvents: 'auto'}}>
-        <span className="font-mono">Embed URL:&nbsp;</span>
-        <a href={debugUrl} target="_blank" rel="noopener noreferrer" className="underline">{debugUrl}</a>
-      </div>
+      {/* The debug URL display has been removed to avoid confusing users. */}
       
       {isLoading && <VideoPlayerLoader />}
 

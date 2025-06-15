@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Play, ArrowLeft } from 'lucide-react';
@@ -23,7 +22,6 @@ interface LiveWatchModalProps {
 }
 
 export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, seasons }: LiveWatchModalProps) => {
-  const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | undefined>();
   const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState<number | undefined>();
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
@@ -52,7 +50,6 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
     } else {
       document.body.style.overflow = 'unset';
       // Reset state on close
-      setShowPlayer(false);
       setSelectedSeasonNumber(undefined);
       setSelectedEpisodeNumber(undefined);
       setCurrentSeason(null);
@@ -108,6 +105,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
                     title={`${title} - S${selectedSeasonNumber} E${selectedEpisodeNumber}`}
                     season={selectedSeasonNumber}
                     episode={selectedEpisodeNumber}
+                    autoPlay={1}
                   />
                 </div>
                 <div className="w-full lg:w-1/4 lg:order-1 flex flex-col gap-4">
@@ -142,28 +140,10 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
             )}
           </div>
         ) : (
-          !showPlayer ? (
-            <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-background to-secondary">
-              <div className="text-center max-w-md mx-auto px-4 animate-fade-in duration-500">
-                <div className="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                  <div className="absolute h-full w-full bg-primary/20 rounded-full animate-pulse"></div>
-                  <Play className="h-16 w-16 text-primary z-10" fill="currentColor" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2 tracking-tight">Ready to Watch?</h2>
-                <p className="text-muted-foreground mb-8">
-                  Click the button below to start streaming {title} instantly.
-                </p>
-                <Button onClick={() => setShowPlayer(true)} size="lg" className="w-full sm:w-auto animate-pulse">
-                  <Play className="mr-2 h-4 w-4" />
-                  Start Watching
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex-grow flex items-center justify-center p-4 md:p-8">
-              <VideoEmbed tmdbId={movieId} type={contentType} title={title} />
-            </div>
-          )
+          // For movies, directly show the player without the "Start Watching" screen
+          <div className="flex-grow flex items-center justify-center p-4 md:p-8">
+            <VideoEmbed tmdbId={movieId} type={contentType} title={title} autoPlay={1} />
+          </div>
         )}
       </div>
     </div>

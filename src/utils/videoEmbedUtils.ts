@@ -21,7 +21,7 @@ export function getEmbedUrl({
   autoPlay,
   autoNext,
 }: EmbedUrlParams): string | null {
-  const baseUrl = "https://vidsrc.to";
+  const baseUrl = "https://vidsrc.me";
 
   // MOVIE
   if (type === "movie") {
