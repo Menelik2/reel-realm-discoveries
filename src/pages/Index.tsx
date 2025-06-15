@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -6,6 +7,8 @@ import { MovieGrid } from '@/components/MovieGrid';
 import { Footer } from '@/components/Footer';
 import { useMovieData } from '@/hooks/useMovieData';
 import { AdBanner } from '@/components/AdBanner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,6 +19,7 @@ const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isMobile = useIsMobile();
 
   const [currentCategory, setCurrentCategory] = useState(
     () => searchParams.get('category') || 'popular'
@@ -91,7 +95,7 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen`}>
+    <div className={`min-h-screen ${isMobile ? 'pb-16' : ''}`}>
       <div className="bg-background text-foreground transition-colors">
         <Header 
           searchQuery={searchQuery}
@@ -127,11 +131,13 @@ const Index = () => {
               handlePageChange={handlePageChange}
               currentCategory={currentCategory}
               setCurrentCategory={handleSetCurrentCategory}
+              isMobile={isMobile}
             />
           </>
         </main>
 
-        <Footer />
+        {!isMobile && <Footer />}
+        {isMobile && <MobileBottomNav />}
       </div>
     </div>
   );

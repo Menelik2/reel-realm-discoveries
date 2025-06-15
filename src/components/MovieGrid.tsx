@@ -1,3 +1,4 @@
+
 import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { CategoryTabs } from '@/components/movie-grid/CategoryTabs';
@@ -21,6 +22,7 @@ interface MovieGridProps {
   handlePageChange: (page: number) => void;
   currentCategory: string;
   setCurrentCategory: (category: string) => void;
+  isMobile: boolean;
 }
 
 export const MovieGrid = ({ 
@@ -39,6 +41,7 @@ export const MovieGrid = ({
   handlePageChange,
   currentCategory,
   setCurrentCategory,
+  isMobile,
 }: MovieGridProps) => {
   return (
     <section className="container mx-auto px-4 py-6 md:py-8">
@@ -64,13 +67,15 @@ export const MovieGrid = ({
             setContentType={setContentType}
           />
 
-          {/* Category Tabs */}
+          {/* Category Tabs & Filters */}
           <div className="mb-6 md:mb-8">
-            <CategoryTabs 
-              currentCategory={currentCategory}
-              setCurrentCategory={setCurrentCategory}
-              contentType={contentType}
-            />
+            {!isMobile && (
+              <CategoryTabs 
+                currentCategory={currentCategory}
+                setCurrentCategory={setCurrentCategory}
+                contentType={contentType}
+              />
+            )}
 
             {/* Filters - only for popular and top_rated */}
             {(currentCategory === 'popular' || currentCategory === 'top_rated') && (
