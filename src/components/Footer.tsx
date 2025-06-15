@@ -1,12 +1,13 @@
 
 import { Link } from 'react-router-dom';
 import { Film } from 'lucide-react';
+import { AdBanner } from './AdBanner';
 
 export const Footer = () => {
   return (
     <footer className="bg-muted/50 mt-auto">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Film className="h-6 w-6" />
@@ -60,6 +61,27 @@ export const Footer = () => {
           </div>
           
           <div>
+            <h3 className="font-semibold mb-4">Follow Us</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <a href="https://x.com/lovable_dev" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Twitter
+                </a>
+              </li>
+              <li>
+                <a href="#" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Facebook
+                </a>
+              </li>
+              <li>
+                <a href="#" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Instagram
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
             <h3 className="font-semibold mb-4">Data Source</h3>
             <p className="text-sm text-muted-foreground">
               This product uses the TMDB API but is not endorsed or certified by TMDB.
@@ -75,7 +97,11 @@ export const Footer = () => {
           </div>
         </div>
         
-        <div className="border-t border-border mt-8 pt-6 text-center">
+        <div className="border-t border-border mt-8 pt-8">
+          <AdBanner slot="1234567890" />
+        </div>
+
+        <div className="mt-8 pt-6 text-center">
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} YENI MOVIE. All rights reserved.
           </p>

@@ -3,6 +3,7 @@ import VideoEmbed from '@/components/VideoEmbed';
 import VideoPlayerLoader from '@/components/video-embed/VideoPlayerLoader';
 import { TVShowControls } from './TVShowControls';
 import { Season } from './types';
+import { AdBanner } from '../AdBanner';
 
 interface TVShowViewProps {
   movieId: number;
@@ -46,6 +47,9 @@ export const TVShowView = ({
                 autoPlay={1}
                 source={selectedSource}
               />
+            </div>
+            <div className="mt-4">
+              <AdBanner slot="3456789012" />
             </div>
           </div>
           <TVShowControls

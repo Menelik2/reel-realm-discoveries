@@ -1,6 +1,7 @@
 
 import VideoEmbed from '@/components/VideoEmbed';
 import { SourceSelector } from './SourceSelector';
+import { AdBanner } from '../AdBanner';
 
 interface MovieViewProps {
   movieId: number;
@@ -23,6 +24,9 @@ export const MovieView = ({ movieId, contentType, title, selectedSource, onSourc
             autoPlay={1}
             source={selectedSource}
           />
+        </div>
+        <div className="mt-4">
+          <AdBanner slot="2345678901" />
         </div>
       </div>
     </div>
