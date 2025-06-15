@@ -24,6 +24,11 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
   const { movie, cast, videos, loading, error } = useMovieDetails(movieId, contentType);
   const [selectedActorId, setSelectedActorId] = useState<number | null>(null);
 
+  useEffect(() => {
+    console.log('[MovieDetails] PROPS', { movieId, contentType });
+    console.log('[MovieDetails] DATA', { movie, loading, error });
+  }, [movieId, contentType, movie, loading, error]);
+
   const getTrailerUrl = () => {
     const trailer = videos?.results?.find(video => 
       video.type === 'Trailer' && video.site === 'YouTube'
@@ -69,10 +74,12 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
   }, []);
 
   if (loading) {
+    console.log('[MovieDetails] Loading...');
     return <MovieDetailsSkeleton />;
   }
   
   if (error) {
+    console.log('[MovieDetails] Error:', error);
     return (
       <div className="fixed inset-0 bg-background z-50 flex items-center justify-center p-4">
         <Alert variant="destructive" className="max-w-lg">
@@ -85,8 +92,20 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
       </div>
     );
   }
-
-  if (!movie) return null;
+  if (!movie) {
+    console.log('[MovieDetails] No movie data found');
+    return (
+      <div className="fixed inset-0 bg-background z-50 flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-lg">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Not Found</AlertTitle>
+          <AlertDescription>
+            No details available for this {contentType === "movie" ? "movie" : "series"}.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   const title = movie.title || movie.name || '';
   const releaseDate = movie.release_date || movie.first_air_date || '';

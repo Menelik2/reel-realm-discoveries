@@ -14,6 +14,12 @@ const MoviePage = () => {
   // Extract content type from the current path
   const contentType = location.pathname.startsWith('/tv/') ? 'tv' : 'movie';
 
+  // Always force white theme for now
+  useEffect(() => {
+    setIsDarkMode(false);
+    document.body.classList.remove('dark');
+  }, []);
+
   // Validate parameters
   useEffect(() => {
     if (!id) {
@@ -34,7 +40,7 @@ const MoviePage = () => {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen`}>
       <div className="bg-background text-foreground transition-colors">
         <Header 
           searchQuery=""

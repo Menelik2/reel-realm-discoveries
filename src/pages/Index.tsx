@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -53,6 +52,12 @@ const Index = () => {
     setCurrentPage(1);
   }, [currentCategory, selectedGenre, selectedYear, searchQuery, contentType]);
 
+  // Always force white theme for now
+  useEffect(() => {
+    setIsDarkMode(false);
+    document.body.classList.remove('dark');
+  }, []);
+
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -85,7 +90,7 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen`}>
       <div className="bg-background text-foreground transition-colors">
         <Header 
           searchQuery={searchQuery}

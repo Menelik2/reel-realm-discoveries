@@ -1,3 +1,4 @@
+
 import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { AdBanner } from '@/components/AdBanner';
@@ -38,13 +39,16 @@ export const MovieGridContent = ({
 
   if (movies.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">
-          {!!searchQuery 
+      <div className="text-center py-16 bg-white rounded-lg shadow">
+        <p className="text-muted-foreground text-lg font-semibold mb-2">
+          {searchQuery
             ? `No results found for "${searchQuery}".`
             : currentCategory === 'custom'
             ? 'Your list is empty. Add new content from the admin page.'
             : `No ${contentType === 'movie' ? 'movies' : 'series'} found. Try adjusting your filters.`}
+        </p>
+        <p className="text-muted-foreground text-sm">
+          Try another search or change category.
         </p>
       </div>
     );
