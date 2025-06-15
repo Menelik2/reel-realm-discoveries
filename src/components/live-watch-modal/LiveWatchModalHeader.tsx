@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface LiveWatchModalHeaderProps {
   onClose: () => void;
@@ -14,20 +14,23 @@ export const LiveWatchModalHeader = ({ onClose, title, hasSeasons, selectedSeaso
   return (
     <div className="absolute top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-b">
       <div className="container mx-auto max-w-7xl">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="lg" onClick={onClose} className="hover:bg-accent -ml-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+        <div className="flex items-center justify-start p-4">
+          <div className="flex items-center gap-4 overflow-hidden">
+            <Button variant="ghost" size="lg" onClick={onClose} className="hover:bg-accent -ml-4 flex-shrink-0">
+              <ArrowLeft className="h-5 w-5 sm:mr-2" />
               <span className="hidden sm:inline">Back</span>
             </Button>
-            <h1 className="text-lg font-semibold truncate">
-              Watch: {title}
-              {hasSeasons && selectedSeasonNumber && selectedEpisodeNumber && ` - S${selectedSeasonNumber} E${selectedEpisodeNumber}`}
-            </h1>
+            <div className="flex items-baseline gap-3 overflow-hidden">
+              <h1 className="text-xl font-bold truncate" title={title}>
+                {title}
+              </h1>
+              {hasSeasons && selectedSeasonNumber && selectedEpisodeNumber && (
+                <span className="text-base font-semibold text-muted-foreground flex-shrink-0">
+                  S{selectedSeasonNumber} E{selectedEpisodeNumber}
+                </span>
+              )}
+            </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-accent lg:hidden">
-            <X className="h-4 w-4" />
-          </Button>
         </div>
       </div>
     </div>

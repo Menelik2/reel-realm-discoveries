@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
@@ -53,9 +52,6 @@ const VideoEmbed = ({
       setHasError(false);
       setIsLoading(true);
       retryCount.current = 0;
-      if (iframeRef.current) {
-        iframeRef.current.src = url;
-      }
     }
     // eslint-disable-next-line
   }, [tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source]);
@@ -98,6 +94,7 @@ const VideoEmbed = ({
         <VideoPlayerError maxRetries={maxRetries} />
       ) : (
         <VideoIframe
+          key={debugUrl}
           ref={iframeRef}
           src={debugUrl}
           title={title}
