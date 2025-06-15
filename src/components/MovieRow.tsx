@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { MovieCard } from '@/components/MovieCard';
 import { useNavigate } from 'react-router-dom';
 import type { Movie } from '@/types/tmdb';
@@ -13,48 +13,41 @@ interface MovieRowProps {
   contentType: 'movie' | 'tv';
 }
 
+const fetchItems = async (fetchUrl: string, contentType: 'movie' | 'tv'): Promise<Movie[]> => {
+  const response = await fetch(`${TMDB_BASE_URL}${fetchUrl}`, {
+    headers: {
+      'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json;charset=utf-8'
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  const data = await response.json();
+  
+  return (data.results || []).map((item: any) => {
+    if (contentType === 'tv' || item.media_type === 'tv') {
+      return {
+        ...item,
+        title: item.name,
+        release_date: item.first_air_date,
+        media_type: 'tv'
+      };
+    }
+    return {
+      ...item,
+      media_type: item.media_type || 'movie'
+    };
+  });
+};
+
 export const MovieRow = ({ title, fetchUrl, contentType }: MovieRowProps) => {
-  const [items, setItems] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`${TMDB_BASE_URL}${fetchUrl}`, {
-          headers: {
-            'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json;charset=utf-8'
-          }
-        });
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        
-        const processedResults = (data.results || []).map((item: any) => {
-            if (contentType === 'tv' || item.media_type === 'tv') {
-                return {
-                    ...item,
-                    title: item.name,
-                    release_date: item.first_air_date,
-                    media_type: 'tv'
-                };
-            }
-            return {
-                ...item,
-                media_type: item.media_type || 'movie'
-            };
-        });
-        setItems(processedResults);
-      } catch (error) {
-        console.error(`Error fetching ${title}:`, error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchItems();
-  }, [fetchUrl, title, contentType]);
+  const { data: items = [], isLoading: loading } = useQuery({
+    queryKey: ['movieRow', { fetchUrl, contentType }],
+    queryFn: () => fetchItems(fetchUrl, contentType),
+  });
   
   const handleMovieClick = (movieId: number) => {
     const item = items.find(i => i.id === movieId);
