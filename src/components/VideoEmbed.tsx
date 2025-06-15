@@ -1,9 +1,11 @@
+
 import { useState, useEffect, useRef } from 'react';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
 import VideoPlayerLoader from './video-embed/VideoPlayerLoader';
 import VideoPlayerError from './video-embed/VideoPlayerError';
 import VideoIframe from './video-embed/VideoIframe';
+import { AdBanner } from './AdBanner';
 
 interface VideoEmbedProps {
   tmdbId?: number;
@@ -80,6 +82,9 @@ const VideoEmbed = ({
     return (
       <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
         <CustomVideoPlayer src={videoUrl} title={title} />
+        <div className="absolute bottom-4 right-4 z-10 w-1/2 md:w-1/3 max-w-[300px]">
+          <AdBanner slot="4567890123" format="auto" />
+        </div>
       </div>
     );
   }
@@ -93,15 +98,22 @@ const VideoEmbed = ({
       {hasError && !isLoading ? (
         <VideoPlayerError maxRetries={maxRetries} />
       ) : (
-        <VideoIframe
-          key={debugUrl}
-          ref={iframeRef}
-          src={debugUrl}
-          title={title}
-          isLoading={isLoading}
-          onLoad={handleLoad}
-          onError={handleError}
-        />
+        <>
+          <VideoIframe
+            key={debugUrl}
+            ref={iframeRef}
+            src={debugUrl}
+            title={title}
+            isLoading={isLoading}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+          {!isLoading && !hasError && (
+             <div className="absolute bottom-4 right-4 z-10 w-1/2 md:w-1/3 max-w-[300px]">
+                <AdBanner slot="4567890123" format="auto" />
+             </div>
+          )}
+        </>
       )}
     </div>
   );
