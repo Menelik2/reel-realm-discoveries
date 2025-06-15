@@ -1,4 +1,3 @@
-
 interface EmbedUrlParams {
   tmdbId?: number;
   imdbId?: string;
@@ -24,7 +23,7 @@ export function getEmbedUrl({
   autoNext,
   source,
 }: EmbedUrlParams): string | null {
-  const baseUrl = source || "https://vidsrc.to";
+  const baseUrl = source || "https://vidsrc.xyz";
 
   // MOVIE
   if (type === "movie") {

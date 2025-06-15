@@ -7,7 +7,7 @@ interface SourceSelectorProps {
 }
 
 const sources = [
-  { name: 'VidSrc TO', url: 'https://vidsrc.to' },
+  { name: 'VidSrc XYZ', url: 'https://vidsrc.xyz' },
   { name: 'VidSrc ME', url: 'https://vidsrc.me' },
   { name: 'VidSrc PRO', url: 'https://vidsrc.pro' },
 ];
