@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -9,6 +8,7 @@ import { useMovieData } from '@/hooks/useMovieData';
 import { AdBanner } from '@/components/AdBanner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { InterstitialAd } from '@/components/InterstitialAd';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,6 +20,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  const [adTargetUrl, setAdTargetUrl] = useState<string | null>(null);
 
   const [currentCategory, setCurrentCategory] = useState(
     () => searchParams.get('category') || 'popular'
@@ -73,12 +74,12 @@ const Index = () => {
     let type: 'movie' | 'tv' = contentType;
     if (searchQuery) {
       const movie = movies.find(m => m.id === movieId);
-      if (movie && movie.media_type) {
+      if (movie && movie.media_type && (movie.media_type === 'movie' || movie.media_type === 'tv')) {
         type = movie.media_type;
       }
     }
-    console.log('Navigating to:', `/${type}/${movieId}`);
-    navigate(`/${type}/${movieId}`);
+    console.log('Showing ad before navigating to:', `/${type}/${movieId}`);
+    setAdTargetUrl(`/${type}/${movieId}`);
   };
 
   const handleSetCurrentCategory = (category: string) => {
@@ -92,6 +93,17 @@ const Index = () => {
       setSelectedGenre('all');
       setSelectedYear('all');
     }
+  };
+
+  const handleAdContinue = () => {
+    if (adTargetUrl) {
+      navigate(adTargetUrl);
+      setAdTargetUrl(null);
+    }
+  };
+
+  const handleAdClose = () => {
+    setAdTargetUrl(null);
   };
 
   return (
@@ -139,6 +151,12 @@ const Index = () => {
         {!isMobile && <Footer />}
         {isMobile && <MobileBottomNav />}
       </div>
+      {adTargetUrl && (
+        <InterstitialAd 
+          onContinue={handleAdContinue}
+          onClose={handleAdClose}
+        />
+      )}
     </div>
   );
 };
