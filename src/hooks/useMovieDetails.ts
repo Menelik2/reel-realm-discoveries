@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { fetchMovieDetails } from '@/api/tmdbService';
 
 interface MovieDetail {
   id: number;
@@ -41,9 +42,6 @@ interface Videos {
   }[];
 }
 
-const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-
 export const useMovieDetails = (movieId: number, contentType: 'movie' | 'tv') => {
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [cast, setCast] = useState<Cast[]>([]);
@@ -54,33 +52,14 @@ export const useMovieDetails = (movieId: number, contentType: 'movie' | 'tv') =>
   useEffect(() => {
     if (!movieId) return;
 
-    const fetchMovieDetails = async () => {
+    const loadMovieDetails = async () => {
       setLoading(true);
       setError(null);
       try {
-        const headers = {
-          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json;charset=utf-8'
-        };
-
-        const [movieResponse, creditsResponse, videosResponse] = await Promise.all([
-          fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}`, { headers }),
-          fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/credits`, { headers }),
-          fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/videos`, { headers })
-        ]);
-
-        if (!movieResponse.ok) throw new Error(`Failed to fetch movie details. Status: ${movieResponse.status}`);
-        if (!creditsResponse.ok) throw new Error(`Failed to fetch credits. Status: ${creditsResponse.status}`);
-        if (!videosResponse.ok) throw new Error(`Failed to fetch videos. Status: ${videosResponse.status}`);
-
-        const movieData = await movieResponse.json();
-        const creditsData = await creditsResponse.json();
-        const videosData = await videosResponse.json();
-
-        setMovie(movieData);
-        setCast(creditsData.cast?.slice(0, 10) || []);
-        setVideos(videosData);
-
+        const { movie, cast, videos } = await fetchMovieDetails(movieId, contentType);
+        setMovie(movie);
+        setCast(cast);
+        setVideos(videos);
       } catch (err) {
         console.error('Error fetching content details:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred.');
@@ -89,7 +68,7 @@ export const useMovieDetails = (movieId: number, contentType: 'movie' | 'tv') =>
       }
     };
 
-    fetchMovieDetails();
+    loadMovieDetails();
   }, [movieId, contentType]);
 
   return { movie, cast, videos, loading, error };
