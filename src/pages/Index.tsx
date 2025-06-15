@@ -90,6 +90,11 @@ const Index = () => {
     }
   };
 
+  const handleRefresh = () => {
+    console.log('Manually refreshing content...');
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
     <div className={`min-h-screen`}>
       <div className="bg-background text-foreground transition-colors">
@@ -127,6 +132,7 @@ const Index = () => {
               handlePageChange={handlePageChange}
               currentCategory={currentCategory}
               setCurrentCategory={handleSetCurrentCategory}
+              onRefresh={handleRefresh}
             />
           </>
         </main>

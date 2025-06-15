@@ -22,6 +22,7 @@ interface MovieGridProps {
   handlePageChange: (page: number) => void;
   currentCategory: string;
   setCurrentCategory: (category: string) => void;
+  onRefresh: () => void;
 }
 
 export const MovieGrid = ({ 
@@ -39,7 +40,8 @@ export const MovieGrid = ({
   currentPage,
   handlePageChange,
   currentCategory,
-  setCurrentCategory
+  setCurrentCategory,
+  onRefresh
 }: MovieGridProps) => {
   return (
     <section className="container mx-auto px-4 py-6 md:py-8">
@@ -63,6 +65,7 @@ export const MovieGrid = ({
           <ContentTypeToggle 
             contentType={contentType}
             setContentType={setContentType}
+            onRefresh={onRefresh}
           />
 
           {/* Category Tabs */}
