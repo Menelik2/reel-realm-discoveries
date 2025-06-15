@@ -12,8 +12,8 @@ interface MovieViewProps {
 
 export const MovieView = ({ movieId, contentType, title, selectedSource, onSourceChange }: MovieViewProps) => {
   return (
-    <div className="flex-grow flex flex-col items-center justify-start p-4 pt-8 md:p-8">
-      <div className="w-full max-w-4xl space-y-4">
+    <div className="flex-grow flex flex-col items-center p-4 md:p-6 container mx-auto max-w-7xl">
+      <div className="w-full space-y-4">
         <SourceSelector selectedSource={selectedSource} onSourceChange={onSourceChange} />
         <div className="shadow-2xl shadow-primary/20 rounded-lg ring-1 ring-white/10 focus-within:ring-primary focus-within:ring-2 transition-all">
           <VideoEmbed 
