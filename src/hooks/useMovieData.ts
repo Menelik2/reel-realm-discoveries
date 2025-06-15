@@ -105,7 +105,17 @@ export const useMovieData = ({
       const data = await response.json();
       
       console.log('TMDB Response:', data);
-      setMovies(data.results || []);
+      const processedResults = (data.results || []).map((item: any) => {
+        if (contentType === 'tv') {
+          return {
+            ...item,
+            title: item.name,
+            release_date: item.first_air_date,
+          };
+        }
+        return item;
+      });
+      setMovies(processedResults);
       setTotalPages(Math.min(data.total_pages || 1, 100));
       
     } catch (error) {
