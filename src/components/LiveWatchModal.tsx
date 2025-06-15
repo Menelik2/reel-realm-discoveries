@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useLiveWatchModal } from './live-watch-modal/useLiveWatchModal';
 import { LiveWatchModalHeader } from './live-watch-modal/LiveWatchModalHeader';
@@ -69,6 +68,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
             onEpisodeChange={setSelectedEpisodeNumber}
             selectedSource={selectedSource}
             onSourceChange={setSelectedSource}
+            onClose={onClose}
           />
         ) : (
           <MovieView
@@ -77,6 +77,7 @@ export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, s
             title={title}
             selectedSource={selectedSource}
             onSourceChange={setSelectedSource}
+            onClose={onClose}
           />
         )}
       </div>

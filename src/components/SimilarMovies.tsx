@@ -2,6 +2,13 @@
 import { useState, useEffect } from 'react';
 import { MovieCard } from '@/components/MovieCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface TMDBMovie {
   id: number;
@@ -89,9 +96,11 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
+          <div className="flex space-x-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="min-w-0 shrink-0 grow-0 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                <div className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
+              </div>
             ))}
           </div>
         </CardContent>
@@ -118,11 +127,23 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {similarMovies.map(movie => (
-            <MovieCard key={movie.id} movie={movie} onMovieClick={handleSimilarMovieClick} />
-          ))}
-        </div>
+        <Carousel
+          opts={{
+            align: "start",
+            loop: similarMovies.length > 5,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {similarMovies.map(movie => (
+              <CarouselItem key={movie.id} className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                <MovieCard movie={movie} onMovieClick={handleSimilarMovieClick} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
+        </Carousel>
       </CardContent>
     </Card>
   );
