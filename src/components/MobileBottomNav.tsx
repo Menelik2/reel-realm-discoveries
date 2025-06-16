@@ -1,6 +1,6 @@
 
 import { Link, useSearchParams } from 'react-router-dom';
-import { Home, Play, Star, TrendingUp, List } from 'lucide-react';
+import { Home, Play, Star, TrendingUp, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const MobileBottomNav = () => {
@@ -12,7 +12,7 @@ export const MobileBottomNav = () => {
     { category: 'now_playing', to: '/?category=now_playing', icon: Play, label: 'Playing' },
     { category: 'top_rated', to: '/?category=top_rated', icon: Star, label: 'Top Rated' },
     { category: 'upcoming', to: '/?category=upcoming', icon: TrendingUp, label: 'Upcoming' },
-    { category: 'custom', to: '/?category=custom', icon: List, label: 'My List' },
+    { category: 'box_office', to: '/top-box-office', icon: BarChart3, label: 'Box Office' },
   ];
 
   return (
@@ -25,7 +25,7 @@ export const MobileBottomNav = () => {
             replace
             className={cn(
               'flex flex-col items-center justify-center text-muted-foreground w-full h-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-sm',
-              currentCategory === category ? 'text-primary' : 'hover:text-foreground'
+              (currentCategory === category || (category === 'box_office' && window.location.pathname === '/top-box-office')) ? 'text-primary' : 'hover:text-foreground'
             )}
           >
             <Icon className="h-5 w-5 mb-1" />
