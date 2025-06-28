@@ -5,8 +5,19 @@ import HeroCarousel from "@/components/HeroCarousel";
 import MovieGrid from "@/components/MovieGrid";
 import { AdBanner } from "@/components/AdBanner";
 
+const getInitialDarkMode = () => {
+  // Prefer user setting, then system preference
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("darkMode");
+    if (stored !== null) return stored === "true";
+    return window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  return false;
+};
+
 const Index = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -29,12 +40,17 @@ const Index = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Always force white theme for now
+  // Apply .dark class based on isDarkMode
   useEffect(() => {
-    setIsDarkMode(false);
-    document.documentElement.classList.remove('dark');
-    document.body.classList.remove('dark');
-  }, []);
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+    localStorage.setItem("darkMode", String(isDarkMode));
+  }, [isDarkMode]);
 
   useEffect(() => {
     setCurrentPage(1);
