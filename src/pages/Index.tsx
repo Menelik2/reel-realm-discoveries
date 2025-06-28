@@ -1,61 +1,33 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Header } from '@/components/Header';
-import { HeroCarousel } from '@/components/HeroCarousel';
-import { MovieGrid } from '@/components/MovieGrid';
-import { Footer } from '@/components/Footer';
-import { useMovieData } from '@/hooks/useMovieData';
-import { AdBanner } from '@/components/AdBanner';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
-import { InterstitialAd } from '@/components/InterstitialAd';
+import { useEffect, useState } from "react";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import HeroCarousel from "@/components/HeroCarousel";
+import MovieGrid from "@/components/MovieGrid";
+import { AdBanner } from "@/components/AdBanner";
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('all');
-  const [selectedYear, setSelectedYear] = useState('all');
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
-  const [refreshKey, setRefreshKey] = useState(0);
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const isMobile = useIsMobile();
-  const [adTargetUrl, setAdTargetUrl] = useState<string | null>(null);
-
-  const [currentCategory, setCurrentCategory] = useState(
-    () => searchParams.get('category') || 'popular'
-  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [contentType, setContentType] = useState<"movie" | "tv">("movie");
+  const [movies, setMovies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentCategory, setCurrentCategory] = useState<string>("popular");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Effect to sync category from URL to state, e.g. on back/forward
+  // Detect mobile
   useEffect(() => {
-    setCurrentCategory(searchParams.get('category') || 'popular');
-  }, [searchParams]);
-
-  const { movies, loading, totalPages } = useMovieData({
-    searchQuery,
-    selectedGenre,
-    selectedYear,
-    contentType,
-    currentCategory,
-    currentPage,
-    refreshKey,
-    enabled: true,
-  });
-
-  // Auto-refresh every day to get new movies from TMDB
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('Auto-refreshing content from TMDB...');
-      setRefreshKey(prev => prev + 1);
-    }, 24 * 60 * 60 * 1000); // 24 hours
-
-    return () => clearInterval(interval);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
-  
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [currentCategory, selectedGenre, selectedYear, searchQuery, contentType]);
 
   // Always force white theme for now
   useEffect(() => {
@@ -63,6 +35,10 @@ const Index = () => {
     document.documentElement.classList.remove('dark');
     document.body.classList.remove('dark');
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [currentCategory, selectedGenre, selectedYear, searchQuery, contentType]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -78,55 +54,45 @@ const Index = () => {
         type = movie.media_type;
       }
     }
-    console.log('Showing ad before navigating to:', `/${type}/${movieId}`);
-    setAdTargetUrl(`/${type}/${movieId}`);
+    // Implement navigation or modal opening here
   };
+
+  // Dummy fetch, replace with real API logic
+  useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setMovies([]);
+      setTotalPages(1);
+      setLoading(false);
+    }, 500);
+  }, [searchQuery, selectedGenre, selectedYear, contentType, currentCategory, currentPage, refreshKey]);
 
   const handleSetCurrentCategory = (category: string) => {
     setCurrentCategory(category);
-    const params = new URLSearchParams(searchParams);
-    params.set('category', category);
-    setSearchParams(params, { replace: true });
-    
-    // Reset filters for categories that don't support filtering
-    if (category !== 'popular' && category !== 'top_rated') {
-      setSelectedGenre('all');
-      setSelectedYear('all');
-    }
-  };
-
-  const handleAdContinue = () => {
-    if (adTargetUrl) {
-      navigate(adTargetUrl);
-      setAdTargetUrl(null);
-    }
-  };
-
-  const handleAdClose = () => {
-    setAdTargetUrl(null);
+    setRefreshKey(prev => prev + 1);
   };
 
   return (
-    <div className={`min-h-screen ${isMobile ? 'pb-16' : ''}`}>
+    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
       <div className="bg-background text-foreground transition-colors">
-        <Header 
+        <Header
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           isDarkMode={isDarkMode}
           setIsDarkMode={setIsDarkMode}
         />
-        
+
         <main>
           {!searchQuery && <HeroCarousel />}
-          
+
           <>
             {!searchQuery && currentCategory !== 'custom' && (
               <div className="container mx-auto px-4 my-8">
                 <AdBanner slot="1571190202" />
               </div>
             )}
-            
-            <MovieGrid 
+
+            <MovieGrid
               key={refreshKey}
               searchQuery={searchQuery}
               selectedGenre={selectedGenre}
@@ -149,14 +115,7 @@ const Index = () => {
         </main>
 
         {!isMobile && <Footer />}
-        {isMobile && <MobileBottomNav />}
       </div>
-      {adTargetUrl && (
-        <InterstitialAd 
-          onContinue={handleAdContinue}
-          onClose={handleAdClose}
-        />
-      )}
     </div>
   );
 };
