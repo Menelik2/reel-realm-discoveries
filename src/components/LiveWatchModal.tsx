@@ -1,86 +1,77 @@
-import { useState } from 'react';
-import { useLiveWatchModal } from './live-watch-modal/useLiveWatchModal';
-import { LiveWatchModalHeader } from './live-watch-modal/LiveWatchModalHeader';
-import { MovieView } from './live-watch-modal/MovieView';
-import { TVShowView } from './live-watch-modal/TVShowView';
-import { Season } from './live-watch-modal/types';
+import React from "react";
 
-interface LiveWatchModalProps {
-  isOpen: boolean;
+interface WatchNowModalProps {
+  open: boolean;
   onClose: () => void;
-  movieId: number;
-  contentType: 'movie' | 'tv';
-  title: string;
-  seasons?: Season[];
+  id: string; // TMDB/IMDB ID (e.g., "tt1234567" or "12345")
+  type: "movie" | "tv";
 }
 
-export const LiveWatchModal = ({ isOpen, onClose, movieId, contentType, title, seasons = [] }: LiveWatchModalProps) => {
-  const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | undefined>();
-  const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState<number | undefined>();
-  const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
-  const [selectedSource, setSelectedSource] = useState('https://vidsrc.cc/v2/embed/');
+const WatchNowModal: React.FC<WatchNowModalProps> = ({ open, onClose, id, type }) => {
+  if (!open) return null;
 
-  const hasSeasons = contentType === 'tv' && seasons && seasons.filter(s => s.season_number > 0).length > 0;
-
-  useLiveWatchModal({
-    isOpen,
-    onClose,
-    hasSeasons,
-    seasons,
-    setCurrentSeason,
-    setSelectedSeasonNumber,
-    setSelectedEpisodeNumber,
-    setSelectedSource,
-  });
-
-  if (!isOpen) return null;
-
-  const handleSeasonChange = (seasonNumberStr: string) => {
-    const seasonNumber = parseInt(seasonNumberStr, 10);
-    const season = seasons?.find(s => s.season_number === seasonNumber);
-    if (season) {
-      setCurrentSeason(season);
-      setSelectedSeasonNumber(season.season_number);
-      setSelectedEpisodeNumber(1);
-    }
-  };
+  const embedUrl = `https://vidsrc.cc/v2/embed/${type}/${id}`;
 
   return (
-    <div className="fixed inset-0 bg-background z-50 overflow-hidden animate-fade-in duration-300">
-      <LiveWatchModalHeader
-        onClose={onClose}
-        title={title}
-        hasSeasons={hasSeasons}
-        selectedSeasonNumber={selectedSeasonNumber}
-        selectedEpisodeNumber={selectedEpisodeNumber}
-      />
-
-      <div className="pt-16 h-full w-full flex flex-col">
-        {contentType === 'tv' ? (
-          <TVShowView
-            movieId={movieId}
-            title={title}
-            seasons={seasons}
-            currentSeason={currentSeason}
-            selectedSeasonNumber={selectedSeasonNumber}
-            selectedEpisodeNumber={selectedEpisodeNumber}
-            onSeasonChange={handleSeasonChange}
-            onEpisodeChange={setSelectedEpisodeNumber}
-            selectedSource={selectedSource}
-            onSourceChange={setSelectedSource}
-            onClose={onClose}
-          />
-        ) : (
-          <MovieView
-            movieId={movieId}
-            contentType={contentType}
-            title={title}
-            selectedSource={selectedSource}
-            onSourceChange={setSelectedSource}
-            onClose={onClose}
-          />
-        )}
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 1000,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0,0,0,0.8)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "90vw",
+          maxWidth: 900,
+          height: "60vh",
+          background: "#000",
+          borderRadius: 8,
+          overflow: "hidden",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            zIndex: 10,
+            background: "rgba(0,0,0,0.5)",
+            color: "#fff",
+            border: "none",
+            borderRadius: "50%",
+            width: 36,
+            height: 36,
+            fontSize: 20,
+            cursor: "pointer",
+          }}
+          aria-label="Close"
+        >
+          ×
+        </button>
+        <iframe
+          src={embedUrl}
+          width="100%"
+          height="100%"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          frameBorder={0}
+          title="Watch Now"
+        />
       </div>
     </div>
   );
 };
+
+export default WatchNowModal;
