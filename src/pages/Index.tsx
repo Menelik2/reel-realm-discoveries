@@ -4,9 +4,9 @@ import { Footer } from "@/components/Footer";
 import HeroCarousel from "@/components/HeroCarousel";
 import MovieGrid from "@/components/MovieGrid";
 import { AdBanner } from "@/components/AdBanner";
+import WatchNowModal from "@/components/WatchNowModal";
 
 const getInitialDarkMode = () => {
-  // Prefer user setting, then system preference
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("darkMode");
     if (stored !== null) return stored === "true";
@@ -29,6 +29,11 @@ const Index = () => {
   const [currentCategory, setCurrentCategory] = useState<string>("popular");
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+
+  // For Watch Now modal
+  const [showWatchNow, setShowWatchNow] = useState(false);
+  const [currentWatchType, setCurrentWatchType] = useState<"movie" | "tv">("movie");
+  const [currentWatchId, setCurrentWatchId] = useState(""); // e.g. "tt1234567"
 
   // Detect mobile
   useEffect(() => {
@@ -62,15 +67,18 @@ const Index = () => {
     }
   };
 
-  const handleMovieClick = (movieId: number) => {
-    let type: 'movie' | 'tv' = contentType;
-    if (searchQuery) {
-      const movie = movies.find(m => m.id === movieId);
-      if (movie && movie.media_type && (movie.media_type === 'movie' || movie.media_type === 'tv')) {
-        type = movie.media_type;
-      }
-    }
-    // Implement navigation or modal opening here
+  // This handles opening the Watch Now modal with the correct type and id
+  const handleWatchNow = (type: "movie" | "tv", id: string) => {
+    setCurrentWatchType(type);
+    setCurrentWatchId(id);
+    setShowWatchNow(true);
+  };
+
+  const handleMovieClick = (movieId: number, typeOverride?: "movie" | "tv", imdbId?: string) => {
+    let type: 'movie' | 'tv' = typeOverride ?? contentType;
+    let id = imdbId || movieId.toString();
+    // Open WatchNowModal with the right id/type (use imdbId if your API provides it)
+    handleWatchNow(type, id);
   };
 
   // Dummy fetch, replace with real API logic
@@ -129,6 +137,13 @@ const Index = () => {
             />
           </>
         </main>
+
+        <WatchNowModal
+          open={showWatchNow}
+          onClose={() => setShowWatchNow(false)}
+          id={currentWatchId}
+          type={currentWatchType}
+        />
 
         {!isMobile && <Footer />}
       </div>
