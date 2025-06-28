@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Season } from './types';
 
@@ -45,7 +44,7 @@ export const useLiveWatchModal = ({
           setSelectedEpisodeNumber(1);
         }
       }
-      setSelectedSource('https://vidsrc.to');
+      setSelectedSource('https://vidsrc.cc/v2/embed/');
     } else {
       document.documentElement.classList.remove('dark');
       document.body.style.overflow = 'unset';
