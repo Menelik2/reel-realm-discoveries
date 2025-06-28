@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { AdBanner } from './AdBanner';
 import { Button } from './ui/button';
