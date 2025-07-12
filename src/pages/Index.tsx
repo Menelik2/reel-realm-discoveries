@@ -5,6 +5,7 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { AdBanner } from "@/components/AdBanner";
 import LiveWatchModal from "@/components/LiveWatchModal";
+import { fetchMovies, searchContent } from "@/api/tmdbService";
 
 const getInitialDarkMode = () => {
   if (typeof window !== "undefined") {
@@ -81,14 +82,38 @@ const Index = () => {
     handleWatchNow(type, id);
   };
 
-  // Dummy fetch, replace with real API logic
+  // Fetch movies from TMDB API
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setMovies([]);
-      setTotalPages(1);
-      setLoading(false);
-    }, 500);
+    const loadContent = async () => {
+      setLoading(true);
+      try {
+        let result;
+        if (searchQuery) {
+          result = await searchContent({
+            searchQuery,
+            currentPage,
+          });
+        } else {
+          result = await fetchMovies({
+            currentCategory,
+            contentType,
+            selectedGenre: selectedGenre || 'all',
+            selectedYear: selectedYear || 'all',
+            currentPage,
+          });
+        }
+        setMovies(result.movies);
+        setTotalPages(result.totalPages);
+      } catch (error) {
+        console.error('Error fetching content:', error);
+        setMovies([]);
+        setTotalPages(1);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContent();
   }, [searchQuery, selectedGenre, selectedYear, contentType, currentCategory, currentPage, refreshKey]);
 
   const handleSetCurrentCategory = (category: string) => {
