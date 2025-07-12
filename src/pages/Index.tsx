@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import HeroCarousel from "@/components/HeroCarousel";
-import MovieGrid from "@/components/MovieGrid";
+import { HeroCarousel } from "@/components/HeroCarousel";
+import { MovieGrid } from "@/components/MovieGrid";
 import { AdBanner } from "@/components/AdBanner";
-import WatchNowModal from "@/components/WatchNowModal";
+import LiveWatchModal from "@/components/LiveWatchModal";
 
 const getInitialDarkMode = () => {
   if (typeof window !== "undefined") {
@@ -20,7 +20,7 @@ const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [contentType, setContentType] = useState<"movie" | "tv">("movie");
   const [movies, setMovies] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -138,7 +138,7 @@ const Index = () => {
           </>
         </main>
 
-        <WatchNowModal
+        <LiveWatchModal
           open={showWatchNow}
           onClose={() => setShowWatchNow(false)}
           id={currentWatchId}

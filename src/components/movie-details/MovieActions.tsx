@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Heart, Globe, Download, Eye } from 'lucide-react';
-import { LiveWatchModal } from '@/components/LiveWatchModal';
+import LiveWatchModal from '@/components/LiveWatchModal';
 
 interface MovieActionsProps {
   trailerUrl: string | null;
@@ -74,12 +74,10 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
       </div>
 
       <LiveWatchModal
-        isOpen={isLiveWatchOpen}
+        open={isLiveWatchOpen}
         onClose={() => setIsLiveWatchOpen(false)}
-        movieId={movieId}
-        contentType={contentType}
-        title={title}
-        seasons={seasons}
+        id={movieId.toString()}
+        type={contentType}
       />
     </>
   );

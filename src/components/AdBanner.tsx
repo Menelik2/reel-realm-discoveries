@@ -31,16 +31,32 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
 
   const pushAd = () => {
     try {
-      if (window.adsbygoogle && !isAdFree && !isStatusLoading) {
+      if (window.adsbygoogle && !isAdFree && !isStatusLoading && adRef.current) {
+        // Check if ad is already initialized to prevent duplicate initialization
+        const insElement = adRef.current.querySelector('ins.adsbygoogle');
+        if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
+          console.log(`Ad already loaded for slot: ${slot}`);
+          setAdLoaded(true);
+          return;
+        }
+
         (window.adsbygoogle = window.adsbygoogle || []).push({});
         setAdLoaded(true);
         console.log(`Ad pushed for slot: ${slot}`);
       }
     } catch (error) {
       console.error("AdSense error:", error);
+      
+      // Don't retry if it's a duplicate ad error
+      if (error.message?.includes('already have ads')) {
+        console.log(`Skipping retry for duplicate ad error on slot: ${slot}`);
+        setAdLoaded(true);
+        return;
+      }
+      
       setAdError(true);
       
-      // Retry logic
+      // Retry logic for other errors
       if (retryCountRef.current < maxRetries) {
         retryCountRef.current += 1;
         setTimeout(() => {
