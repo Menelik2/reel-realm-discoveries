@@ -14,7 +14,7 @@ const getInitialDarkMode = () => {
     return window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
-  return false;
+  return true; // Default to dark mode
 };
 
 const Index = () => {
@@ -48,16 +48,20 @@ const Index = () => {
 
   // Apply .dark class based on isDarkMode
   useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
+      root.classList.add('dark');
+      body.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
+      root.classList.remove('dark');
+      body.classList.remove('dark');
     }
     localStorage.setItem("darkMode", String(isDarkMode));
   }, [isDarkMode]);
 
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [currentCategory, selectedGenre, selectedYear, searchQuery, contentType]);
@@ -122,7 +126,7 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen transition-colors ${isDarkMode ? 'dark' : ''}`}>
       <div className="bg-background text-foreground transition-colors">
         <Header
           searchQuery={searchQuery}
