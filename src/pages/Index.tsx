@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { AdBanner } from "@/components/AdBanner";
-import LiveWatchModal from "@/components/LiveWatchModal";
 import { fetchMovies, searchContent } from "@/api/tmdbService";
 
 const getInitialDarkMode = () => {
@@ -14,10 +14,11 @@ const getInitialDarkMode = () => {
     return window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
-  return true; // Default to dark mode
+  return false; // Default to light mode
 };
 
 const Index = () => {
+  const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
@@ -30,11 +31,6 @@ const Index = () => {
   const [currentCategory, setCurrentCategory] = useState<string>("popular");
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-
-  // For Watch Now modal
-  const [showWatchNow, setShowWatchNow] = useState(false);
-  const [currentWatchType, setCurrentWatchType] = useState<"movie" | "tv">("movie");
-  const [currentWatchId, setCurrentWatchId] = useState(""); // e.g. "tt1234567"
 
   // Detect mobile
   useEffect(() => {
@@ -72,18 +68,9 @@ const Index = () => {
     }
   };
 
-  // This handles opening the Watch Now modal with the correct type and id
-  const handleWatchNow = (type: "movie" | "tv", id: string) => {
-    setCurrentWatchType(type);
-    setCurrentWatchId(id);
-    setShowWatchNow(true);
-  };
-
-  const handleMovieClick = (movieId: number, typeOverride?: "movie" | "tv", imdbId?: string) => {
-    let type: 'movie' | 'tv' = typeOverride ?? contentType;
-    let id = imdbId || movieId.toString();
-    // Open WatchNowModal with the right id/type (use imdbId if your API provides it)
-    handleWatchNow(type, id);
+  const handleMovieClick = (movieId: number, typeOverride?: "movie" | "tv") => {
+    const type: 'movie' | 'tv' = typeOverride ?? contentType;
+    navigate(`/${type}/${movieId}`);
   };
 
   // Fetch movies from TMDB API
@@ -166,13 +153,6 @@ const Index = () => {
             />
           </>
         </main>
-
-        <LiveWatchModal
-          open={showWatchNow}
-          onClose={() => setShowWatchNow(false)}
-          id={currentWatchId}
-          type={currentWatchType}
-        />
 
         {!isMobile && <Footer />}
       </div>
