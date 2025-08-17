@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { AdBanner } from '@/components/AdBanner';
+import { ResponsiveAd } from '@/components/ResponsiveAd';
 import { BoxOfficeMovieCard } from '@/components/BoxOfficeMovieCard';
 
 const TopBoxOffice = () => {
@@ -37,7 +38,7 @@ const TopBoxOffice = () => {
             </p>
         </div>
 
-        <AdBanner slot="1571190202" className="mb-8" />
+        <ResponsiveAd slot="1571190202" className="mb-8" />
         
         <AdBanner slot="3456789012" className="mb-8" />
         
@@ -59,7 +60,7 @@ const TopBoxOffice = () => {
           </div>
         )}
 
-        <AdBanner slot="6789012345" className="my-8" />
+        <ResponsiveAd slot="6789012345" className="my-8" />
       </main>
 
       <Footer />

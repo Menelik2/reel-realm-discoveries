@@ -2,6 +2,7 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
+import { ResponsiveAd } from '@/components/ResponsiveAd';
 import { AdBanner } from '@/components/AdBanner';
 
 const Privacy = () => {
@@ -50,7 +51,7 @@ const Privacy = () => {
               </div>
             </section>
 
-            <AdBanner slot="1571190202" className="my-8" />
+            <ResponsiveAd slot="1571190202" className="my-8" />
 
             <section>
               <h2 className="text-2xl font-semibold mb-4">Google AdSense and Advertising</h2>
@@ -184,6 +185,8 @@ const Privacy = () => {
               </p>
             </div>
           </div>
+
+          <ResponsiveAd slot="3456789012" className="my-8" />
         </main>
 
         <Footer />
