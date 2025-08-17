@@ -110,6 +110,8 @@ const About = () => {
               </p>
             </section>
           </div>
+
+          <AdBanner slot="9876543210" className="my-8" />
         </main>
 
         <Footer />

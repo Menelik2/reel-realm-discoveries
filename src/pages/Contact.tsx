@@ -93,6 +93,8 @@ const Contact = () => {
               </Card>
 
               <AdBanner slot="1571190202" />
+              
+              <AdBanner slot="4567890123" className="mt-6" />
             </div>
 
             <Card>
@@ -194,6 +196,8 @@ const Contact = () => {
               </div>
             </div>
           </div>
+
+          <AdBanner slot="2345678901" className="my-8" />
         </main>
 
         <Footer />

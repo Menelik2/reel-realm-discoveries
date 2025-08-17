@@ -127,8 +127,9 @@ const Index = () => {
 
           <>
             {!searchQuery && currentCategory !== 'custom' && (
-              <div className="container mx-auto px-4 my-8">
+              <div className="container mx-auto px-4 my-8 space-y-8">
                 <AdBanner slot="1571190202" />
+                <AdBanner slot="7890123456" />
               </div>
             )}
 
@@ -152,6 +153,11 @@ const Index = () => {
               isMobile={isMobile}
             />
           </>
+
+          {/* Additional ad banners */}
+          <div className="container mx-auto px-4 my-8">
+            <AdBanner slot="8901234567" />
+          </div>
         </main>
 
         {!isMobile && <Footer />}

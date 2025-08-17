@@ -39,6 +39,8 @@ const TopBoxOffice = () => {
 
         <AdBanner slot="1571190202" className="mb-8" />
         
+        <AdBanner slot="3456789012" className="mb-8" />
+        
         {error && (
            <Alert variant="destructive" className="max-w-2xl mx-auto">
             <AlertTriangle className="h-4 w-4" />
@@ -56,6 +58,8 @@ const TopBoxOffice = () => {
             ))}
           </div>
         )}
+
+        <AdBanner slot="6789012345" className="my-8" />
       </main>
 
       <Footer />
