@@ -12,8 +12,8 @@ const getInitialDarkMode = () => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("darkMode");
     if (stored !== null) return stored === "true";
-    return window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // Always default to light mode instead of checking system preferences
+    return false;
   }
   return false; // Default to light mode
 };
