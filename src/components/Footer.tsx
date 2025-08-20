@@ -2,8 +2,26 @@
 import { Link } from 'react-router-dom';
 import { Film } from 'lucide-react';
 import { AdBanner } from './AdBanner';
+import { useEffect } from 'react';
 
 export const Footer = () => {
+  useEffect(() => {
+    // Load Google AdSense auto ads script
+    const script = document.createElement('script');
+    script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8938310552882401';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    document.head.appendChild(script);
+
+    return () => {
+      // Clean up script on unmount
+      const existingScript = document.querySelector(`script[src="${script.src}"]`);
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
+  }, []);
+
   return (
     <footer className="bg-muted/50 mt-auto">
       <div className="container mx-auto px-4 py-8">
