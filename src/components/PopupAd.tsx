@@ -43,10 +43,22 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
   const pushAd = () => {
     try {
       if (window.adsbygoogle && adRef.current) {
+        // Check if ad is already initialized to prevent duplicate initialization
+        const insElement = adRef.current.querySelector('ins.adsbygoogle');
+        if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
+          console.log('Popup ad already loaded');
+          return;
+        }
+        
         (window.adsbygoogle = window.adsbygoogle || []).push({});
+        console.log('Popup ad pushed');
       }
     } catch (error) {
       console.error("Popup AdSense error:", error);
+      // Don't retry if it's a duplicate ad error
+      if (error.message && error.message.includes('already have ads')) {
+        return;
+      }
     }
   };
 
@@ -84,7 +96,7 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
               display: 'block'
             }}
             data-ad-client="ca-pub-8938310552882401"
-            data-ad-slot="1571190202"
+            data-ad-slot="9876543210"
             data-ad-format="auto"
             data-full-width-responsive="true"
           />

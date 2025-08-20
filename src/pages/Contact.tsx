@@ -93,7 +93,7 @@ const Contact = () => {
                 </CardContent>
               </Card>
 
-              <ResponsiveAd slot="1571190202" />
+              <ResponsiveAd slot="5432198765" />
               
               <AdBanner slot="4567890123" className="mt-6" />
             </div>

@@ -77,7 +77,7 @@ const About = () => {
             </div>
           </div>
 
-          <ResponsiveAd slot="1571190202" className="my-8" />
+          <ResponsiveAd slot="8901234567" />
 
           <div className="space-y-8">
             <section>

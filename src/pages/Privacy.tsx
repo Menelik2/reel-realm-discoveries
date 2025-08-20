@@ -51,7 +51,7 @@ const Privacy = () => {
               </div>
             </section>
 
-            <ResponsiveAd slot="1571190202" className="my-8" />
+            <ResponsiveAd slot="6789054321" className="my-8" />
 
             <section>
               <h2 className="text-2xl font-semibold mb-4">Google AdSense and Advertising</h2>

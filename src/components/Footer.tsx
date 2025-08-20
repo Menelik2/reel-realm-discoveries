@@ -6,20 +6,28 @@ import { useEffect } from 'react';
 
 export const Footer = () => {
   useEffect(() => {
-    // Load Google AdSense auto ads script
+    // Check if AdSense script is already loaded
+    const existingScript = document.querySelector('script[src*="adsbygoogle.js"]');
+    if (existingScript) {
+      return; // Script already loaded
+    }
+
+    // Load Google AdSense auto ads script only once
     const script = document.createElement('script');
     script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8938310552882401';
     script.async = true;
     script.crossOrigin = 'anonymous';
-    document.head.appendChild(script);
-
-    return () => {
-      // Clean up script on unmount
-      const existingScript = document.querySelector(`script[src="${script.src}"]`);
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
+    script.id = 'adsbygoogle-script';
+    
+    script.onload = () => {
+      console.log('AdSense script loaded successfully');
     };
+    
+    script.onerror = () => {
+      console.error('Failed to load AdSense script');
+    };
+    
+    document.head.appendChild(script);
   }, []);
 
   return (

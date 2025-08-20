@@ -64,7 +64,7 @@ export const MovieGridContent = ({
       
       {/* AdSense Banner between content and pagination */}
       <div className="my-8">
-        <AdBanner slot="1571190202" />
+        <AdBanner slot="9087654321" />
       </div>
       
       {/* Pagination */}

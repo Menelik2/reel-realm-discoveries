@@ -38,7 +38,7 @@ const TopBoxOffice = () => {
             </p>
         </div>
 
-        <ResponsiveAd slot="1571190202" className="mb-8" />
+        <ResponsiveAd slot="2468135790" className="mb-8" />
         
         <AdBanner slot="3456789012" className="mb-8" />
         
