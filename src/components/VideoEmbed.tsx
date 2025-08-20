@@ -45,26 +45,30 @@ const VideoEmbed = ({
 
   // Debug: log embed url and render in UI
   useEffect(() => {
-    const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
-    setDebugUrl(url || '');
-    if (!url) {
-      setHasError(true);
-      setIsLoading(false);
-    } else {
-      setHasError(false);
-      setIsLoading(true);
-      retryCount.current = 0;
-    }
+    const loadEmbedUrl = async () => {
+      const url = await getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
+      setDebugUrl(url || '');
+      if (!url) {
+        setHasError(true);
+        setIsLoading(false);
+      } else {
+        setHasError(false);
+        setIsLoading(true);
+        retryCount.current = 0;
+      }
+    };
+    
+    loadEmbedUrl();
     // eslint-disable-next-line
   }, [tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source]);
 
-  const handleError = () => {
+  const handleError = async () => {
     setIsLoading(true);
     if (retryCount.current < maxRetries) {
       retryCount.current += 1;
-      setTimeout(() => {
+      setTimeout(async () => {
         if (iframeRef.current) {
-          const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
+          const url = await getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
           iframeRef.current.src = url || '';
           setHasError(false);
         }

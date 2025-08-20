@@ -1,3 +1,5 @@
+import { videoStreamingService, VideoStreamRequest } from '@/api/videoStreamingService';
+
 interface EmbedUrlParams {
   tmdbId?: number;
   imdbId?: string;
@@ -9,9 +11,73 @@ interface EmbedUrlParams {
   autoPlay?: 1 | 0;
   autoNext?: 1 | 0;
   source?: string;
+  quality?: 'auto' | '720p' | '1080p';
 }
 
-export function getEmbedUrl({
+export async function getEmbedUrl({
+  tmdbId,
+  imdbId,
+  type = "movie",
+  season,
+  episode,
+  dsLang,
+  subUrl,
+  autoPlay,
+  autoNext,
+  source,
+  quality = 'auto',
+}: EmbedUrlParams): Promise<string | null> {
+  // If a specific source is provided, use the legacy logic
+  if (source) {
+    return getLegacyEmbedUrl({
+      tmdbId,
+      imdbId,
+      type,
+      season,
+      episode,
+      dsLang,
+      subUrl,
+      autoPlay,
+      autoNext,
+      source,
+    });
+  }
+
+  // Use the new streaming service for better reliability
+  const request: VideoStreamRequest = {
+    tmdbId,
+    imdbId,
+    type,
+    season,
+    episode,
+    quality,
+    language: dsLang,
+    subtitles: !!subUrl,
+  };
+
+  try {
+    const stream = await videoStreamingService.getStreamUrl(request);
+    return stream?.streamUrl || null;
+  } catch (error) {
+    console.error('Failed to get stream URL:', error);
+    // Fallback to legacy logic
+    return getLegacyEmbedUrl({
+      tmdbId,
+      imdbId,
+      type,
+      season,
+      episode,
+      dsLang,
+      subUrl,
+      autoPlay,
+      autoNext,
+      source: 'https://vidsrc.cc/v2',
+    });
+  }
+}
+
+// Legacy embed URL logic as fallback
+function getLegacyEmbedUrl({
   tmdbId,
   imdbId,
   type = "movie",
@@ -132,4 +198,25 @@ export function getEmbedUrl({
     return null;
   }
   return null;
+}
+
+// Export additional utility functions
+export async function getMultipleStreamSources(params: EmbedUrlParams) {
+  const request: VideoStreamRequest = {
+    tmdbId: params.tmdbId,
+    imdbId: params.imdbId,
+    type: params.type || 'movie',
+    season: params.season,
+    episode: params.episode,
+    quality: params.quality,
+    language: params.dsLang,
+    subtitles: !!params.subUrl,
+  };
+
+  try {
+    return await videoStreamingService.getMultipleStreams(request);
+  } catch (error) {
+    console.error('Failed to get multiple stream sources:', error);
+    return [];
+  }
 }
