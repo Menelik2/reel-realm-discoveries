@@ -77,15 +77,14 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
         </div>
         
         <div ref={adRef} className="p-4">
+          {/* YENI NEW ADS */}
           <ins 
             className="adsbygoogle"
             style={{ 
-              display: 'block',
-              minHeight: '250px',
-              width: '100%'
+              display: 'block'
             }}
             data-ad-client="ca-pub-8938310552882401"
-            data-ad-slot="9876543210"
+            data-ad-slot="1571190202"
             data-ad-format="auto"
             data-full-width-responsive="true"
           />
