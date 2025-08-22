@@ -4,7 +4,6 @@ import { Footer } from '@/components/Footer';
 import { useState } from 'react';
 import { Film, Users, Target, Heart } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
-import { ResponsiveAd } from '@/components/ResponsiveAd';
 
 const About = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -77,7 +76,7 @@ const About = () => {
             </div>
           </div>
 
-          <ResponsiveAd slot="8901234567" />
+          <AdBanner slot="1571190202" className="my-8" />
 
           <div className="space-y-8">
             <section>
@@ -111,8 +110,6 @@ const About = () => {
               </p>
             </section>
           </div>
-
-          <ResponsiveAd slot="9876543210" className="my-8" />
         </main>
 
         <Footer />

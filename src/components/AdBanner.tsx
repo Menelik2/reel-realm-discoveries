@@ -6,6 +6,11 @@ import { useAdFreeStatus } from '@/hooks/useAdFreeStatus';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
+declare global {
+  interface Window {
+    adsbygoogle?: unknown[];
+  }
+}
 
 interface AdBannerProps {
   slot: string;
@@ -29,39 +34,22 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
       if (window.adsbygoogle && !isAdFree && !isStatusLoading && adRef.current) {
         // Check if ad is already initialized to prevent duplicate initialization
         const insElement = adRef.current.querySelector('ins.adsbygoogle');
-        if (!insElement) {
-          console.error(`Ad element not found for slot: ${slot}`);
-          setAdError(true);
+        if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
+          console.log(`Ad already loaded for slot: ${slot}`);
+          setAdLoaded(true);
           return;
         }
-
-        // Check for any existing status or processing flag
-        const adStatus = insElement.getAttribute('data-adsbygoogle-status');
-        const isProcessed = insElement.hasAttribute('data-ad-processed');
-        
-        if (adStatus || isProcessed) {
-          console.log(`Ad already processed for slot: ${slot}, status: ${adStatus}`);
-          if (adStatus === 'done' || isProcessed) {
-            setAdLoaded(true);
-          } else if (adStatus === 'error') {
-            setAdError(true);
-          }
-          return;
-        }
-
-        // Mark as processed to prevent duplicate processing
-        insElement.setAttribute('data-ad-processed', 'true');
 
         (window.adsbygoogle = window.adsbygoogle || []).push({});
         setAdLoaded(true);
         console.log(`Ad pushed for slot: ${slot}`);
       }
-    } catch (error: any) {
-      console.error(`AdSense error for slot ${slot}:`, error);
+    } catch (error) {
+      console.error("AdSense error:", error);
       
-      // Handle duplicate ad errors
-      if (error?.message?.includes('already have ads') || error?.message?.includes('TagError')) {
-        console.log(`Duplicate ad detected for slot: ${slot} - marking as loaded`);
+      // Don't retry if it's a duplicate ad error
+      if (error.message?.includes('already have ads')) {
+        console.log(`Skipping retry for duplicate ad error on slot: ${slot}`);
         setAdLoaded(true);
         return;
       }
@@ -143,7 +131,6 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
         data-ad-format={format}
         data-full-width-responsive="true"
         data-adtest={process.env.NODE_ENV === 'development' ? 'on' : 'off'}
-        key={`banner-ad-${slot}-${Date.now()}`}
       />
       
       {/* Loading indicator for ads */}

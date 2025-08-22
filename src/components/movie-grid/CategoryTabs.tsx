@@ -11,7 +11,6 @@ export const CategoryTabs = ({ currentCategory, setCurrentCategory, contentType 
   const categories = [
     { key: 'popular', label: 'Popular' },
     { key: 'top_rated', label: 'Top Rated' },
-    { key: 'streaming', label: 'Streaming' },
     { key: 'upcoming', label: contentType === 'movie' ? 'Upcoming' : 'On The Air' },
     { key: 'now_playing', label: contentType === 'movie' ? 'Now Playing' : 'Airing Today' }
   ];

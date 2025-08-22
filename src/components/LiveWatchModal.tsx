@@ -1,40 +1,16 @@
-import React, { useState } from "react";
-import { VideoSourceSelector } from "./VideoSourceSelector";
-import VideoEmbed from "./VideoEmbed";
+import React from "react";
 
 interface WatchNowModalProps {
   open: boolean;
   onClose: () => void;
   id: string; // TMDB/IMDB ID (e.g., "tt1234567" or "12345")
   type: "movie" | "tv";
-  title?: string;
-  season?: number;
-  episode?: number;
 }
 
-const WatchNowModal: React.FC<WatchNowModalProps> = ({ 
-  open, 
-  onClose, 
-  id, 
-  type, 
-  title = "Watch Now",
-  season,
-  episode
-}) => {
-  const [selectedSource, setSelectedSource] = useState<string>('');
-  const [sourceName, setSourceName] = useState<string>('');
-  
+const WatchNowModal: React.FC<WatchNowModalProps> = ({ open, onClose, id, type }) => {
   if (!open) return null;
 
-  const handleSourceSelect = (url: string, source: string) => {
-    setSelectedSource(url);
-    setSourceName(source);
-  };
-
-  // Convert string ID to number if it's a TMDB ID, keep as string if IMDB
-  const isImdbId = id.startsWith('tt');
-  const tmdbId = isImdbId ? undefined : parseInt(id);
-  const imdbId = isImdbId ? id : undefined;
+  const embedUrl = `https://vidsrc.cc/v2/embed/${type}/${id}`;
 
   return (
     <div
@@ -45,121 +21,54 @@ const WatchNowModal: React.FC<WatchNowModalProps> = ({
         zIndex: 1000,
         width: "100vw",
         height: "100vh",
-        background: "rgba(0,0,0,0.9)",
+        background: "rgba(0,0,0,0.8)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "1rem",
       }}
       onClick={onClose}
     >
       <div
         style={{
           position: "relative",
-          width: "100%",
-          maxWidth: "1200px",
-          height: "90vh",
-          background: "hsl(var(--background))",
-          borderRadius: 12,
+          width: "90vw",
+          maxWidth: 900,
+          height: "60vh",
+          background: "#000",
+          borderRadius: 8,
           overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{
-          padding: "1rem",
-          borderBottom: "1px solid hsl(var(--border))",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          background: "hsl(var(--background))",
-        }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "600" }}>
-              {title}
-            </h2>
-            {sourceName && (
-              <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.875rem", opacity: 0.7 }}>
-                Playing from {sourceName}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "hsl(var(--muted))",
-              color: "hsl(var(--muted-foreground))",
-              border: "none",
-              borderRadius: "50%",
-              width: 40,
-              height: 40,
-              fontSize: 20,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* Video Content */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          {selectedSource ? (
-            <div style={{ flex: 1, padding: "1rem" }}>
-              <VideoEmbed
-                tmdbId={tmdbId}
-                imdbId={imdbId}
-                type={type}
-                title={title}
-                season={season}
-                episode={episode}
-              />
-            </div>
-          ) : (
-            <div style={{ 
-              flex: 1, 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center",
-              padding: "2rem"
-            }}>
-              <div style={{ width: "100%", maxWidth: "600px" }}>
-                <div style={{ padding: '2rem', textAlign: 'center' }}>
-                  <p>Select a video source to watch</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer with source switcher */}
-        {selectedSource && (
-          <div style={{
-            padding: "1rem",
-            borderTop: "1px solid hsl(var(--border))",
-            background: "hsl(var(--muted))",
-          }}>
-            <button
-              onClick={() => setSelectedSource('')}
-              style={{
-                background: "hsl(var(--primary))",
-                color: "hsl(var(--primary-foreground))",
-                border: "none",
-                borderRadius: "6px",
-                padding: "0.5rem 1rem",
-                cursor: "pointer",
-                fontSize: "0.875rem",
-              }}
-            >
-              Change Source
-            </button>
-          </div>
-        )}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            zIndex: 10,
+            background: "rgba(0,0,0,0.5)",
+            color: "#fff",
+            border: "none",
+            borderRadius: "50%",
+            width: 36,
+            height: 36,
+            fontSize: 20,
+            cursor: "pointer",
+          }}
+          aria-label="Close"
+        >
+          ×
+        </button>
+        <iframe
+          src={embedUrl}
+          width="100%"
+          height="100%"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          frameBorder={0}
+          title="Watch Now"
+        />
       </div>
     </div>
   );

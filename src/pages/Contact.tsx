@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdBanner } from '@/components/AdBanner';
-import { ResponsiveAd } from '@/components/ResponsiveAd';
 
 const Contact = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -93,9 +92,7 @@ const Contact = () => {
                 </CardContent>
               </Card>
 
-              <ResponsiveAd slot="5432198765" />
-              
-              <AdBanner slot="4567890123" className="mt-6" />
+              <AdBanner slot="1571190202" />
             </div>
 
             <Card>
@@ -197,8 +194,6 @@ const Contact = () => {
               </div>
             </div>
           </div>
-
-          <ResponsiveAd slot="2345678901" className="my-8" />
         </main>
 
         <Footer />

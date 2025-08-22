@@ -2,7 +2,6 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
-import { ResponsiveAd } from '@/components/ResponsiveAd';
 import { AdBanner } from '@/components/AdBanner';
 
 const Terms = () => {
@@ -43,7 +42,7 @@ const Terms = () => {
               </p>
             </section>
 
-            <ResponsiveAd slot="3210987654" className="my-8" />
+            <AdBanner slot="1571190202" className="my-8" />
 
             <section>
               <h2 className="text-2xl font-semibold mb-4">Acceptable Use</h2>
@@ -138,8 +137,6 @@ const Terms = () => {
               </p>
             </div>
           </div>
-
-          <ResponsiveAd slot="4567890123" className="my-8" />
         </main>
 
         <Footer />

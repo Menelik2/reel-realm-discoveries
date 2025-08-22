@@ -5,15 +5,14 @@ import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { AdBanner } from "@/components/AdBanner";
-import { ResponsiveAd } from "@/components/ResponsiveAd";
 import { fetchMovies, searchContent } from "@/api/tmdbService";
 
 const getInitialDarkMode = () => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("darkMode");
     if (stored !== null) return stored === "true";
-    // Always default to light mode instead of checking system preferences
-    return false;
+    return window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
   return false; // Default to light mode
 };
@@ -128,9 +127,8 @@ const Index = () => {
 
           <>
             {!searchQuery && currentCategory !== 'custom' && (
-              <div className="container mx-auto px-4 my-8 space-y-8">
-                <ResponsiveAd slot="1571190202" />
-                <AdBanner slot="7890123456" />
+              <div className="container mx-auto px-4 my-8">
+                <AdBanner slot="1571190202" />
               </div>
             )}
 
@@ -154,12 +152,6 @@ const Index = () => {
               isMobile={isMobile}
             />
           </>
-
-          {/* Additional ad banners */}
-          <div className="container mx-auto px-4 my-8 space-y-8">
-            <ResponsiveAd slot="8901234567" />
-            <AdBanner slot="2468013579" />
-          </div>
         </main>
 
         {!isMobile && <Footer />}
