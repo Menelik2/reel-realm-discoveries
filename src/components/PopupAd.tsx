@@ -67,18 +67,27 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
         return;
       }
 
-      // Check if ad is already loaded
+      // Check if ad is already initialized or has any status
       const adStatus = insElement.getAttribute('data-adsbygoogle-status');
-      if (adStatus && adStatus !== 'done') {
-        console.log('Ad already being processed');
+      if (adStatus) {
+        console.log(`Popup ad already has status: ${adStatus}`);
+        if (adStatus === 'done') {
+          setAdLoaded(true);
+        } else if (adStatus === 'error') {
+          setAdError(true);
+        }
         return;
       }
 
-      if (adStatus === 'done') {
-        console.log('Ad already loaded');
+      // Check if this element was already processed by looking for data-ad-processed
+      if (insElement.hasAttribute('data-ad-processed')) {
+        console.log('Popup ad already processed');
         setAdLoaded(true);
         return;
       }
+
+      // Mark as processed to prevent duplicate processing
+      insElement.setAttribute('data-ad-processed', 'true');
 
       // Push ad to AdSense
       window.adsbygoogle.push({});
@@ -92,9 +101,9 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
           console.log('Popup ad loaded successfully');
         } else if (status === 'error') {
           setAdError(true);
-          console.error('Ad failed to load');
+          console.error('Popup ad failed to load');
         } else {
-          // Keep checking
+          // Keep checking for up to 10 seconds
           setTimeout(checkAdLoaded, 500);
         }
       };
@@ -103,14 +112,15 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
 
     } catch (error: any) {
       console.error("Popup AdSense error:", error);
-      setAdError(true);
       
       // Handle specific error cases
-      if (error?.message?.includes('already have ads')) {
-        console.log('Duplicate ad error - ad already exists');
+      if (error?.message?.includes('already have ads') || error?.message?.includes('TagError')) {
+        console.log('Duplicate ad error - marking as loaded');
         setAdLoaded(true);
         return;
       }
+      
+      setAdError(true);
     }
   };
 
@@ -175,9 +185,10 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
               minHeight: '250px'
             }}
             data-ad-client="ca-pub-8938310552882401"
-            data-ad-slot="1234567890"
+            data-ad-slot="3456789012"
             data-ad-format="auto"
             data-full-width-responsive="true"
+            key={`popup-ad-${Date.now()}`}
           />
         </div>
         

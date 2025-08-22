@@ -14,13 +14,33 @@ export const ResponsiveAd = ({ slot, className = "" }: ResponsiveAdProps) => {
     try {
       if (window.adsbygoogle && !isAdFree && !isLoading && adRef.current) {
         const insElement = adRef.current.querySelector('ins.adsbygoogle');
-        if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
+        if (!insElement) {
+          console.error(`Responsive ad element not found for slot: ${slot}`);
           return;
         }
+
+        // Check for any existing status or processing flag
+        const adStatus = insElement.getAttribute('data-adsbygoogle-status');
+        const isProcessed = insElement.hasAttribute('data-ad-processed');
+        
+        if (adStatus || isProcessed) {
+          console.log(`Responsive ad already processed for slot: ${slot}`);
+          return;
+        }
+
+        // Mark as processed to prevent duplicate processing
+        insElement.setAttribute('data-ad-processed', 'true');
+        
         (window.adsbygoogle = window.adsbygoogle || []).push({});
+        console.log(`Responsive ad pushed for slot: ${slot}`);
       }
-    } catch (error) {
-      console.error("Responsive AdSense error:", error);
+    } catch (error: any) {
+      console.error(`Responsive AdSense error for slot ${slot}:`, error);
+      
+      // Handle duplicate ad errors gracefully
+      if (error?.message?.includes('already have ads') || error?.message?.includes('TagError')) {
+        console.log(`Duplicate responsive ad detected for slot: ${slot}`);
+      }
     }
   };
 
@@ -49,6 +69,7 @@ export const ResponsiveAd = ({ slot, className = "" }: ResponsiveAdProps) => {
         data-auto-format="rspv"
         data-full-width-responsive="true"
         data-ad-format="auto"
+        key={`responsive-ad-${slot}-${Date.now()}`}
       />
       <div style={{ overflow: 'hidden' }}></div>
     </div>
