@@ -60,8 +60,6 @@ export const TVShowView = ({
                     title={`${title} - S${selectedSeasonNumber} E${selectedEpisodeNumber}`}
                     season={selectedSeasonNumber}
                     episode={selectedEpisodeNumber}
-                    autoPlay={1}
-                    source={selectedSource}
                   />
                 </div>
                 <div className="mt-4">

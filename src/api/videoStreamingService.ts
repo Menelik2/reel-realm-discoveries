@@ -1,261 +1,142 @@
-interface StreamingSource {
-  id: string;
+interface VideoSource {
   name: string;
-  baseUrl: string;
-  priority: number;
-  supports: {
-    movies: boolean;
-    series: boolean;
-    subtitles: boolean;
-    hd: boolean;
-  };
+  url: string;
+  quality?: string;
+  isVip?: boolean;
 }
 
-interface VideoStreamRequest {
+interface StreamingOptions {
   tmdbId?: number;
   imdbId?: string;
-  type: 'movie' | 'tv';
   season?: number;
   episode?: number;
-  quality?: 'auto' | '720p' | '1080p';
-  language?: string;
-  subtitles?: boolean;
+  title?: string;
+  year?: number;
 }
-
-interface VideoStreamResponse {
-  streamUrl: string;
-  source: string;
-  quality: string;
-  subtitles?: string[];
-  expires?: number;
-  directUrl?: boolean;
-}
-
-// Multiple streaming sources for better availability
-const STREAMING_SOURCES: StreamingSource[] = [
-  {
-    id: 'vidsrc',
-    name: 'VidSrc',
-    baseUrl: 'https://vidsrc.cc/v2/embed',
-    priority: 1,
-    supports: { movies: true, series: true, subtitles: true, hd: true }
-  },
-  {
-    id: 'vidsrcpro',
-    name: 'VidSrc Pro',
-    baseUrl: 'https://vidsrc.pro/embed',
-    priority: 2,
-    supports: { movies: true, series: true, subtitles: true, hd: true }
-  },
-  {
-    id: 'superembed',
-    name: 'SuperEmbed',
-    baseUrl: 'https://multiembed.mov/directstream.php',
-    priority: 3,
-    supports: { movies: true, series: true, subtitles: false, hd: true }
-  },
-  {
-    id: 'embedsu',
-    name: 'EmbedSu',
-    baseUrl: 'https://embed.su/embed',
-    priority: 4,
-    supports: { movies: true, series: true, subtitles: true, hd: true }
-  }
-];
 
 export class VideoStreamingService {
-  private sources: StreamingSource[];
-
-  constructor() {
-    this.sources = STREAMING_SOURCES.sort((a, b) => a.priority - b.priority);
+  private static getCleanId(id: string | number): string {
+    if (typeof id === 'string') {
+      // Remove 'tt' prefix if present for IMDB IDs
+      return id.startsWith('tt') ? id.substring(2) : id;
+    }
+    return id.toString();
   }
 
-  /**
-   * Get streaming URL for a movie or TV show
-   */
-  async getStreamUrl(request: VideoStreamRequest): Promise<VideoStreamResponse | null> {
-    for (const source of this.sources) {
-      try {
-        const streamUrl = await this.buildStreamUrl(source, request);
-        if (streamUrl) {
-          // Test if the stream is accessible
-          const isAccessible = await this.testStreamAccessibility(streamUrl);
-          if (isAccessible) {
-            return {
-              streamUrl,
-              source: source.name,
-              quality: request.quality || 'auto',
-              directUrl: false,
-              expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-            };
-          }
-        }
-      } catch (error) {
-        console.warn(`Failed to get stream from ${source.name}:`, error);
-        continue;
+  private static async checkVipAvailability(options: StreamingOptions): Promise<boolean> {
+    try {
+      const { tmdbId, imdbId, season, episode } = options;
+      
+      let checkUrl = 'https://multiembed.mov/directstream.php?';
+      
+      if (tmdbId) {
+        checkUrl += `video_id=${tmdbId}&tmdb=1`;
+      } else if (imdbId) {
+        const cleanId = this.getCleanId(imdbId);
+        checkUrl += `video_id=${cleanId}`;
+      } else {
+        return false;
       }
-    }
 
-    return null;
-  }
-
-  /**
-   * Get multiple streaming sources for redundancy
-   */
-  async getMultipleStreams(request: VideoStreamRequest): Promise<VideoStreamResponse[]> {
-    const streams: VideoStreamResponse[] = [];
-    
-    for (const source of this.sources) {
-      try {
-        const streamUrl = await this.buildStreamUrl(source, request);
-        if (streamUrl) {
-          streams.push({
-            streamUrl,
-            source: source.name,
-            quality: request.quality || 'auto',
-            directUrl: false,
-            expires: Date.now() + (24 * 60 * 60 * 1000)
-          });
-        }
-      } catch (error) {
-        console.warn(`Failed to get stream from ${source.name}:`, error);
+      if (season && episode) {
+        checkUrl += `&s=${season}&e=${episode}`;
       }
-    }
 
-    return streams;
+      checkUrl += '&check=1';
+
+      const response = await fetch(checkUrl);
+      const result = await response.text();
+      return result.trim() === '1';
+    } catch (error) {
+      console.error('Error checking VIP availability:', error);
+      return false;
+    }
   }
 
-  /**
-   * Build streaming URL based on source and request parameters
-   */
-  private async buildStreamUrl(source: StreamingSource, request: VideoStreamRequest): Promise<string | null> {
-    const { tmdbId, imdbId, type, season, episode, language, subtitles } = request;
+  private static buildMultiEmbedUrl(options: StreamingOptions, isVip: boolean = false): string {
+    const { tmdbId, imdbId, season, episode } = options;
     
-    // Prefer TMDB ID if available
-    const id = tmdbId || imdbId;
-    if (!id) return null;
-
-    let url = '';
-    const params = new URLSearchParams();
-
-    switch (source.id) {
-      case 'vidsrc':
-        if (type === 'movie') {
-          url = `${source.baseUrl}/movie/${id}`;
-        } else if (type === 'tv') {
-          if (season && episode) {
-            url = `${source.baseUrl}/tv/${id}/${season}-${episode}`;
-          } else {
-            url = `${source.baseUrl}/tv/${id}`;
-          }
-        }
-        break;
-
-      case 'vidsrcpro':
-        if (type === 'movie') {
-          url = `${source.baseUrl}/movie/${id}`;
-        } else if (type === 'tv' && season && episode) {
-          url = `${source.baseUrl}/tv/${id}/${season}/${episode}`;
-        }
-        break;
-
-      case 'superembed':
-        params.append('video_id', String(id));
-        params.append('tmdb', '1');
-        if (type === 'tv' && season && episode) {
-          params.append('s', String(season));
-          params.append('e', String(episode));
-        }
-        url = `${source.baseUrl}?${params.toString()}`;
-        break;
-
-      case 'embedsu':
-        if (type === 'movie') {
-          url = `${source.baseUrl}/movie/${id}`;
-        } else if (type === 'tv' && season && episode) {
-          url = `${source.baseUrl}/tv/${id}/${season}/${episode}`;
-        }
-        break;
-
-      default:
-        return null;
+    const baseUrl = isVip 
+      ? 'https://multiembed.mov/directstream.php?'
+      : 'https://multiembed.mov/?';
+    
+    let url = baseUrl;
+    
+    if (tmdbId) {
+      url += `video_id=${tmdbId}&tmdb=1`;
+    } else if (imdbId) {
+      const cleanId = this.getCleanId(imdbId);
+      url += `video_id=${cleanId}`;
+    } else {
+      throw new Error('Either TMDB ID or IMDB ID is required');
     }
 
-    // Add common parameters
-    if (language) params.append('lang', language);
-    if (subtitles && source.supports.subtitles) params.append('sub', '1');
-    
-    // Append params if any were added
-    if (params.toString() && !url.includes('?')) {
-      url += `?${params.toString()}`;
-    } else if (params.toString()) {
-      url += `&${params.toString()}`;
+    if (season && episode) {
+      url += `&s=${season}&e=${episode}`;
     }
 
     return url;
   }
 
-  /**
-   * Test if a streaming URL is accessible
-   */
-  private async testStreamAccessibility(url: string): Promise<boolean> {
+  static async getVideoSources(options: StreamingOptions): Promise<VideoSource[]> {
+    const sources: VideoSource[] = [];
+
     try {
-      // For iframe embeds, we can't really test accessibility due to CORS
-      // So we'll just validate the URL format
-      return this.isValidUrl(url);
-    } catch {
-      return false;
+      // Check VIP availability first
+      const vipAvailable = await this.checkVipAvailability(options);
+      
+      if (vipAvailable) {
+        const vipUrl = this.buildMultiEmbedUrl(options, true);
+        sources.push({
+          name: 'MultiEmbed VIP',
+          url: vipUrl,
+          quality: 'HD',
+          isVip: true
+        });
+      }
+
+      // Always add standard player as fallback
+      const standardUrl = this.buildMultiEmbedUrl(options, false);
+      sources.push({
+        name: 'MultiEmbed Standard',
+        url: standardUrl,
+        quality: 'Auto',
+        isVip: false
+      });
+
+    } catch (error) {
+      console.error('Error getting video sources:', error);
+      
+      // Fallback to standard player if there's an error
+      try {
+        const fallbackUrl = this.buildMultiEmbedUrl(options, false);
+        sources.push({
+          name: 'MultiEmbed',
+          url: fallbackUrl,
+          quality: 'Auto',
+          isVip: false
+        });
+      } catch (fallbackError) {
+        console.error('Fallback URL generation failed:', fallbackError);
+      }
     }
+
+    return sources;
   }
 
-  /**
-   * Validate URL format
-   */
-  private isValidUrl(url: string): boolean {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
+  static async getMovieSources(tmdbId: number, imdbId?: string): Promise<VideoSource[]> {
+    return this.getVideoSources({ tmdbId, imdbId });
   }
 
-  /**
-   * Get available qualities for a stream
-   */
-  getAvailableQualities(): string[] {
-    return ['auto', '720p', '1080p'];
-  }
-
-  /**
-   * Get supported languages
-   */
-  getSupportedLanguages(): Record<string, string> {
-    return {
-      'en': 'English',
-      'es': 'Spanish',
-      'fr': 'French',
-      'de': 'German',
-      'it': 'Italian',
-      'pt': 'Portuguese',
-      'ru': 'Russian',
-      'ja': 'Japanese',
-      'ko': 'Korean',
-      'zh': 'Chinese'
-    };
-  }
-
-  /**
-   * Search for alternative streaming sources
-   */
-  async findAlternativeSources(request: VideoStreamRequest): Promise<VideoStreamResponse[]> {
-    // This could integrate with additional APIs to find more sources
-    return this.getMultipleStreams(request);
+  static async getTVShowSources(
+    tmdbId: number, 
+    season: number, 
+    episode: number, 
+    imdbId?: string
+  ): Promise<VideoSource[]> {
+    return this.getVideoSources({ tmdbId, imdbId, season, episode });
   }
 }
 
-// Export singleton instance
-export const videoStreamingService = new VideoStreamingService();
-
 // Export types
-export type { VideoStreamRequest, VideoStreamResponse, StreamingSource };
+export type { VideoSource, StreamingOptions };

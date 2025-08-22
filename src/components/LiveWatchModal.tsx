@@ -118,8 +118,6 @@ const WatchNowModal: React.FC<WatchNowModalProps> = ({
                 title={title}
                 season={season}
                 episode={episode}
-                source={selectedSource}
-                autoPlay={1}
               />
             </div>
           ) : (
@@ -131,14 +129,9 @@ const WatchNowModal: React.FC<WatchNowModalProps> = ({
               padding: "2rem"
             }}>
               <div style={{ width: "100%", maxWidth: "600px" }}>
-                <VideoSourceSelector
-                  tmdbId={tmdbId}
-                  imdbId={imdbId}
-                  type={type}
-                  season={season}
-                  episode={episode}
-                  onSourceSelect={handleSourceSelect}
-                />
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                  <p>Select a video source to watch</p>
+                </div>
               </div>
             </div>
           )}

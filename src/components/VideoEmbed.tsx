@@ -1,124 +1,177 @@
-
-import { useState, useEffect, useRef } from 'react';
-import CustomVideoPlayer from './CustomVideoPlayer';
-import { getEmbedUrl } from '@/utils/videoEmbedUtils';
+import { useState, useEffect } from 'react';
+import { VideoStreamingService } from '@/api/videoStreamingService';
 import VideoPlayerLoader from './video-embed/VideoPlayerLoader';
 import VideoPlayerError from './video-embed/VideoPlayerError';
-import VideoIframe from './video-embed/VideoIframe';
+import { VideoSourceSelector } from './VideoSourceSelector';
 import { AdBanner } from './AdBanner';
 
-interface VideoEmbedProps {
-  tmdbId?: number;
-  imdbId?: string;
-  type?: 'movie' | 'tv';
-  title: string;
-  dsLang?: string;
-  autoPlay?: 1 | 0;
-  season?: number;
-  episode?: number;
-  subUrl?: string;
-  autoNext?: 1 | 0;
-  videoUrl?: string;
-  source?: string;
+interface VideoSource {
+  name: string;
+  url: string;
+  quality?: string;
+  isVip?: boolean;
 }
 
-const VideoEmbed = ({
-  tmdbId,
+interface VideoEmbedProps {
+  tmdbId: number;
+  imdbId?: string;
+  type: 'movie' | 'tv';
+  season?: number;
+  episode?: number;
+  title?: string;
+  onError?: (error: string) => void;
+  className?: string;
+}
+
+export const VideoEmbed = ({ 
+  tmdbId, 
   imdbId,
-  type = "movie",
+  type, 
+  season, 
+  episode, 
   title,
-  dsLang,
-  autoPlay,
-  season,
-  episode,
-  subUrl,
-  autoNext,
-  videoUrl,
-  source,
+  onError,
+  className = ""
 }: VideoEmbedProps) => {
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [debugUrl, setDebugUrl] = useState<string>('');
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const retryCount = useRef(0);
-  const maxRetries = 3;
+  const [sources, setSources] = useState<VideoSource[]>([]);
+  const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Debug: log embed url and render in UI
+  const maxRetries = 2;
+
   useEffect(() => {
-    const loadEmbedUrl = async () => {
-      const url = await getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
-      setDebugUrl(url || '');
-      if (!url) {
-        setHasError(true);
-        setIsLoading(false);
-      } else {
-        setHasError(false);
-        setIsLoading(true);
-        retryCount.current = 0;
-      }
-    };
-    
-    loadEmbedUrl();
-    // eslint-disable-next-line
-  }, [tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source]);
+    loadVideoSources();
+  }, [tmdbId, imdbId, type, season, episode]);
 
-  const handleError = async () => {
-    setIsLoading(true);
-    if (retryCount.current < maxRetries) {
-      retryCount.current += 1;
-      setTimeout(async () => {
-        if (iframeRef.current) {
-          const url = await getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
-          iframeRef.current.src = url || '';
-          setHasError(false);
+  const loadVideoSources = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      let videoSources: VideoSource[];
+      
+      if (type === 'movie') {
+        videoSources = await VideoStreamingService.getMovieSources(tmdbId, imdbId);
+      } else {
+        if (!season || !episode) {
+          throw new Error('Season and episode are required for TV shows');
         }
-      }, 1000 * retryCount.current);
-    } else {
-      setHasError(true);
-      setIsLoading(false);
+        videoSources = await VideoStreamingService.getTVShowSources(tmdbId, season, episode, imdbId);
+      }
+
+      if (videoSources.length === 0) {
+        throw new Error('No video sources available');
+      }
+
+      setSources(videoSources);
+      setCurrentSourceIndex(0);
+    } catch (error) {
+      console.error('Error loading video sources:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load video');
+      onError?.(error instanceof Error ? error.message : 'Failed to load video');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLoad = () => setIsLoading(false);
+  const handleSourceChange = (index: number) => {
+    setCurrentSourceIndex(index);
+    setError(null);
+    setRetryCount(0);
+  };
 
-  // If a direct videoUrl is provided, use our custom video player instead of the embed iframe
-  if (videoUrl) {
+  const handleIframeError = () => {
+    const nextIndex = currentSourceIndex + 1;
+    
+    if (nextIndex < sources.length) {
+      console.log(`Source ${sources[currentSourceIndex].name} failed, trying next source...`);
+      setCurrentSourceIndex(nextIndex);
+      setRetryCount(0);
+    } else if (retryCount < maxRetries) {
+      console.log(`All sources failed, retrying... (${retryCount + 1}/${maxRetries})`);
+      setRetryCount(prev => prev + 1);
+      setCurrentSourceIndex(0);
+    } else {
+      const errorMsg = 'All video sources failed to load';
+      setError(errorMsg);
+      onError?.(errorMsg);
+    }
+  };
+
+  const currentSource = sources[currentSourceIndex];
+
+  if (loading) {
     return (
-      <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
-        <CustomVideoPlayer src={videoUrl} title={title} />
-        <div className="absolute bottom-4 right-4 z-10 w-1/2 md:w-1/3 max-w-[300px]">
-          <AdBanner slot="4567890123" format="auto" />
-        </div>
+      <div className={`relative aspect-video w-full bg-black rounded-lg overflow-hidden ${className}`}>
+        <VideoPlayerLoader />
+      </div>
+    );
+  }
+
+  if (error || !currentSource) {
+    return (
+      <div className={`relative aspect-video w-full bg-black rounded-lg overflow-hidden ${className}`}>
+        <VideoPlayerError 
+          maxRetries={maxRetries}
+        />
       </div>
     );
   }
 
   return (
-    <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
-      {/* The debug URL display has been removed to avoid confusing users. */}
-      
-      {isLoading && <VideoPlayerLoader />}
-
-      {hasError && !isLoading ? (
-        <VideoPlayerError maxRetries={maxRetries} />
-      ) : (
-        <>
-          <VideoIframe
-            key={debugUrl}
-            ref={iframeRef}
-            src={debugUrl}
-            title={title}
-            isLoading={isLoading}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-          {!isLoading && !hasError && (
-             <div className="absolute bottom-4 right-4 z-10 w-1/2 md:w-1/3 max-w-[300px]">
-                <AdBanner slot="4567890123" format="auto" />
-             </div>
-          )}
-        </>
+    <div className={`relative w-full ${className}`}>
+      {/* Source Selector */}
+      {sources.length > 1 && (
+        <VideoSourceSelector
+          sources={sources}
+          currentIndex={currentSourceIndex}
+          onSourceChange={handleSourceChange}
+        />
       )}
+
+      {/* Video Player */}
+      <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
+        <iframe
+          key={`${currentSource.url}-${retryCount}`}
+          src={currentSource.url}
+          className="absolute top-0 left-0 w-full h-full"
+          frameBorder="0"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation"
+          onError={handleIframeError}
+          onLoad={() => {
+            console.log(`Successfully loaded: ${currentSource.name}`);
+          }}
+        />
+        
+        {/* VIP Badge */}
+        {currentSource.isVip && (
+          <div className="absolute top-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg z-10">
+            VIP Quality
+          </div>
+        )}
+        
+        {/* Ad Banner */}
+        <div className="absolute bottom-4 right-4 z-10 w-1/2 md:w-1/3 max-w-[300px]">
+          <AdBanner slot="4567890123" format="auto" />
+        </div>
+      </div>
+
+      {/* Source Info */}
+      <div className="mt-2 text-center">
+        <p className="text-sm text-muted-foreground">
+          Playing from: <span className="font-medium">{currentSource.name}</span>
+          {currentSource.quality && (
+            <span className="ml-2 text-xs bg-muted px-2 py-0.5 rounded">
+              {currentSource.quality}
+            </span>
+          )}
+        </p>
+      </div>
     </div>
   );
 };

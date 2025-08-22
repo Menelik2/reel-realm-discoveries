@@ -32,9 +32,7 @@ export const MovieView = ({ movieId, contentType, title, selectedSource, onSourc
             <VideoEmbed 
               tmdbId={movieId} 
               type={contentType} 
-              title={title} 
-              autoPlay={1}
-              source={selectedSource}
+              title={title}
             />
           </div>
           <div className="mt-4">
