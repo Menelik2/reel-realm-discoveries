@@ -6,11 +6,6 @@ import { useAdFreeStatus } from '@/hooks/useAdFreeStatus';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
-declare global {
-  interface Window {
-    adsbygoogle?: unknown[];
-  }
-}
 
 interface AdBannerProps {
   slot: string;

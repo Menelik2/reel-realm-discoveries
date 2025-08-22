@@ -12,7 +12,10 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
   const { data: isAdFree, isLoading } = useAdFreeStatus();
   const [isVisible, setIsVisible] = useState(false);
   const [hasShown, setHasShown] = useState(false);
+  const [adLoaded, setAdLoaded] = useState(false);
+  const [adError, setAdError] = useState(false);
   const adRef = useRef<HTMLDivElement>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     // Don't show if user is ad-free, still loading, or already shown
@@ -40,36 +43,95 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
     onClose?.();
   };
 
+  const isAdSenseReady = () => {
+    return typeof window !== 'undefined' && 
+           window.adsbygoogle && 
+           typeof window.adsbygoogle.push === 'function';
+  };
+
   const pushAd = () => {
+    if (!adRef.current || adLoaded || adError) return;
+
     try {
-      if (window.adsbygoogle && adRef.current) {
-        // Check if ad is already initialized to prevent duplicate initialization
-        const insElement = adRef.current.querySelector('ins.adsbygoogle');
-        if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
-          console.log('Popup ad already loaded');
-          return;
-        }
-        
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        console.log('Popup ad pushed');
+      // Check if AdSense is ready
+      if (!isAdSenseReady()) {
+        console.log('AdSense not ready, retrying in 1 second...');
+        retryTimeoutRef.current = setTimeout(pushAd, 1000);
+        return;
       }
-    } catch (error) {
+
+      const insElement = adRef.current.querySelector('ins.adsbygoogle');
+      if (!insElement) {
+        console.error('Ad element not found');
+        setAdError(true);
+        return;
+      }
+
+      // Check if ad is already loaded
+      const adStatus = insElement.getAttribute('data-adsbygoogle-status');
+      if (adStatus && adStatus !== 'done') {
+        console.log('Ad already being processed');
+        return;
+      }
+
+      if (adStatus === 'done') {
+        console.log('Ad already loaded');
+        setAdLoaded(true);
+        return;
+      }
+
+      // Push ad to AdSense
+      window.adsbygoogle.push({});
+      console.log('Popup ad pushed to AdSense');
+      
+      // Monitor ad loading
+      const checkAdLoaded = () => {
+        const status = insElement.getAttribute('data-adsbygoogle-status');
+        if (status === 'done') {
+          setAdLoaded(true);
+          console.log('Popup ad loaded successfully');
+        } else if (status === 'error') {
+          setAdError(true);
+          console.error('Ad failed to load');
+        } else {
+          // Keep checking
+          setTimeout(checkAdLoaded, 500);
+        }
+      };
+      
+      setTimeout(checkAdLoaded, 1000);
+
+    } catch (error: any) {
       console.error("Popup AdSense error:", error);
-      // Don't retry if it's a duplicate ad error
-      if (error.message && error.message.includes('already have ads')) {
+      setAdError(true);
+      
+      // Handle specific error cases
+      if (error?.message?.includes('already have ads')) {
+        console.log('Duplicate ad error - ad already exists');
+        setAdLoaded(true);
         return;
       }
     }
   };
 
   useEffect(() => {
-    if (isVisible && !isAdFree) {
+    if (isVisible && !isAdFree && !adLoaded && !adError) {
+      // Wait for DOM to be ready and AdSense script to load
       const timer = setTimeout(() => {
         pushAd();
-      }, 100);
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isVisible, isAdFree]);
+  }, [isVisible, isAdFree, adLoaded, adError]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!isVisible || isAdFree || isLoading) return null;
 
@@ -88,15 +150,32 @@ export const PopupAd = ({ onClose, delay = 10 }: PopupAdProps) => {
           </Button>
         </div>
         
-        <div ref={adRef} className="p-4">
-          {/* YENI NEW ADS */}
+        <div ref={adRef} className="p-4 min-h-[250px] flex items-center justify-center">
+          {/* Show loading state */}
+          {!adLoaded && !adError && (
+            <div className="flex flex-col items-center justify-center space-y-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-sm text-muted-foreground">Loading advertisement...</p>
+            </div>
+          )}
+          
+          {/* Show error state */}
+          {adError && (
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Advertisement unavailable</p>
+            </div>
+          )}
+          
+          {/* Google AdSense Ad */}
           <ins 
             className="adsbygoogle"
             style={{ 
-              display: 'block'
+              display: 'block',
+              minWidth: '300px',
+              minHeight: '250px'
             }}
             data-ad-client="ca-pub-8938310552882401"
-            data-ad-slot="9876543210"
+            data-ad-slot="1234567890"
             data-ad-format="auto"
             data-full-width-responsive="true"
           />
