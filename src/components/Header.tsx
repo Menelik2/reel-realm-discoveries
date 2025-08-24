@@ -49,11 +49,22 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           {/* Theme Toggle & Mobile Menu */}
           <div className="flex items-center space-x-2">
             <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              size="sm"
               onClick={() => setIsDarkMode(!isDarkMode)}
+              className="flex items-center gap-2 text-xs font-medium"
             >
-              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {isDarkMode ? (
+                <>
+                  <Sun className="h-3 w-3" />
+                  <span className="hidden sm:inline">Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="h-3 w-3" />
+                  <span className="hidden sm:inline">Dark</span>
+                </>
+              )}
             </Button>
 
             <Button
