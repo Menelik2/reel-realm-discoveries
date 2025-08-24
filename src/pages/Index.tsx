@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieGrid } from "@/components/MovieGrid";
-import { AdBanner } from "@/components/AdBanner";
+import { HomeCategoryRows } from "@/components/HomeCategoryRows";
 import { fetchMovies, searchContent } from "@/api/tmdbService";
 
 const getInitialDarkMode = () => {
@@ -125,13 +125,7 @@ const Index = () => {
         <main>
           {!searchQuery && <HeroCarousel />}
 
-          <>
-            {!searchQuery && currentCategory !== 'custom' && (
-              <div className="container mx-auto px-4 my-8">
-                <AdBanner slot="1571190202" />
-              </div>
-            )}
-
+          {searchQuery ? (
             <MovieGrid
               key={refreshKey}
               searchQuery={searchQuery}
@@ -151,7 +145,13 @@ const Index = () => {
               setCurrentCategory={handleSetCurrentCategory}
               isMobile={isMobile}
             />
-          </>
+          ) : (
+            <HomeCategoryRows
+              contentType={contentType}
+              setContentType={setContentType}
+              onMovieClick={handleMovieClick}
+            />
+          )}
         </main>
 
         {!isMobile && <Footer />}
