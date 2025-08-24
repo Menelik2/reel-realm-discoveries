@@ -83,6 +83,9 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
 
   useEffect(() => {
     if (!isAdFree && !isStatusLoading && !adManager.isSlotInitialized(slot)) {
+      // Clean up any stale ads first
+      adManager.cleanup();
+      
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         pushAd();

@@ -71,12 +71,13 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 
       {categories.map((category, index) => (
         <CategorySection 
-          key={`${category.key}-${selectedGenre}`}
+          key={category.key}
           category={category}
           contentType={contentType}
           selectedGenre={selectedGenre}
           onMovieClick={onMovieClick}
           showAdAfter={index === 1} // Show ad after second category
+          sectionIndex={index}
         />
       ))}
     </div>
@@ -89,9 +90,10 @@ interface CategorySectionProps {
   selectedGenre: string;
   onMovieClick: (movieId: number) => void;
   showAdAfter?: boolean;
+  sectionIndex: number;
 }
 
-const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, showAdAfter }: CategorySectionProps) => {
+const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, showAdAfter, sectionIndex }: CategorySectionProps) => {
   const { movies, loading } = useMovieData({
     searchQuery: '',
     selectedGenre,
@@ -115,7 +117,7 @@ const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, s
         </section>
         {showAdAfter && (
           <div className="container mx-auto px-4">
-            <AdBanner slot="8926420198" className="my-6" />
+            <AdBanner slot={`892642019${sectionIndex}`} className="my-6" />
           </div>
         )}
       </>
@@ -125,7 +127,7 @@ const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, s
   if (movies.length === 0) {
     return showAdAfter ? (
       <div className="container mx-auto px-4">
-        <AdBanner slot="8926420198" className="my-6" />
+        <AdBanner slot={`892642019${sectionIndex}`} className="my-6" />
       </div>
     ) : null;
   }
@@ -146,7 +148,7 @@ const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, s
       </section>
       {showAdAfter && (
         <div className="container mx-auto px-4">
-          <AdBanner slot="8926420198" className="my-6" />
+          <AdBanner slot={`892642019${sectionIndex}`} className="my-6" />
         </div>
       )}
     </>

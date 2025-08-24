@@ -26,6 +26,17 @@ class AdManager {
     this.initializedSlots.clear();
   }
 
+  cleanup(): void {
+    // Remove any stale DOM elements with ads
+    const adsElements = document.querySelectorAll('ins.adsbygoogle[data-adsbygoogle-status]');
+    adsElements.forEach((element, index) => {
+      // Only remove if there are duplicates or the element is not visible
+      if (index > 0 || !(element as HTMLElement).offsetParent) {
+        element.remove();
+      }
+    });
+  }
+
   getInitializedSlots(): string[] {
     return Array.from(this.initializedSlots);
   }
