@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useMovieData } from '@/hooks/useMovieData';
 import { MovieCard } from '@/components/MovieCard';
 import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Movie } from '@/types/tmdb';
 
 interface HomeCategoryRowsProps {
@@ -10,7 +12,22 @@ interface HomeCategoryRowsProps {
   onMovieClick: (movieId: number) => void;
 }
 
+const genres = [
+  { id: 28, name: 'Action' },
+  { id: 35, name: 'Comedy' },
+  { id: 18, name: 'Drama' },
+  { id: 27, name: 'Horror' },
+  { id: 878, name: 'Sci-Fi' },
+  { id: 53, name: 'Thriller' },
+  { id: 16, name: 'Animation' },
+  { id: 12, name: 'Adventure' },
+  { id: 80, name: 'Crime' },
+  { id: 99, name: 'Documentary' },
+];
+
 export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: HomeCategoryRowsProps) => {
+  const [selectedGenre, setSelectedGenre] = useState<string>('all');
+  
   const categories = [
     { key: 'popular', label: 'Popular' },
     { key: 'top_rated', label: 'Top Rated' },
@@ -20,12 +37,31 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 
   return (
     <div className="space-y-8">
-      {/* Content Type Toggle */}
+      {/* Content Type Toggle & Genre Filter */}
       <div className="container mx-auto px-4 pt-6">
-        <ContentTypeToggle 
-          contentType={contentType}
-          setContentType={setContentType}
-        />
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <ContentTypeToggle 
+            contentType={contentType}
+            setContentType={setContentType}
+          />
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Filter by Genre:</span>
+            <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Genres" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Genres</SelectItem>
+                {genres.map(genre => (
+                  <SelectItem key={genre.id} value={genre.id.toString()}>
+                    {genre.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       {/* Ad Banner */}
@@ -35,9 +71,10 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 
       {categories.map((category, index) => (
         <CategorySection 
-          key={category.key}
+          key={`${category.key}-${selectedGenre}`}
           category={category}
           contentType={contentType}
+          selectedGenre={selectedGenre}
           onMovieClick={onMovieClick}
           showAdAfter={index === 1} // Show ad after second category
         />
@@ -49,14 +86,15 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 interface CategorySectionProps {
   category: { key: string; label: string };
   contentType: 'movie' | 'tv';
+  selectedGenre: string;
   onMovieClick: (movieId: number) => void;
   showAdAfter?: boolean;
 }
 
-const CategorySection = ({ category, contentType, onMovieClick, showAdAfter }: CategorySectionProps) => {
+const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, showAdAfter }: CategorySectionProps) => {
   const { movies, loading } = useMovieData({
     searchQuery: '',
-    selectedGenre: 'all',
+    selectedGenre,
     selectedYear: 'all',
     contentType,
     currentCategory: category.key,
