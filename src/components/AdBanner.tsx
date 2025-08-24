@@ -1,10 +1,11 @@
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdFreeStatus } from '@/hooks/useAdFreeStatus';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { adManager } from '@/utils/adManager';
 
 declare global {
   interface Window {
@@ -29,17 +30,27 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
   const retryCountRef = useRef(0);
   const maxRetries = 3;
 
-  const pushAd = () => {
+  const pushAd = useCallback(() => {
     try {
+      // Check if this slot is already globally initialized
+      if (adManager.isSlotInitialized(slot)) {
+        console.log(`Ad slot ${slot} already globally initialized, skipping`);
+        setAdLoaded(true);
+        return;
+      }
+
       if (window.adsbygoogle && !isAdFree && !isStatusLoading && adRef.current) {
-        // Check if ad is already initialized to prevent duplicate initialization
+        // Check if the DOM element already has ads
         const insElement = adRef.current.querySelector('ins.adsbygoogle');
         if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
           console.log(`Ad already loaded for slot: ${slot}`);
           setAdLoaded(true);
+          adManager.markSlotAsInitialized(slot);
           return;
         }
 
+        // Mark as initialized before pushing to prevent race conditions
+        adManager.markSlotAsInitialized(slot);
         (window.adsbygoogle = window.adsbygoogle || []).push({});
         setAdLoaded(true);
         console.log(`Ad pushed for slot: ${slot}`);
@@ -48,12 +59,15 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
       console.error("AdSense error:", error);
       
       // Don't retry if it's a duplicate ad error
-      if (error.message?.includes('already have ads')) {
+      if (error?.message?.includes('already have ads')) {
         console.log(`Skipping retry for duplicate ad error on slot: ${slot}`);
         setAdLoaded(true);
+        adManager.markSlotAsInitialized(slot);
         return;
       }
       
+      // Reset the slot in case of other errors
+      adManager.resetSlot(slot);
       setAdError(true);
       
       // Retry logic for other errors
@@ -65,10 +79,10 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
         }, 2000 * retryCountRef.current);
       }
     }
-  };
+  }, [slot, isAdFree, isStatusLoading]);
 
   useEffect(() => {
-    if (!isAdFree && !isStatusLoading) {
+    if (!isAdFree && !isStatusLoading && !adManager.isSlotInitialized(slot)) {
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         pushAd();
@@ -76,16 +90,16 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
       
       return () => clearTimeout(timer);
     }
-  }, [slot, isAdFree, isStatusLoading]);
+  }, [slot, isAdFree, isStatusLoading, pushAd]);
 
   // Intersection Observer for lazy loading
   useEffect(() => {
-    if (!adRef.current || isAdFree || isStatusLoading) return;
+    if (!adRef.current || isAdFree || isStatusLoading || adManager.isSlotInitialized(slot)) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !adLoaded && !adError) {
+          if (entry.isIntersecting && !adLoaded && !adError && !adManager.isSlotInitialized(slot)) {
             pushAd();
           }
         });
@@ -96,7 +110,7 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
     observer.observe(adRef.current);
 
     return () => observer.disconnect();
-  }, [isAdFree, isStatusLoading, adLoaded, adError]);
+  }, [isAdFree, isStatusLoading, adLoaded, adError, slot, pushAd]);
 
   const handlePurchase = async () => {
     setIsRedirecting(true);
@@ -124,13 +138,15 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
 
   return (
     <div ref={adRef} className={`relative ${className}`}>
-      <ins className="adsbygoogle"
+      <ins 
+        className="adsbygoogle"
         style={style}
         data-ad-client="ca-pub-8938310552882401"
         data-ad-slot={slot}
         data-ad-format={format}
         data-full-width-responsive="true"
         data-adtest={process.env.NODE_ENV === 'development' ? 'on' : 'off'}
+        key={`ad-${slot}`}
       />
       
       {/* Loading indicator for ads */}
