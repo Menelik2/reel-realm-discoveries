@@ -49,6 +49,14 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
           return;
         }
 
+        // Double-check no duplicate ads exist globally for this slot
+        const existingAds = document.querySelectorAll(`ins.adsbygoogle[data-ad-slot="${slot}"][data-adsbygoogle-status]`);
+        if (existingAds.length > 0) {
+          console.log(`Found existing ads for slot ${slot}, cleaning up`);
+          adManager.cleanupSlot(slot);
+          return;
+        }
+
         // Mark as initialized before pushing to prevent race conditions
         adManager.markSlotAsInitialized(slot);
         (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -58,11 +66,11 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
     } catch (error) {
       console.error("AdSense error:", error);
       
-      // Don't retry if it's a duplicate ad error
-      if (error?.message?.includes('already have ads')) {
-        console.log(`Skipping retry for duplicate ad error on slot: ${slot}`);
+      // Handle duplicate ad error specifically
+      if (error?.message?.includes('already have ads') || error?.name === 'TagError') {
+        console.log(`Duplicate ad error for slot: ${slot}, cleaning up`);
+        adManager.cleanupSlot(slot);
         setAdLoaded(true);
-        adManager.markSlotAsInitialized(slot);
         return;
       }
       
@@ -91,8 +99,17 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
         pushAd();
       }, 100);
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        // Cleanup on unmount
+        adManager.cleanupSlot(slot);
+      };
     }
+    
+    // Cleanup when component unmounts
+    return () => {
+      adManager.cleanupSlot(slot);
+    };
   }, [slot, isAdFree, isStatusLoading, pushAd]);
 
   // Intersection Observer for lazy loading
