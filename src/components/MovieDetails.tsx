@@ -146,6 +146,9 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             seasons={movie.seasons}
           />
 
+          {/* Ad after movie info */}
+          <AdBanner slot="4392847561" className="my-6" />
+
           <div className="mt-8">
             <ProductionDetails 
               budget={movie.budget || 0}
@@ -182,6 +185,9 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
               </Card>
             </div>
           )}
+
+          {/* Bottom ad */}
+          <AdBanner slot="7834561902" className="my-8" />
 
         </div>
       </div>
