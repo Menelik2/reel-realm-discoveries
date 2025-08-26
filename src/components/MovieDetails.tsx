@@ -17,7 +17,7 @@ interface MovieDetailsProps {
   movieId: number;
   contentType?: 'movie' | 'tv';
   onClose: () => void;
-  onMovieClick: (movieId: number) => void;
+  onMovieClick: (movieId: number, contentType?: 'movie' | 'tv') => void;
 }
 
 export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieClick }: MovieDetailsProps) => {
@@ -38,7 +38,7 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
 
   const handleSimilarMovieClick = (newMovieId: number) => {
     console.log('Opening similar movie:', newMovieId);
-    onMovieClick(newMovieId);
+    onMovieClick(newMovieId, contentType);
   };
 
   const handleActorClick = (actorId: number) => {
@@ -52,8 +52,8 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
   const handleActorMovieClick = (movieId: number, contentType: 'movie' | 'tv') => {
     // Close actor details first
     setSelectedActorId(null);
-    // Navigate to the movie/series
-    onMovieClick(movieId);
+    // Navigate to the movie/series with correct content type
+    onMovieClick(movieId, contentType);
   };
 
   // Handle escape key press
