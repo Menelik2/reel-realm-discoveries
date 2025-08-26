@@ -29,6 +29,8 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
   
   const categories = [
+    { key: 'trending_week', label: 'Trending This Week' },
+    { key: 'latest_releases', label: 'Latest Releases' },
     { key: 'popular', label: 'Popular' },
     { key: 'top_rated', label: 'Top Rated' },
     { key: 'upcoming', label: contentType === 'movie' ? 'Upcoming' : 'On The Air' },
