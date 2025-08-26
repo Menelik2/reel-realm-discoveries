@@ -49,6 +49,13 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
     setSelectedActorId(null);
   };
 
+  const handleActorMovieClick = (movieId: number, contentType: 'movie' | 'tv') => {
+    // Close actor details first
+    setSelectedActorId(null);
+    // Navigate to the movie/series
+    onMovieClick(movieId);
+  };
+
   // Handle escape key press
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -191,7 +198,11 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
 
         </div>
       </div>
-      <ActorDetails actorId={selectedActorId} onClose={handleCloseActorDetails} />
+      <ActorDetails 
+        actorId={selectedActorId} 
+        onClose={handleCloseActorDetails} 
+        onMovieClick={handleActorMovieClick}
+      />
     </div>
   );
 };

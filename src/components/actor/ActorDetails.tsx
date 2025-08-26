@@ -17,6 +17,7 @@ import { ActorMovieCredits } from "./ActorMovieCredits";
 interface ActorDetailsProps {
   actorId: number | null;
   onClose: () => void;
+  onMovieClick?: (movieId: number, contentType: 'movie' | 'tv') => void;
 }
 
 const ActorDetailsSkeleton = () => (
@@ -39,7 +40,7 @@ const ActorDetailsSkeleton = () => (
 );
 
 
-export const ActorDetails = ({ actorId, onClose }: ActorDetailsProps) => {
+export const ActorDetails = ({ actorId, onClose, onMovieClick }: ActorDetailsProps) => {
   const { actor, credits, loading, error } = useActorDetails(actorId);
 
   return (
@@ -94,7 +95,7 @@ export const ActorDetails = ({ actorId, onClose }: ActorDetailsProps) => {
                         <p className="text-muted-foreground">No biography available.</p>
                     )}
 
-                    <ActorMovieCredits credits={credits} />
+                    <ActorMovieCredits credits={credits} onMovieClick={onMovieClick} />
                 </div>
             </>
         )}
