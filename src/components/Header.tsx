@@ -3,7 +3,7 @@ import { Search, Menu, X, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import { AdBanner } from '@/components/AdBanner';
+
 
 interface HeaderProps {
   searchQuery: string;
@@ -17,8 +17,6 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
-      {/* Header Ad Banner */}
-      <AdBanner slot="2856473598" className="w-full" style={{ height: '60px' }} format="banner" />
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}

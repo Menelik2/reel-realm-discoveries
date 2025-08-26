@@ -67,20 +67,20 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
     if (currentCategory === 'trending_week') {
         url = `${TMDB_BASE_URL}/trending/${contentType}/week`;
     } else if (currentCategory === 'latest_releases') {
-        // Use discover with recent release dates
+        // Use discover with very recent release dates (last month)
         url = `${TMDB_BASE_URL}/discover/${contentType}`;
         const currentDate = new Date();
-        const threeMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 3, currentDate.getDate());
+        const oneMonthAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, currentDate.getDate());
         
         if (contentType === 'movie') {
-            params.append('primary_release_date.gte', threeMonthsAgo.toISOString().split('T')[0]);
+            params.append('primary_release_date.gte', oneMonthAgo.toISOString().split('T')[0]);
             params.append('primary_release_date.lte', currentDate.toISOString().split('T')[0]);
         } else {
-            params.append('first_air_date.gte', threeMonthsAgo.toISOString().split('T')[0]);
+            params.append('first_air_date.gte', oneMonthAgo.toISOString().split('T')[0]);
             params.append('first_air_date.lte', currentDate.toISOString().split('T')[0]);
         }
-        params.append('sort_by', 'release_date.desc');
-        params.append('vote_count.gte', '50');
+        params.append('sort_by', 'popularity.desc');
+        params.append('vote_count.gte', '10');
     } else if (useDiscover) {
         url = `${TMDB_BASE_URL}/discover/${contentType}`;
         if (selectedGenre !== 'all') params.append('with_genres', selectedGenre);
