@@ -27,24 +27,27 @@ class AdManager {
   }
 
   cleanup(): void {
-    // Remove any stale DOM elements with ads
+    // More aggressive cleanup - remove ALL processed ad elements
     const adsElements = document.querySelectorAll('ins.adsbygoogle[data-adsbygoogle-status]');
     adsElements.forEach((element) => {
-      // More aggressive cleanup - remove all stale elements
-      const parent = element.parentElement;
-      if (parent && !parent.isConnected) {
+      element.remove();
+    });
+    
+    // Also cleanup any orphaned elements
+    const orphanedAds = document.querySelectorAll('ins.adsbygoogle:not([data-adsbygoogle-status])');
+    orphanedAds.forEach((element) => {
+      const slot = element.getAttribute('data-ad-slot');
+      if (slot && this.initializedSlots.has(slot)) {
         element.remove();
       }
     });
   }
 
-  // Clean up specific slot
+  // Clean up specific slot - more aggressive
   cleanupSlot(slot: string): void {
     const adsElements = document.querySelectorAll(`ins.adsbygoogle[data-ad-slot="${slot}"]`);
     adsElements.forEach((element) => {
-      if (element.getAttribute('data-adsbygoogle-status')) {
-        element.remove();
-      }
+      element.remove();
     });
     this.resetSlot(slot);
   }

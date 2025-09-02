@@ -32,6 +32,22 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
 
   const pushAd = useCallback(() => {
     try {
+      // Aggressive check for any existing ads with this slot
+      const existingAds = document.querySelectorAll(`ins.adsbygoogle[data-ad-slot="${slot}"]`);
+      if (existingAds.length > 0) {
+        // Check if any have been processed
+        const processedAds = Array.from(existingAds).filter(ad => 
+          ad.getAttribute('data-adsbygoogle-status')
+        );
+        
+        if (processedAds.length > 0) {
+          console.log(`Found ${processedAds.length} existing processed ads for slot: ${slot}, skipping`);
+          setAdLoaded(true);
+          adManager.markSlotAsInitialized(slot);
+          return;
+        }
+      }
+
       // Check if this slot is already globally initialized
       if (adManager.isSlotInitialized(slot)) {
         console.log(`Ad slot ${slot} already globally initialized, skipping`);
@@ -40,20 +56,12 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
       }
 
       if (window.adsbygoogle && !isAdFree && !isStatusLoading && adRef.current) {
-        // Check if the DOM element already has ads
-        const insElement = adRef.current.querySelector('ins.adsbygoogle');
-        if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
-          console.log(`Ad already loaded for slot: ${slot}`);
+        // Check if the current DOM element already has processed ads
+        const insElement = adRef.current.querySelector('ins.adsbygoogle[data-adsbygoogle-status]');
+        if (insElement) {
+          console.log(`Current element already has processed ad for slot: ${slot}`);
           setAdLoaded(true);
           adManager.markSlotAsInitialized(slot);
-          return;
-        }
-
-        // Double-check no duplicate ads exist globally for this slot
-        const existingAds = document.querySelectorAll(`ins.adsbygoogle[data-ad-slot="${slot}"][data-adsbygoogle-status]`);
-        if (existingAds.length > 0) {
-          console.log(`Found existing ads for slot ${slot}, cleaning up`);
-          adManager.cleanupSlot(slot);
           return;
         }
 
@@ -66,10 +74,11 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
     } catch (error) {
       console.error("AdSense error:", error);
       
-      // Handle duplicate ad error specifically
+      // Handle duplicate ad error specifically - more aggressive cleanup
       if (error?.message?.includes('already have ads') || error?.name === 'TagError') {
-        console.log(`Duplicate ad error for slot: ${slot}, cleaning up`);
-        adManager.cleanupSlot(slot);
+        console.log(`TagError for slot: ${slot}, performing full cleanup`);
+        // Force cleanup all ads globally and reset
+        adManager.forceReset();
         setAdLoaded(true);
         return;
       }
