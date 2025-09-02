@@ -30,11 +30,11 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
   
   const categories = [
     { key: 'trending_week', label: 'Trending This Week' },
-    { key: 'latest_releases', label: 'Latest Releases' },
-    { key: 'now_playing', label: contentType === 'movie' ? 'Now Playing' : 'Airing Today' },
     { key: 'popular', label: 'Popular' },
     { key: 'top_rated', label: 'Top Rated' },
-    { key: 'upcoming', label: contentType === 'movie' ? 'Upcoming' : 'On The Air' }
+    { key: 'upcoming', label: contentType === 'movie' ? 'Upcoming' : 'On The Air' },
+    { key: 'now_playing', label: contentType === 'movie' ? 'Now Playing' : 'Airing Today' },
+    { key: 'latest_releases', label: 'Latest Releases' }
   ];
 
   return (
