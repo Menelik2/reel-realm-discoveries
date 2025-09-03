@@ -44,7 +44,7 @@ export const useLiveWatchModal = ({
           setSelectedEpisodeNumber(1);
         }
       }
-      setSelectedSource('https://vidsrc.net/v2');
+      setSelectedSource('https://vidsrc.cc/v2/embed/');
     } else {
       document.documentElement.classList.remove('dark');
       document.body.style.overflow = 'unset';

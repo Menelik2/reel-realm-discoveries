@@ -10,7 +10,7 @@ interface WatchNowModalProps {
 const WatchNowModal: React.FC<WatchNowModalProps> = ({ open, onClose, id, type }) => {
   if (!open) return null;
 
-  const embedUrl = `https://vidsrc.net/v2/embed/${type}/${id}`;
+  const embedUrl = `https://vidsrc.cc/v2/embed/${type}/${id}`;
 
   return (
     <div
