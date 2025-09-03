@@ -1,4 +1,5 @@
 import React from "react";
+import VideoEmbed from "./VideoEmbed";
 
 interface WatchNowModalProps {
   open: boolean;
@@ -10,7 +11,7 @@ interface WatchNowModalProps {
 const WatchNowModal: React.FC<WatchNowModalProps> = ({ open, onClose, id, type }) => {
   if (!open) return null;
 
-  const embedUrl = `https://vidsrc.net/v2/embed/${type}/${id}`;
+  const tmdbId = parseInt(id, 10);
 
   return (
     <div
@@ -60,14 +61,12 @@ const WatchNowModal: React.FC<WatchNowModalProps> = ({ open, onClose, id, type }
         >
           ×
         </button>
-        <iframe
-          src={embedUrl}
-          width="100%"
-          height="100%"
-          allow="autoplay; fullscreen"
-          allowFullScreen
-          frameBorder={0}
+        <VideoEmbed
+          tmdbId={tmdbId}
+          type={type}
           title="Watch Now"
+          autoPlay={1}
+          source="https://vidsrc.net/v2"
         />
       </div>
     </div>
