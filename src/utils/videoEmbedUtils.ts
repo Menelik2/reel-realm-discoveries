@@ -23,7 +23,7 @@ export function getEmbedUrl({
   autoNext,
   source,
 }: EmbedUrlParams): string | null {
-  const baseUrl = source || "https://vidsrc.cc/v2";
+  const baseUrl = source || "https://vidsrc.net/v2";
   const isVidsrcXyz = baseUrl.includes("vidsrc.xyz");
 
   // MOVIE
@@ -53,7 +53,7 @@ export function getEmbedUrl({
         }
       }
     } else {
-      // vidsrc.cc structure
+      // vidsrc.net structure
       if (tmdbId) {
         if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
           return `${baseUrl}/embed/movie/${tmdbId}`;
@@ -103,7 +103,7 @@ export function getEmbedUrl({
         }
       }
     } else {
-      // vidsrc.cc structure
+      // vidsrc.net structure
       if (tmdbId) {
         if (!dsLang) {
           return `${baseUrl}/embed/tv/${tmdbId}`;
@@ -173,7 +173,7 @@ export function getEmbedUrl({
         }
       }
     } else {
-      // vidsrc.cc structure  
+      // vidsrc.net structure  
       if (tmdbId) {
         if (
           !dsLang &&
