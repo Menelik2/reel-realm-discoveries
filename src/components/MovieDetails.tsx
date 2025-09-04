@@ -151,6 +151,7 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             movieId={movieId}
             contentType={contentType}
             seasons={movie.seasons}
+            imdbId={movie.imdb_id}
           />
 
           {/* Ad after movie info */}

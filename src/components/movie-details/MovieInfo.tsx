@@ -22,6 +22,7 @@ interface MovieInfoProps {
   movieId: number;
   contentType: 'movie' | 'tv';
   seasons?: any[];
+  imdbId?: string;
 }
 
 export const MovieInfo = ({
@@ -39,6 +40,7 @@ export const MovieInfo = ({
   movieId,
   contentType,
   seasons,
+  imdbId,
 }: MovieInfoProps) => {
   return (
     <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
@@ -102,6 +104,7 @@ export const MovieInfo = ({
           contentType={contentType}
           title={title}
           seasons={seasons}
+          imdbId={imdbId}
         />
       </div>
     </div>

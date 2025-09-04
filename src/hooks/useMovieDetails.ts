@@ -23,6 +23,8 @@ interface MovieDetail {
   revenue?: number;
   tagline?: string;
   homepage?: string;
+  imdb_id?: string;
+  seasons?: any[];
 }
 
 interface Cast {

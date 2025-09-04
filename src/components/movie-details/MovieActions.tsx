@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Heart, Globe, Download, Eye } from 'lucide-react';
 import LiveWatchModal from '@/components/LiveWatchModal';
+import DownloadModal from '@/components/DownloadModal';
 
 interface MovieActionsProps {
   trailerUrl: string | null;
@@ -10,14 +11,20 @@ interface MovieActionsProps {
   contentType: 'movie' | 'tv';
   title: string;
   seasons?: any[];
+  imdbId?: string;
 }
 
-export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title, seasons }: MovieActionsProps) => {
+export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title, seasons, imdbId }: MovieActionsProps) => {
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   const handleDownload = () => {
-    // Redirect to IMDBot on Telegram, which handles both movies and series
-    window.open('https://t.me/imdbot', '_blank');
+    if (imdbId) {
+      setIsDownloadOpen(true);
+    } else {
+      // Fallback to IMDBot if no IMDB ID
+      window.open('https://t.me/imdbot', '_blank');
+    }
   };
 
   return (
@@ -79,6 +86,16 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         id={movieId.toString()}
         type={contentType}
       />
+
+      {imdbId && (
+        <DownloadModal
+          open={isDownloadOpen}
+          onClose={() => setIsDownloadOpen(false)}
+          imdbId={imdbId}
+          contentType={contentType}
+          title={title}
+        />
+      )}
     </>
   );
 };
