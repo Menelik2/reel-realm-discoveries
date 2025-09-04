@@ -31,9 +31,59 @@ const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
 
 export const fetchMovieDownloadLinks = async (imdbId: string): Promise<DownloadResult> => {
   try {
-    const response = await fetch(`${DOWNLOAD_API_BASE}/get-movie/?imdb_id=${imdbId}`);
+    // Ensure IMDB ID is in correct format (remove 'tt' prefix if present, API might expect just numbers)
+    const cleanImdbId = imdbId.startsWith('tt') ? imdbId.substring(2) : imdbId;
+    const apiUrl = `${DOWNLOAD_API_BASE}/get-movie/?imdb_id=${cleanImdbId}`;
+    
+    console.log('Fetching movie download links:', { originalId: imdbId, cleanId: cleanImdbId, url: apiUrl });
+    
+    const response = await fetch(apiUrl);
+    
+    console.log('API Response status:', response.status);
     
     if (!response.ok) {
+      // Try with original IMDB ID format if cleaned version fails
+      if (!imdbId.startsWith('tt')) {
+        const retryUrl = `${DOWNLOAD_API_BASE}/get-movie/?imdb_id=tt${imdbId}`;
+        console.log('Retrying with tt prefix:', retryUrl);
+        
+        const retryResponse = await fetch(retryUrl);
+        if (!retryResponse.ok) {
+          throw new Error(`API request failed with status: ${response.status} and retry with status: ${retryResponse.status}`);
+        }
+        const retryData = await retryResponse.json();
+        console.log('Retry successful, data:', retryData);
+        
+        // Continue processing with retry data
+        const data: MovieDownloadResponse = retryData;
+        const categories: { [key: string]: string[] } = {};
+
+        // Process each quality category
+        const qualityCategories = ['top', '2160p', '1440p', '1080p'] as const;
+        
+        for (const category of qualityCategories) {
+          const categoryData = data[category];
+          
+          if (categoryData && Array.isArray(categoryData) && categoryData.length > 0) {
+            categories[category] = categoryData
+              .filter(item => item.message_id)
+              .map(item => `${TELEGRAM_BOT_BASE}${item.message_id}`);
+            
+            if (categories[category].length === 0) {
+              categories[category] = ['No message_id found'];
+            }
+          } else {
+            categories[category] = ['No message_id found'];
+          }
+        }
+
+        return {
+          imdbId,
+          type: 'movie',
+          categories
+        };
+      }
+      
       throw new Error(`API request failed with status: ${response.status}`);
     }
 
@@ -77,9 +127,70 @@ export const fetchMovieDownloadLinks = async (imdbId: string): Promise<DownloadR
 
 export const fetchSeriesDownloadLinks = async (imdbId: string): Promise<DownloadResult> => {
   try {
-    const response = await fetch(`${DOWNLOAD_API_BASE}/get-series/?imdb_id=${imdbId}`);
+    // Ensure IMDB ID is in correct format (remove 'tt' prefix if present, API might expect just numbers)
+    const cleanImdbId = imdbId.startsWith('tt') ? imdbId.substring(2) : imdbId;
+    const apiUrl = `${DOWNLOAD_API_BASE}/get-series/?imdb_id=${cleanImdbId}`;
+    
+    console.log('Fetching series download links:', { originalId: imdbId, cleanId: cleanImdbId, url: apiUrl });
+    
+    const response = await fetch(apiUrl);
+    
+    console.log('Series API Response status:', response.status);
     
     if (!response.ok) {
+      // Try with original IMDB ID format if cleaned version fails
+      if (!imdbId.startsWith('tt')) {
+        const retryUrl = `${DOWNLOAD_API_BASE}/get-series/?imdb_id=tt${imdbId}`;
+        console.log('Retrying series with tt prefix:', retryUrl);
+        
+        const retryResponse = await fetch(retryUrl);
+        if (!retryResponse.ok) {
+          throw new Error(`API request failed with status: ${response.status} and retry with status: ${retryResponse.status}`);
+        }
+        const retryData = await retryResponse.json();
+        console.log('Series retry successful, data:', retryData);
+        
+        // Process retry data the same way as below
+        const data: SeriesDownloadResponse = retryData;
+        
+        // Check for invite link first
+        if (data.invite_link) {
+          return {
+            imdbId,
+            type: 'series',
+            categories: {
+              'invite_link': data.invite_link
+            }
+          };
+        }
+
+        // If no invite link, process message_id categories like movies
+        const categories: { [key: string]: string[] } = {};
+        const qualityCategories = ['top', '2160p', '1440p', '1080p'] as const;
+        
+        for (const category of qualityCategories) {
+          const categoryData = data[category];
+          
+          if (categoryData && Array.isArray(categoryData) && categoryData.length > 0) {
+            categories[category] = categoryData
+              .filter(item => item.message_id)
+              .map(item => `${TELEGRAM_BOT_BASE}${item.message_id}`);
+            
+            if (categories[category].length === 0) {
+              categories[category] = ['No message_id found'];
+            }
+          } else {
+            categories[category] = ['No message_id found'];
+          }
+        }
+
+        return {
+          imdbId,
+          type: 'series',
+          categories
+        };
+      }
+      
       throw new Error(`API request failed with status: ${response.status}`);
     }
 
