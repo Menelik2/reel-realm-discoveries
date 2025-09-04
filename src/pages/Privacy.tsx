@@ -50,7 +50,7 @@ const Privacy = () => {
               </div>
             </section>
 
-            <AdBanner slot="1571190202" className="my-8" />
+            <AdBanner slot="1571190206" className="my-8" />
 
             <section>
               <h2 className="text-2xl font-semibold mb-4">Google AdSense and Advertising</h2>

@@ -54,9 +54,17 @@ class AdManager {
 
   // Force cleanup all ads and reset state
   forceReset(): void {
-    // Remove all ad elements
-    const adsElements = document.querySelectorAll('ins.adsbygoogle[data-adsbygoogle-status]');
-    adsElements.forEach((element) => element.remove());
+    console.log('AdManager: Force reset - cleaning up all ads');
+    
+    // Remove all ad elements more aggressively
+    const allAdsElements = document.querySelectorAll('ins.adsbygoogle');
+    allAdsElements.forEach((element) => {
+      try {
+        element.remove();
+      } catch (e) {
+        console.warn('Failed to remove ad element:', e);
+      }
+    });
     
     // Clear all tracked slots
     this.clearAllSlots();
@@ -65,6 +73,8 @@ class AdManager {
     if (window.adsbygoogle) {
       window.adsbygoogle.length = 0;
     }
+    
+    console.log('AdManager: Force reset complete');
   }
 
   getInitializedSlots(): string[] {

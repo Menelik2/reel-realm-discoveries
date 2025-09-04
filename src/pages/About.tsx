@@ -76,7 +76,7 @@ const About = () => {
             </div>
           </div>
 
-          <AdBanner slot="1571190202" className="my-8" />
+          <AdBanner slot="1571190204" className="my-8" />
 
           <div className="space-y-8">
             <section>

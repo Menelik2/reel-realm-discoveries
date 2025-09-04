@@ -31,13 +31,6 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
   const maxRetries = 3;
 
   const pushAd = useCallback(() => {
-    // Temporarily disable all ads to eliminate error
-    console.log(`AdBanner temporarily disabled for slot: ${slot}`);
-    setAdLoaded(true);
-    return;
-
-    // Original code commented out for troubleshooting
-    /*
     try {
       // Aggressive check for any existing ads with this slot
       const existingAds = document.querySelectorAll(`ins.adsbygoogle[data-ad-slot="${slot}"]`);
@@ -103,7 +96,6 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
         }, 2000 * retryCountRef.current);
       }
     }
-    */
   }, [slot, isAdFree, isStatusLoading]);
 
   useEffect(() => {
@@ -183,7 +175,8 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
         data-ad-format={format}
         data-full-width-responsive="true"
         data-adtest={process.env.NODE_ENV === 'development' ? 'on' : 'off'}
-        key={`ad-${slot}`}
+        key={`ad-${slot}-${Date.now()}`}
+        data-unique-id={`${slot}-${Date.now()}`}
       />
       
       {/* Loading indicator for ads */}
