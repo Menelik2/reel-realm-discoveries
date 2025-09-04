@@ -110,16 +110,18 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
       
       return () => {
         clearTimeout(timer);
-        // Cleanup on unmount
-        adManager.cleanupSlot(slot);
       };
     }
-    
-    // Cleanup when component unmounts
-    return () => {
-      adManager.cleanupSlot(slot);
-    };
   }, [slot, isAdFree, isStatusLoading, pushAd]);
+
+  // Cleanup when component unmounts - safer cleanup
+  useEffect(() => {
+    return () => {
+      // Only reset the slot tracking, don't forcefully remove DOM elements
+      // Let React handle the DOM cleanup naturally
+      adManager.resetSlot(slot);
+    };
+  }, [slot]);
 
   // Intersection Observer for lazy loading
   useEffect(() => {

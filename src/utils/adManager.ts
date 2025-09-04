@@ -30,7 +30,13 @@ class AdManager {
     // More aggressive cleanup - remove ALL processed ad elements
     const adsElements = document.querySelectorAll('ins.adsbygoogle[data-adsbygoogle-status]');
     adsElements.forEach((element) => {
-      element.remove();
+      try {
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      } catch (e) {
+        console.warn('Failed to remove ad element:', e);
+      }
     });
     
     // Also cleanup any orphaned elements
@@ -38,7 +44,13 @@ class AdManager {
     orphanedAds.forEach((element) => {
       const slot = element.getAttribute('data-ad-slot');
       if (slot && this.initializedSlots.has(slot)) {
-        element.remove();
+        try {
+          if (element.parentNode) {
+            element.parentNode.removeChild(element);
+          }
+        } catch (e) {
+          console.warn('Failed to remove orphaned ad element:', e);
+        }
       }
     });
   }
@@ -47,7 +59,13 @@ class AdManager {
   cleanupSlot(slot: string): void {
     const adsElements = document.querySelectorAll(`ins.adsbygoogle[data-ad-slot="${slot}"]`);
     adsElements.forEach((element) => {
-      element.remove();
+      try {
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      } catch (e) {
+        console.warn(`Failed to remove ad element for slot ${slot}:`, e);
+      }
     });
     this.resetSlot(slot);
   }
@@ -60,7 +78,9 @@ class AdManager {
     const allAdsElements = document.querySelectorAll('ins.adsbygoogle');
     allAdsElements.forEach((element) => {
       try {
-        element.remove();
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
       } catch (e) {
         console.warn('Failed to remove ad element:', e);
       }
