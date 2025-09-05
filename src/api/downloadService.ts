@@ -18,12 +18,12 @@ export interface DownloadResult {
   error?: string;
 }
 
-const DOWNLOAD_API_BASE = 'https://cors-anywhere.herokuapp.com/http://3.122.146.239';
+const DOWNLOAD_API_BASE = 'https://api.allorigins.win/get?url=http%3A//3.122.146.239';
 const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
 
 export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadResult> => {
   try {
-    const apiUrl = `${DOWNLOAD_API_BASE}/get-movie/?tmdb_id=${tmdbId}`;
+    const apiUrl = `${DOWNLOAD_API_BASE}/get-movie/%3Ftmdb_id%3D${tmdbId}`;
     
     console.log('Fetching movie download links:', { tmdbId, url: apiUrl });
     
@@ -41,7 +41,8 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
       throw new Error(`API request failed with status: ${response.status}`);
     }
 
-    const data: MovieDownloadResponse = await response.json();
+    const responseData = await response.json();
+    const data: MovieDownloadResponse = responseData.contents ? JSON.parse(responseData.contents) : responseData;
     console.log('Movie download data:', data);
     
     const categories: { [key: string]: string[] } = {};
