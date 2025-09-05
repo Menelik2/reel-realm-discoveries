@@ -27,7 +27,13 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
     
     console.log('Fetching movie download links:', { tmdbId, url: apiUrl });
     
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     
     console.log('API Response status:', response.status);
     
