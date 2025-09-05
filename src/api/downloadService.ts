@@ -18,7 +18,7 @@ export interface DownloadResult {
   error?: string;
 }
 
-const DOWNLOAD_API_BASE = 'http://3.122.146.239';
+const DOWNLOAD_API_BASE = 'https://cors-anywhere.herokuapp.com/http://3.122.146.239';
 const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
 
 export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadResult> => {
@@ -29,13 +29,13 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
     
     const response = await fetch(apiUrl, {
       method: 'GET',
-      mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       },
     });
     
-    console.log('API Response status:', response.status);
+    console.log('API Response status:', response.status, 'URL:', apiUrl);
     
     if (!response.ok) {
       throw new Error(`API request failed with status: ${response.status}`);
