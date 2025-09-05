@@ -19,10 +19,10 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   const handleDownload = () => {
-    if (imdbId) {
+    if (contentType === 'movie') {
       setIsDownloadOpen(true);
     } else {
-      // Fallback to IMDBot if no IMDB ID
+      // Fallback to IMDBot for TV shows (no longer supported)
       window.open('https://t.me/imdbot', '_blank');
     }
   };
@@ -58,15 +58,17 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
             <span className="sm:hidden">Like</span>
           </Button>
           
-          <Button 
-            variant="outline" 
-            className="flex-1 sm:flex-none"
-            onClick={handleDownload}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Download</span>
-            <span className="sm:hidden">Save</span>
-          </Button>
+          {contentType === 'movie' && (
+            <Button 
+              variant="outline" 
+              className="flex-1 sm:flex-none"
+              onClick={handleDownload}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Download</span>
+              <span className="sm:hidden">Save</span>
+            </Button>
+          )}
           
           {homepage && (
             <Button variant="outline" asChild className="flex-1 sm:flex-none">
@@ -87,12 +89,11 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         type={contentType}
       />
 
-      {imdbId && (
+      {contentType === 'movie' && (
         <DownloadModal
           open={isDownloadOpen}
           onClose={() => setIsDownloadOpen(false)}
-          imdbId={imdbId}
-          contentType={contentType}
+          tmdbId={movieId.toString()}
           title={title}
         />
       )}

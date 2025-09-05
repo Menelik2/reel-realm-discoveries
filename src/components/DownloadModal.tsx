@@ -8,31 +8,30 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 interface DownloadModalProps {
   open: boolean;
   onClose: () => void;
-  imdbId: string;
-  contentType: 'movie' | 'tv';
+  tmdbId: string;
   title: string;
 }
 
-const DownloadModal = ({ open, onClose, imdbId, contentType, title }: DownloadModalProps) => {
+const DownloadModal = ({ open, onClose, tmdbId, title }: DownloadModalProps) => {
   const [downloadData, setDownloadData] = useState<DownloadResult | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open && imdbId) {
+    if (open && tmdbId) {
       fetchDownloadData();
     }
-  }, [open, imdbId, contentType]);
+  }, [open, tmdbId]);
 
   const fetchDownloadData = async () => {
     setLoading(true);
     try {
-      const result = await getDownloadLinks(imdbId, contentType);
+      const result = await getDownloadLinks(tmdbId);
       setDownloadData(result);
     } catch (error) {
       console.error('Error fetching download links:', error);
       setDownloadData({
-        imdbId,
-        type: contentType === 'movie' ? 'movie' : 'series',
+        tmdbId,
+        type: 'movie',
         categories: {},
         error: 'Failed to fetch download links'
       });
@@ -57,26 +56,6 @@ const DownloadModal = ({ open, onClose, imdbId, contentType, title }: DownloadMo
       );
     }
 
-    // Handle series with invite link
-    if (downloadData.type === 'series' && downloadData.categories.invite_link) {
-      return (
-        <div className="space-y-4">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Join the Telegram channel to download this series
-            </p>
-            <Button
-              onClick={() => handleLinkClick(downloadData.categories.invite_link as string)}
-              className="w-full"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Join Telegram Channel
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
     // Handle categories with message IDs
     const categories = Object.entries(downloadData.categories);
     if (categories.length === 0) {
@@ -93,7 +72,7 @@ const DownloadModal = ({ open, onClose, imdbId, contentType, title }: DownloadMo
         {categories.map(([category, links]) => (
           <div key={category} className="space-y-2">
             <h4 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">
-              {category === 'top' ? 'Best Quality' : category}
+              {category === 'top' ? 'Best Quality' : category.toUpperCase()}
             </h4>
             <div className="space-y-2">
               {Array.isArray(links) ? (
