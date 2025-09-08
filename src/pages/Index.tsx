@@ -83,6 +83,7 @@ const Index = () => {
           result = await searchContent({
             searchQuery,
             currentPage,
+            contentType,
           });
         } else {
           result = await fetchMovies({

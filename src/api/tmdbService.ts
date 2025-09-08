@@ -110,19 +110,22 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
 interface SearchContentParams {
   searchQuery: string;
   currentPage: number;
+  contentType?: 'movie' | 'tv';
 }
 
-export const searchContent = async ({ searchQuery, currentPage }: SearchContentParams) => {
+export const searchContent = async ({ searchQuery, currentPage, contentType }: SearchContentParams) => {
     const params = new URLSearchParams();
     params.append('query', searchQuery);
     params.append('page', currentPage.toString());
     params.append('_t', Date.now().toString());
 
-    const url = `${TMDB_BASE_URL}/search/multi?${params.toString()}`;
+    // Use specific search endpoint if contentType is provided, otherwise search all
+    const searchEndpoint = contentType ? `search/${contentType}` : 'search/multi';
+    const url = `${TMDB_BASE_URL}/${searchEndpoint}?${params.toString()}`;
     const data = await fetchFromTMDB(url);
 
     return {
-        movies: processTMDbResults(data.results),
+        movies: processTMDbResults(data.results, contentType),
         totalPages: Math.min(data.total_pages || 1, 100),
     };
 };

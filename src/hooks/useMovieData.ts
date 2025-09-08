@@ -40,7 +40,7 @@ export const useMovieData = ({
 
   const queryFn = () => {
     if (searchQuery) {
-      return searchContent({ searchQuery, currentPage });
+      return searchContent({ searchQuery, currentPage, contentType });
     }
     if (currentCategory === 'custom') {
       return fetchCustomContent();
