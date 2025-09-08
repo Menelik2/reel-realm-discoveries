@@ -32,78 +32,63 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
 
   const pushAd = useCallback(() => {
     try {
-      // Aggressive check for any existing ads with this slot
-      const existingAds = document.querySelectorAll(`ins.adsbygoogle[data-ad-slot="${slot}"]`);
-      if (existingAds.length > 0) {
-        // Check if any have been processed
-        const processedAds = Array.from(existingAds).filter(ad => 
-          ad.getAttribute('data-adsbygoogle-status')
-        );
-        
-        if (processedAds.length > 0) {
-          console.log(`Found ${processedAds.length} existing processed ads for slot: ${slot}, skipping`);
-          setAdLoaded(true);
-          adManager.markSlotAsInitialized(slot);
-          return;
-        }
-      }
-
-      // Check if this slot is already globally initialized
+      // Skip if already processing this slot
       if (adManager.isSlotInitialized(slot)) {
-        console.log(`Ad slot ${slot} already globally initialized, skipping`);
+        console.log(`Ad slot ${slot} already initialized, skipping`);
         setAdLoaded(true);
         return;
       }
+
+      // Clean up any existing ads for this slot before initializing
+      adManager.cleanupSlot(slot);
 
       if (window.adsbygoogle && !isAdFree && !isStatusLoading && adRef.current) {
-        // Check if the current DOM element already has processed ads
+        // Double-check the current element doesn't have processed ads
         const insElement = adRef.current.querySelector('ins.adsbygoogle[data-adsbygoogle-status]');
         if (insElement) {
-          console.log(`Current element already has processed ad for slot: ${slot}`);
+          console.log(`Current element already has processed ad for slot: ${slot}, skipping`);
           setAdLoaded(true);
           adManager.markSlotAsInitialized(slot);
           return;
         }
 
-        // Mark as initialized before pushing to prevent race conditions
+        // Mark as initialized BEFORE pushing to prevent race conditions
         adManager.markSlotAsInitialized(slot);
+        
+        // Initialize the ad
         (window.adsbygoogle = window.adsbygoogle || []).push({});
         setAdLoaded(true);
-        console.log(`Ad pushed for slot: ${slot}`);
+        console.log(`Ad successfully pushed for slot: ${slot}`);
       }
     } catch (error) {
-      console.error("AdSense error:", error);
+      console.error("AdSense error for slot", slot, ":", error);
       
-      // Handle duplicate ad error specifically - more aggressive cleanup
+      // Handle the specific duplicate ad error
       if (error?.message?.includes('already have ads') || error?.name === 'TagError') {
-        console.log(`TagError for slot: ${slot}, performing full cleanup`);
-        // Force cleanup all ads globally and reset
-        adManager.forceReset();
+        console.log(`TagError detected for slot: ${slot}, performing cleanup`);
+        adManager.cleanupSlot(slot);
         setAdLoaded(true);
         return;
       }
       
-      // Reset the slot in case of other errors
+      // Reset slot for other errors and potentially retry
       adManager.resetSlot(slot);
       setAdError(true);
       
-      // Retry logic for other errors
       if (retryCountRef.current < maxRetries) {
         retryCountRef.current += 1;
+        console.log(`Retrying ad initialization for slot: ${slot}, attempt: ${retryCountRef.current}`);
         setTimeout(() => {
           setAdError(false);
           pushAd();
-        }, 2000 * retryCountRef.current);
+        }, 1000 * retryCountRef.current);
       }
     }
   }, [slot, isAdFree, isStatusLoading]);
 
   useEffect(() => {
-    if (!isAdFree && !isStatusLoading && !adManager.isSlotInitialized(slot)) {
-      // Clean up any stale ads first
-      adManager.cleanup();
-      
-      // Small delay to ensure DOM is ready
+    if (!isAdFree && !isStatusLoading) {
+      // Small delay to ensure DOM is ready and avoid race conditions
       const timer = setTimeout(() => {
         pushAd();
       }, 100);
@@ -114,12 +99,11 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
     }
   }, [slot, isAdFree, isStatusLoading, pushAd]);
 
-  // Cleanup when component unmounts - safer cleanup
+  // Cleanup when component unmounts
   useEffect(() => {
     return () => {
-      // Only reset the slot tracking, don't forcefully remove DOM elements
-      // Let React handle the DOM cleanup naturally
-      adManager.resetSlot(slot);
+      // Clean up this specific slot to prevent conflicts on remount
+      adManager.cleanupSlot(slot);
     };
   }, [slot]);
 
@@ -177,8 +161,6 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
         data-ad-format={format}
         data-full-width-responsive="true"
         data-adtest={process.env.NODE_ENV === 'development' ? 'on' : 'off'}
-        key={`ad-${slot}-${Date.now()}`}
-        data-unique-id={`${slot}-${Date.now()}`}
       />
       
       {/* Loading indicator for ads */}
