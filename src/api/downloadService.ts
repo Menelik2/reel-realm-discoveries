@@ -23,17 +23,33 @@ const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
 
 export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadResult> => {
   try {
-    const apiUrl = `${DOWNLOAD_API_BASE}/get-movie/%3Ftmdb_id%3D${tmdbId}`;
+    // Try direct API first, then fallback to AllOrigins if CORS issues
+    let apiUrl = `http://3.122.146.239/get-movie?tmdb_id=${tmdbId}`;
+    let response;
     
-    console.log('Fetching movie download links:', { tmdbId, url: apiUrl });
+    console.log('Fetching movie download links for TMDB ID:', tmdbId);
     
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-    });
+    try {
+      // Try direct API call first
+      console.log('Attempting direct API call:', apiUrl);
+      response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (corsError) {
+      // Fallback to AllOrigins proxy if CORS issues
+      console.log('Direct API failed, trying AllOrigins proxy:', corsError.message);
+      apiUrl = `${DOWNLOAD_API_BASE}/get-movie/%3Ftmdb_id%3D${tmdbId}`;
+      response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+      });
+    }
     
     console.log('API Response status:', response.status, 'URL:', apiUrl);
     
@@ -42,8 +58,23 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
     }
 
     const responseData = await response.json();
-    const data: MovieDownloadResponse = responseData.contents ? JSON.parse(responseData.contents) : responseData;
-    console.log('Movie download data:', data);
+    console.log('Raw API response:', responseData);
+    
+    let data: MovieDownloadResponse;
+    
+    // Handle AllOrigins response format
+    if (responseData.contents) {
+      try {
+        data = JSON.parse(responseData.contents);
+      } catch (parseError) {
+        console.error('Failed to parse AllOrigins contents:', parseError);
+        throw new Error('Invalid response format from proxy');
+      }
+    } else {
+      data = responseData;
+    }
+    
+    console.log('Parsed movie download data:', data);
     
     const categories: { [key: string]: string[] } = {};
 
