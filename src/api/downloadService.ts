@@ -3,7 +3,10 @@ interface MessageIdObject {
 }
 
 interface MovieDownloadResponse {
+  [key: string]: MessageIdObject[] | undefined;
   top?: MessageIdObject[];
+  "2160p"?: MessageIdObject[];
+  "1440p"?: MessageIdObject[];
   "1080p"?: MessageIdObject[];
   "720p"?: MessageIdObject[];
   "480p"?: MessageIdObject[];
@@ -78,21 +81,29 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
     
     const categories: { [key: string]: string[] } = {};
 
-    // Process each quality category
-    const qualityCategories = ['top', '1080p', '720p', '480p'] as const;
+    // Process all quality categories dynamically
+    const allCategories = Object.keys(data);
+    console.log('Found categories in API response:', allCategories);
     
-    for (const category of qualityCategories) {
+    // Process each category found in the response
+    for (const category of allCategories) {
       const categoryData = data[category];
       
       if (categoryData && Array.isArray(categoryData) && categoryData.length > 0) {
-        categories[category] = categoryData
-          .filter(item => item.message_id)
+        const messageIds = categoryData
+          .filter(item => item && typeof item === 'object' && item.message_id)
           .map(item => `${TELEGRAM_BOT_BASE}${item.message_id}`);
         
-        if (categories[category].length === 0) {
-          categories[category] = ['No message_id found'];
-        }
+        categories[category] = messageIds.length > 0 ? messageIds : ['No message_id found'];
       } else {
+        categories[category] = ['No message_id found'];
+      }
+    }
+    
+    // Ensure we have standard quality categories even if not in response
+    const standardCategories = ['top', '2160p', '1440p', '1080p', '720p', '480p'];
+    for (const category of standardCategories) {
+      if (!categories[category]) {
         categories[category] = ['No message_id found'];
       }
     }
