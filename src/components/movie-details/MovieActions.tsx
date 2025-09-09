@@ -87,6 +87,14 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         onClose={() => setIsLiveWatchOpen(false)}
         id={movieId.toString()}
         type={contentType}
+        title={title}
+        content={{
+          id: movieId,
+          title: title,
+          media_type: contentType,
+          name: title,
+          imdb_id: imdbId
+        } as any}
       />
 
       {contentType === 'movie' && (
