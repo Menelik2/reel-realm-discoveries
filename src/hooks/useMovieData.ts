@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchMovies, searchContent } from '@/api/tmdbService';
 import { fetchCustomContent } from '@/api/customContentService';
+import { useAuth } from './useAuth';
 
 interface UseMovieDataProps {
   searchQuery: string;
@@ -24,6 +25,7 @@ export const useMovieData = ({
   refreshKey = 0,
   enabled = true,
 }: UseMovieDataProps) => {
+  const { user } = useAuth();
 
   const queryKey = [
     'movies',
@@ -34,7 +36,8 @@ export const useMovieData = ({
       selectedGenre, 
       selectedYear, 
       currentPage,
-      refreshKey 
+      refreshKey,
+      userId: user?.id
     }
   ];
 
@@ -43,7 +46,7 @@ export const useMovieData = ({
       return searchContent({ searchQuery, currentPage, contentType });
     }
     if (currentCategory === 'custom') {
-      return fetchCustomContent();
+      return fetchCustomContent(user?.id);
     }
     return fetchMovies({ currentCategory, contentType, selectedGenre, selectedYear, currentPage });
   };

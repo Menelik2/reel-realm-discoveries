@@ -15,9 +15,15 @@ const processItem = (item: any): Movie => {
   };
 };
 
-export const fetchCustomContent = async () => {
+export const fetchCustomContent = async (userId?: string) => {
+    // Only fetch custom content if user is authenticated
+    if (!userId) {
+        return { movies: [], totalPages: 1 };
+    }
+
     const { data: customContent, error: supabaseError } = await (supabase.from as any)('custom_content')
         .select('tmdb_id, content_type')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
     if (supabaseError) throw supabaseError;
