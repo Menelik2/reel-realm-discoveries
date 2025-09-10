@@ -24,6 +24,7 @@ const VideoIframe = forwardRef<HTMLIFrameElement, VideoIframeProps>(
         onLoad={onLoad}
         onError={onError}
         sandbox="allow-forms allow-same-origin allow-scripts allow-presentation"
+        style={{ pointerEvents: 'auto' }}
       />
     );
   }
