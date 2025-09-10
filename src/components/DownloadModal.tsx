@@ -56,9 +56,28 @@ const DownloadModal = ({ open, onClose, tmdbId, title }: DownloadModalProps) => 
       );
     }
 
-    // Handle categories with message IDs
-    const categories = Object.entries(downloadData.categories);
-    if (categories.length === 0) {
+    // Filter available categories and order them: 480p, 720p, 1080p
+    const preferredOrder = ['480p', '720p', '1080p'];
+    const availableCategories = Object.entries(downloadData.categories)
+      .filter(([category, links]) => {
+        if (!links || !Array.isArray(links)) return false;
+        return links.some(link => 
+          link !== 'No links available' && 
+          link !== 'No message_id found' && 
+          link !== 'API Error - Please try again' &&
+          link.startsWith('https://telegram.dog/Phonofilmbot?start=')
+        );
+      })
+      .sort(([a], [b]) => {
+        const indexA = preferredOrder.indexOf(a);
+        const indexB = preferredOrder.indexOf(b);
+        if (indexA === -1 && indexB === -1) return 0;
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+
+    if (availableCategories.length === 0) {
       return (
         <Alert>
           <AlertCircle className="h-4 w-4" />
@@ -69,41 +88,31 @@ const DownloadModal = ({ open, onClose, tmdbId, title }: DownloadModalProps) => 
 
     return (
       <div className="space-y-4">
-        {categories.map(([category, links]) => (
+        {availableCategories.map(([category, links]) => (
           <div key={category} className="space-y-2">
             <h4 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">
-              {category === 'top' ? 'Best Quality' : category.toUpperCase()}
+              {category.toUpperCase()}
             </h4>
             <div className="space-y-2">
-              {Array.isArray(links) ? (
-                links.map((link, index) => (
-                  <div key={index}>
-                    {link === 'No message_id found' ? (
-                      <p className="text-sm text-muted-foreground">No links available</p>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleLinkClick(link)}
-                        className="w-full justify-start"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Option {index + 1}
-                      </Button>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleLinkClick(links)}
-                  className="w-full justify-start"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
-              )}
+              {Array.isArray(links) && links
+                .filter(link => 
+                  link !== 'No links available' && 
+                  link !== 'No message_id found' && 
+                  link !== 'API Error - Please try again' &&
+                  link.startsWith('https://telegram.dog/Phonofilmbot?start=')
+                )
+                .map((link, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleLinkClick(link)}
+                    className="w-full justify-start"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Option {index + 1}
+                  </Button>
+                ))}
             </div>
           </div>
         ))}
