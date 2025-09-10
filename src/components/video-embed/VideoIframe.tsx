@@ -23,7 +23,7 @@ const VideoIframe = forwardRef<HTMLIFrameElement, VideoIframeProps>(
         loading="eager"
         onLoad={onLoad}
         onError={onError}
-        sandbox="allow-forms allow-same-origin allow-scripts allow-presentation"
+        sandbox="allow-forms allow-same-origin allow-scripts allow-presentation allow-fullscreen"
         style={{ pointerEvents: 'auto' }}
       />
     );
