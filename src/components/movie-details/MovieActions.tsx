@@ -32,14 +32,9 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
       <div className="flex flex-col gap-4">
         {/* Primary action - Live Watch */}
         <Button 
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsLiveWatchOpen(true);
-          }}
+          onClick={() => setIsLiveWatchOpen(true)}
           size="default"
           className="w-full sm:w-auto"
-          type="button"
         >
           <Eye className="mr-2 h-4 w-4" />
           <span className="font-semibold">Watch Now</span>
