@@ -21,7 +21,6 @@ export interface DownloadResult {
   error?: string;
 }
 
-const DOWNLOAD_API_BASE = 'https://api.allorigins.win/get?url=http%3A//3.122.146.239';
 const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
 
 export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadResult> => {
@@ -29,7 +28,7 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
     console.log('🔍 Fetching movie download links for TMDB ID:', tmdbId);
     
     // Try direct API call first  
-    const directApiUrl = `http://3.122.146.239/get-movie/?tmdb_id=${tmdbId}`;
+    const directApiUrl = `https://api.t4tsa.cc/get-movie/?tmdb_id=${tmdbId}`;
     console.log('📡 Attempting direct API call:', directApiUrl);
     
     let response;
