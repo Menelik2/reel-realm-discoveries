@@ -62,11 +62,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             allowFullScreen
             frameBorder={0}
             title="Watch Now"
-            sandbox="allow-forms allow-same-origin allow-scripts allow-presentation allow-fullscreen"
-            style={{ 
-              border: 'none',
-              pointerEvents: 'auto'
-            }}
+            style={{ border: 'none' }}
           />
         </div>
       </div>

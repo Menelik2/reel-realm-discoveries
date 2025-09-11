@@ -27,84 +27,105 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
   const [adLoaded, setAdLoaded] = useState(false);
   const [adError, setAdError] = useState(false);
   const adRef = useRef<HTMLDivElement>(null);
-  const initializationRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
 
-  const initializeAd = useCallback(() => {
-    // Prevent multiple initializations
-    if (initializationRef.current || adManager.isSlotInitialized(slot)) {
-      console.log(`Ad slot ${slot} already initialized, skipping`);
-      setAdLoaded(true);
-      return;
-    }
-
+  const pushAd = useCallback(() => {
     try {
-      if (!window.adsbygoogle || isAdFree || isStatusLoading || !adRef.current) {
-        return;
-      }
-
-      // Check if this element already has an ad
-      const insElement = adRef.current.querySelector('ins.adsbygoogle[data-adsbygoogle-status]');
-      if (insElement) {
-        console.log(`Element already has processed ad for slot: ${slot}`);
+      // Skip if already processing this slot
+      if (adManager.isSlotInitialized(slot)) {
+        console.log(`Ad slot ${slot} already initialized, skipping`);
         setAdLoaded(true);
-        adManager.markSlotAsInitialized(slot);
-        initializationRef.current = true;
         return;
       }
 
-      // Mark as initializing to prevent race conditions
-      initializationRef.current = true;
-      adManager.markSlotAsInitialized(slot);
-      
-      // Push the ad
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-      setAdLoaded(true);
-      console.log(`Ad successfully pushed for slot: ${slot}`);
+      // Clean up any existing ads for this slot before initializing
+      adManager.cleanupSlot(slot);
 
-    } catch (error: any) {
+      if (window.adsbygoogle && !isAdFree && !isStatusLoading && adRef.current) {
+        // Double-check the current element doesn't have processed ads
+        const insElement = adRef.current.querySelector('ins.adsbygoogle[data-adsbygoogle-status]');
+        if (insElement) {
+          console.log(`Current element already has processed ad for slot: ${slot}, skipping`);
+          setAdLoaded(true);
+          adManager.markSlotAsInitialized(slot);
+          return;
+        }
+
+        // Mark as initialized BEFORE pushing to prevent race conditions
+        adManager.markSlotAsInitialized(slot);
+        
+        // Initialize the ad
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        setAdLoaded(true);
+        console.log(`Ad successfully pushed for slot: ${slot}`);
+      }
+    } catch (error) {
       console.error("AdSense error for slot", slot, ":", error);
       
-      // Handle TagError specifically
-      if (error?.name === 'TagError' && error?.message?.includes('already have ads')) {
-        console.log(`TagError detected for slot: ${slot}, marking as loaded`);
+      // Handle the specific duplicate ad error
+      if (error?.message?.includes('already have ads') || error?.name === 'TagError') {
+        console.log(`TagError detected for slot: ${slot}, performing cleanup`);
+        adManager.cleanupSlot(slot);
         setAdLoaded(true);
         return;
       }
       
-      // Reset for other errors
-      initializationRef.current = false;
+      // Reset slot for other errors and potentially retry
       adManager.resetSlot(slot);
       setAdError(true);
+      
+      if (retryCountRef.current < maxRetries) {
+        retryCountRef.current += 1;
+        console.log(`Retrying ad initialization for slot: ${slot}, attempt: ${retryCountRef.current}`);
+        setTimeout(() => {
+          setAdError(false);
+          pushAd();
+        }, 1000 * retryCountRef.current);
+      }
     }
   }, [slot, isAdFree, isStatusLoading]);
 
-  // Single initialization effect using IntersectionObserver for better performance
   useEffect(() => {
-    if (isAdFree || isStatusLoading || !adRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !initializationRef.current && !adLoaded && !adError) {
-            // Small delay to ensure DOM is stable
-            setTimeout(initializeAd, 50);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    );
-
-    observer.observe(adRef.current);
-    return () => observer.disconnect();
-  }, [isAdFree, isStatusLoading, adLoaded, adError, initializeAd]);
+    if (!isAdFree && !isStatusLoading) {
+      // Small delay to ensure DOM is ready and avoid race conditions
+      const timer = setTimeout(() => {
+        pushAd();
+      }, 100);
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [slot, isAdFree, isStatusLoading, pushAd]);
 
   // Cleanup when component unmounts
   useEffect(() => {
     return () => {
-      initializationRef.current = false;
+      // Clean up this specific slot to prevent conflicts on remount
       adManager.cleanupSlot(slot);
     };
   }, [slot]);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    if (!adRef.current || isAdFree || isStatusLoading || adManager.isSlotInitialized(slot)) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !adLoaded && !adError && !adManager.isSlotInitialized(slot)) {
+            pushAd();
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(adRef.current);
+
+    return () => observer.disconnect();
+  }, [isAdFree, isStatusLoading, adLoaded, adError, slot, pushAd]);
 
   const handlePurchase = async () => {
     setIsRedirecting(true);
@@ -150,7 +171,7 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
       )}
       
       {/* Error state */}
-      {adError && (
+      {adError && retryCountRef.current >= maxRetries && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/20 rounded">
           <p className="text-xs text-muted-foreground">Ad temporarily unavailable</p>
         </div>
