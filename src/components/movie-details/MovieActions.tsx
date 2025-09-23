@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Heart, Globe, Download, Eye } from 'lucide-react';
+import { Play, Heart, Globe, Download, Eye, Send } from 'lucide-react';
 import LiveWatchModal from '@/components/LiveWatchModal';
 import DownloadModal from '@/components/DownloadModal';
+import { useTelegramUrl } from '@/hooks/useTelegramUrl';
 
 interface MovieActionsProps {
   trailerUrl: string | null;
@@ -17,14 +18,18 @@ interface MovieActionsProps {
 export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title, seasons, imdbId }: MovieActionsProps) => {
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  
+  // Get Telegram URL for TV series
+  const { data: telegramUrl } = useTelegramUrl(contentType === 'tv' ? {
+    id: movieId,
+    media_type: 'tv',
+    title,
+    name: title,
+    imdb_id: imdbId
+  } as any : null);
 
   const handleDownload = () => {
-    if (contentType === 'movie') {
-      setIsDownloadOpen(true);
-    } else {
-      // Fallback to IMDBot for TV shows (no longer supported)
-      window.open('https://t.me/imdbot', '_blank');
-    }
+    setIsDownloadOpen(true);
   };
 
   return (
@@ -58,27 +63,42 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
             <span className="sm:hidden">Like</span>
           </Button>
           
-          {contentType === 'movie' && (
+          {/* Download button for both movies and TV series */}
+          <Button 
+            variant="outline" 
+            className="flex-1 sm:flex-none"
+            onClick={handleDownload}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            <span className="hidden sm:inline">Download</span>
+            <span className="sm:hidden">Save</span>
+          </Button>
+          
+          {/* Telegram button for TV series */}
+          {contentType === 'tv' && telegramUrl && (
             <Button 
               variant="outline" 
               className="flex-1 sm:flex-none"
-              onClick={handleDownload}
+              onClick={() => window.open(telegramUrl, '_blank')}
             >
-              <Download className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Download</span>
-              <span className="sm:hidden">Save</span>
+              <Send className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Telegram</span>
+              <span className="sm:hidden">TG</span>
             </Button>
           )}
           
-          {homepage && (
-            <Button variant="outline" asChild className="flex-1 sm:flex-none">
-              <a href={homepage} target="_blank" rel="noopener noreferrer">
-                <Globe className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Official</span>
-                <span className="sm:hidden">Web</span>
-              </a>
-            </Button>
-          )}
+          {/* Official button - use homepage if available, otherwise TMDB page */}
+          <Button variant="outline" asChild className="flex-1 sm:flex-none">
+            <a 
+              href={homepage || `https://www.themoviedb.org/${contentType}/${movieId}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Official</span>
+              <span className="sm:hidden">Web</span>
+            </a>
+          </Button>
         </div>
       </div>
 
@@ -97,14 +117,13 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         } as any}
       />
 
-      {contentType === 'movie' && (
-        <DownloadModal
-          open={isDownloadOpen}
-          onClose={() => setIsDownloadOpen(false)}
-          tmdbId={movieId.toString()}
-          title={title}
-        />
-      )}
+      {/* Download modal for both movies and TV series */}
+      <DownloadModal
+        open={isDownloadOpen}
+        onClose={() => setIsDownloadOpen(false)}
+        tmdbId={movieId.toString()}
+        title={title}
+      />
     </>
   );
 };

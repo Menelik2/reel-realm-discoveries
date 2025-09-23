@@ -1,10 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Play, Heart, Send, Download, ExternalLink } from 'lucide-react';
 import type { Movie } from '@/types/tmdb';
-import { useTelegramUrl } from '@/hooks/useTelegramUrl';
-import { useState } from 'react';
-import DownloadModal from '@/components/DownloadModal';
 
 interface MovieCardProps {
   movie: Movie;
@@ -13,8 +8,6 @@ interface MovieCardProps {
 }
 
 export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps) => {
-  const { data: telegramUrl } = useTelegramUrl(movie.media_type === 'tv' ? movie : null);
-  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   
   const posterUrl = fullPosterUrl
     ? fullPosterUrl
@@ -36,118 +29,34 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
   }
 
   return (
-    <>
-      <Card className="group hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer" onClick={handleCardClick}>
-        <CardContent className="p-0">
-          <div className="relative aspect-[2/3] overflow-hidden">
-            <img
-              src={posterUrl}
-              alt={movie.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/placeholder.svg';
-              }}
-            />
-            
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <div className="flex flex-wrap gap-1 md:gap-2 justify-center">
-                <Button 
-                  size="sm" 
-                  variant="secondary" 
-                  className="text-xs px-2 py-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle trailer click
-                  }}
-                >
-                  <Play className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                  <span className="hidden sm:inline">Trailer</span>
-                </Button>
-                
-                <Button 
-                  size="sm" 
-                  variant="secondary" 
-                  className="px-2 py-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle favorite click
-                  }}
-                >
-                  <Heart className="h-3 w-3 md:h-4 md:w-4" />
-                </Button>
-
-                {movie.media_type === 'tv' && (
-                  <>
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      className="px-2 py-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsDownloadOpen(true);
-                      }}
-                    >
-                      <Download className="h-3 w-3 md:h-4 md:w-4" />
-                    </Button>
-                    
-                    {telegramUrl && (
-                      <Button 
-                        size="sm" 
-                        variant="secondary" 
-                        className="px-2 py-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(telegramUrl, '_blank');
-                        }}
-                      >
-                        <Send className="h-3 w-3 md:h-4 md:w-4" />
-                      </Button>
-                    )}
-                    
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      className="px-2 py-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Handle official site click - will open TMDB page
-                        window.open(`https://www.themoviedb.org/tv/${movie.id}`, '_blank');
-                      }}
-                    >
-                      <ExternalLink className="h-3 w-3 md:h-4 md:w-4" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
+    <Card className="group hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer" onClick={handleCardClick}>
+      <CardContent className="p-0">
+        <div className="relative aspect-[2/3] overflow-hidden">
+          <img
+            src={posterUrl}
+            alt={movie.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = '/placeholder.svg';
+            }}
+          />
+        </div>
+        
+        <div className="p-2 md:p-3">
+          <h3 className="font-semibold text-xs md:text-sm line-clamp-2 mb-1">
+            {movie.title}
+          </h3>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            {movie.vote_average > 0 ? (
+              <span>⭐ {movie.vote_average.toFixed(1)}</span>
+            ) : (
+              <span />
+            )}
+            <span>{getReleaseYear(movie.release_date)}</span>
           </div>
-          
-          <div className="p-2 md:p-3">
-            <h3 className="font-semibold text-xs md:text-sm line-clamp-2 mb-1">
-              {movie.title}
-            </h3>
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              {movie.vote_average > 0 ? (
-                <span>⭐ {movie.vote_average.toFixed(1)}</span>
-              ) : (
-                <span />
-              )}
-              <span>{getReleaseYear(movie.release_date)}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {movie.media_type === 'tv' && (
-        <DownloadModal
-          open={isDownloadOpen}
-          onClose={() => setIsDownloadOpen(false)}
-          tmdbId={movie.id.toString()}
-          title={movie.title || movie.name || 'Unknown Title'}
-        />
-      )}
-    </>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
