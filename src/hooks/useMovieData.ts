@@ -43,7 +43,8 @@ export const useMovieData = ({
 
   const queryFn = () => {
     if (searchQuery) {
-      return searchContent({ searchQuery, currentPage, contentType });
+      // Remove contentType to search both movies and TV shows together
+      return searchContent({ searchQuery, currentPage });
     }
     if (currentCategory === 'custom') {
       return fetchCustomContent(user?.id);
