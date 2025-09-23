@@ -126,6 +126,12 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
         imageUrl={movie.poster_path}
         contentType={contentType}
         movieId={movie.id}
+        releaseDate={releaseDate}
+        rating={movie.vote_average}
+        genres={movie.genres?.map(g => g.name) || []}
+        cast={cast.slice(0, 5).map(c => c.name)}
+        director={cast.find(c => c.character?.toLowerCase().includes('director'))?.name}
+        duration={runtime}
       />
       {/* Full-size container */}
       <div className="min-h-screen w-full">

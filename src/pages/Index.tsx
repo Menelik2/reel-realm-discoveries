@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { HomeCategoryRows } from "@/components/HomeCategoryRows";
+import { SEOMetadata } from "@/components/SEOMetadata";
 import { fetchMovies, searchContent } from "@/api/tmdbService";
 
 const getInitialDarkMode = () => {
@@ -115,6 +116,7 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen transition-colors ${isDarkMode ? 'dark' : ''}`}>
+      <SEOMetadata />
       <div className="bg-background text-foreground transition-colors">
         <Header
           searchQuery={searchQuery}
