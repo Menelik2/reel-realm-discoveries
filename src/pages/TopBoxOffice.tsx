@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useTopBoxOffice } from '@/hooks/useTopBoxOffice';
@@ -10,7 +9,6 @@ import { BoxOfficeMovieCard } from '@/components/BoxOfficeMovieCard';
 
 const TopBoxOffice = () => {
   const { data: movies, isLoading, error } = useTopBoxOffice();
-  const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
 
   const renderSkeletons = () => (
     [...Array(10)].map((_, i) => (
@@ -29,8 +27,6 @@ const TopBoxOffice = () => {
         setSearchQuery={() => {}}
         isDarkMode={false}
         setIsDarkMode={() => {}}
-        contentType={contentType}
-        setContentType={setContentType}
       />
       
       <main className="container mx-auto px-4 py-8">

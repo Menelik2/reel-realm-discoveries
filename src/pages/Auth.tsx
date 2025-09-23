@@ -13,7 +13,6 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -41,7 +40,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header searchQuery="" setSearchQuery={() => {}} isDarkMode={false} setIsDarkMode={() => {}} contentType={contentType} setContentType={setContentType} />
+      <Header searchQuery="" setSearchQuery={() => {}} isDarkMode={false} setIsDarkMode={() => {}} />
       <main className="container mx-auto px-4 py-8 flex justify-center items-center" style={{ minHeight: 'calc(100vh - 200px)'}}>
         <Card className="w-full max-w-sm">
           <CardHeader>

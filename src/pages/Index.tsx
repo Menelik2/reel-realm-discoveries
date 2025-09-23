@@ -121,8 +121,6 @@ const Index = () => {
           setSearchQuery={setSearchQuery}
           isDarkMode={isDarkMode}
           setIsDarkMode={setIsDarkMode}
-          contentType={contentType}
-          setContentType={setContentType}
         />
 
         <main>

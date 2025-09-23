@@ -16,7 +16,6 @@ const Admin = () => {
   const [tmdbId, setTmdbId] = useState('');
   const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
   const [loading, setLoading] = useState(false);
-  const [headerContentType, setHeaderContentType] = useState<'movie' | 'tv'>('movie');
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -68,7 +67,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header searchQuery="" setSearchQuery={() => {}} isDarkMode={false} setIsDarkMode={() => {}} contentType={headerContentType} setContentType={setHeaderContentType} />
+      <Header searchQuery="" setSearchQuery={() => {}} isDarkMode={false} setIsDarkMode={() => {}} />
       <main className="flex-grow container mx-auto px-4 py-8 flex justify-center items-center">
         <Card className="w-full max-w-lg">
           <CardHeader>
