@@ -1,5 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Play, Heart, Send } from 'lucide-react';
 import type { Movie } from '@/types/tmdb';
+import { useTelegramUrl } from '@/hooks/useTelegramUrl';
 
 interface MovieCardProps {
   movie: Movie;
@@ -8,6 +11,7 @@ interface MovieCardProps {
 }
 
 export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps) => {
+  const { data: telegramUrl } = useTelegramUrl(movie.media_type === 'tv' ? movie : null);
   
   const posterUrl = fullPosterUrl
     ? fullPosterUrl
@@ -42,6 +46,47 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
             }}
           />
           
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <div className="flex space-x-1 md:space-x-2">
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                className="text-xs px-2 py-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Handle trailer click
+                }}
+              >
+                <Play className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                <span className="hidden sm:inline">Trailer</span>
+              </Button>
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                className="px-2 py-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Handle favorite click
+                }}
+              >
+                <Heart className="h-3 w-3 md:h-4 md:w-4" />
+              </Button>
+              {movie.media_type === 'tv' && telegramUrl && (
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  className="px-2 py-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(telegramUrl, '_blank');
+                  }}
+                >
+                  <Send className="h-3 w-3 md:h-4 md:w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
         
         <div className="p-2 md:p-3">
