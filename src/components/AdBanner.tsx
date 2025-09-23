@@ -166,40 +166,56 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
   }
 
   return (
-    <div ref={adRef} className={`relative ${className}`}>
+    <div ref={adRef} className={`relative bg-background border border-border rounded-lg overflow-hidden ${className}`} 
+         style={{ minHeight: '280px', width: '100%' }}>
       <ins 
         className="adsbygoogle"
-        style={style}
+        style={{ 
+          display: 'block',
+          minHeight: '280px',
+          width: '100%',
+          ...style 
+        }}
         data-ad-client="ca-pub-8938310552882401"
         data-ad-slot={slot}
-        data-ad-format={format}
+        data-ad-format="rectangle"
         data-full-width-responsive="true"
         data-adtest={process.env.NODE_ENV === 'development' ? 'on' : 'off'}
       />
       
       {/* Loading indicator for ads */}
       {!adLoaded && !adError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/20 rounded">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/10 backdrop-blur-sm">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Loading advertisement...</p>
+          </div>
         </div>
       )}
       
       {/* Error state */}
       {adError && retryCountRef.current >= maxRetries && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/20 rounded">
-          <p className="text-xs text-muted-foreground">Ad temporarily unavailable</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/10">
+          <div className="text-center p-8">
+            <div className="w-16 h-16 bg-muted rounded-lg mx-auto mb-4 flex items-center justify-center">
+              <div className="w-8 h-8 bg-muted-foreground/20 rounded"></div>
+            </div>
+            <p className="text-sm text-muted-foreground">Advertisement space</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Content loading temporarily unavailable</p>
+          </div>
         </div>
       )}
       
       {user && (
-         <div className="absolute bottom-2 right-2 z-10">
+         <div className="absolute top-2 right-2 z-10">
            <Button 
             size="sm" 
             variant="secondary"
             onClick={handlePurchase}
             disabled={isRedirecting}
+            className="shadow-md"
            >
-            {isRedirecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isRedirecting && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
              Remove Ads ($5)
            </Button>
          </div>
