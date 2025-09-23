@@ -39,35 +39,49 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
         return;
       }
 
-      // Clean up any existing ads for this slot before initializing
-      adManager.cleanupSlot(slot);
-
       if (window.adsbygoogle && !isAdFree && !isStatusLoading && adRef.current) {
-        // Double-check the current element doesn't have processed ads
-        const insElement = adRef.current.querySelector('ins.adsbygoogle[data-adsbygoogle-status]');
-        if (insElement) {
+        // Check if the current ad element already has ads
+        const insElement = adRef.current.querySelector('ins.adsbygoogle');
+        if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
           console.log(`Current element already has processed ad for slot: ${slot}, skipping`);
           setAdLoaded(true);
           adManager.markSlotAsInitialized(slot);
           return;
         }
 
+        // Ensure we only have one ins element per container
+        const existingIns = adRef.current.querySelectorAll('ins.adsbygoogle');
+        if (existingIns.length > 1) {
+          // Remove extra ins elements
+          for (let i = 1; i < existingIns.length; i++) {
+            existingIns[i].remove();
+          }
+        }
+
         // Mark as initialized BEFORE pushing to prevent race conditions
         adManager.markSlotAsInitialized(slot);
         
-        // Initialize the ad
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        setAdLoaded(true);
-        console.log(`Ad successfully pushed for slot: ${slot}`);
+        // Initialize the ad with a small delay to ensure DOM is ready
+        setTimeout(() => {
+          try {
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            setAdLoaded(true);
+            console.log(`Ad successfully pushed for slot: ${slot}`);
+          } catch (pushError) {
+            console.error("AdSense push error for slot", slot, ":", pushError);
+            adManager.resetSlot(slot);
+            setAdError(true);
+          }
+        }, 50);
       }
     } catch (error) {
       console.error("AdSense error for slot", slot, ":", error);
       
       // Handle the specific duplicate ad error
       if (error?.message?.includes('already have ads') || error?.name === 'TagError') {
-        console.log(`TagError detected for slot: ${slot}, performing cleanup`);
-        adManager.cleanupSlot(slot);
+        console.log(`TagError detected for slot: ${slot}, setting as loaded`);
         setAdLoaded(true);
+        adManager.markSlotAsInitialized(slot);
         return;
       }
       

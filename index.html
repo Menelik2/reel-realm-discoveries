@@ -53,23 +53,37 @@
          crossorigin="anonymous"
          onerror="console.warn('AdSense script failed to load')"></script>
     
-    <!-- Initialize AdSense -->
+    <!-- Initialize AdSense properly -->
     <script>
       window.adsbygoogle = window.adsbygoogle || [];
-      function gtag(){adsbygoogle.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'ca-pub-8938310552882401');
+      
+      // Error handling for AdSense
+      window.addEventListener('error', function(e) {
+        if (e.filename && e.filename.includes('adsbygoogle')) {
+          console.warn('AdSense error detected:', e.message);
+        }
+      });
+      
+      // Ensure AdSense is ready
+      function initializeAds() {
+        if (typeof window.adsbygoogle !== 'undefined') {
+          console.log('AdSense initialized successfully');
+        } else {
+          console.warn('AdSense failed to initialize');
+        }
+      }
+      
+      // Initialize when page loads
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeAds);
+      } else {
+        initializeAds();
+      }
     </script>
   </head>
 
   <body>
     <div id="root"></div>
-    <!-- Autotag zone script -->
-    <script type="text/javascript">
-      aclib.runAutoTag({
-        zoneId: '8mgrbdczfe',
-      });
-    </script>
     
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>

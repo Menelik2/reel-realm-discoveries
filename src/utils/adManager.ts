@@ -57,17 +57,33 @@ class AdManager {
 
   // Clean up specific slot - more aggressive
   cleanupSlot(slot: string): void {
+    console.log(`AdManager: Cleaning up slot ${slot}`);
+    
+    // Find and remove all ad elements for this specific slot
     const adsElements = document.querySelectorAll(`ins.adsbygoogle[data-ad-slot="${slot}"]`);
-    adsElements.forEach((element) => {
+    adsElements.forEach((element, index) => {
       try {
-        if (element.parentNode) {
-          element.parentNode.removeChild(element);
-        }
+        console.log(`Removing ad element ${index + 1} for slot ${slot}`);
+        // Remove the element completely
+        element.remove();
       } catch (e) {
         console.warn(`Failed to remove ad element for slot ${slot}:`, e);
       }
     });
+    
+    // Also check for any processed ads in the same container
+    const processedAds = document.querySelectorAll(`ins.adsbygoogle[data-adsbygoogle-status][data-ad-slot="${slot}"]`);
+    processedAds.forEach((element, index) => {
+      try {
+        console.log(`Removing processed ad element ${index + 1} for slot ${slot}`);
+        element.remove();
+      } catch (e) {
+        console.warn(`Failed to remove processed ad element for slot ${slot}:`, e);
+      }
+    });
+    
     this.resetSlot(slot);
+    console.log(`AdManager: Cleanup complete for slot ${slot}`);
   }
 
   // Force cleanup all ads and reset state
