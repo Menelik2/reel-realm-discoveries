@@ -10,9 +10,11 @@ interface HeaderProps {
   setSearchQuery: (query: string) => void;
   isDarkMode: boolean;
   setIsDarkMode: (dark: boolean) => void;
+  contentType: 'movie' | 'tv';
+  setContentType: (type: 'movie' | 'tv') => void;
 }
 
-export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode }: HeaderProps) => {
+export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode, contentType, setContentType }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -27,6 +29,24 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <div className="flex gap-2">
+              <Button
+                variant={contentType === 'movie' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setContentType('movie')}
+                className="text-xs"
+              >
+                Movies
+              </Button>
+              <Button
+                variant={contentType === 'tv' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setContentType('tv')}
+                className="text-xs"
+              >
+                TV Series
+              </Button>
+            </div>
             <Link to="/top-box-office" className="hover:text-primary transition-colors">Top Box Office</Link>
             <Link to="/about" className="hover:text-primary transition-colors">About</Link>
             <Link to="/contact" className="hover:text-primary transition-colors">Contact</Link>
@@ -104,6 +124,24 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
               >
                 Home
               </Link>
+              <div className="flex gap-2 py-2">
+                <Button
+                  variant={contentType === 'movie' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setContentType('movie')}
+                  className="text-xs flex-1"
+                >
+                  Movies
+                </Button>
+                <Button
+                  variant={contentType === 'tv' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setContentType('tv')}
+                  className="text-xs flex-1"
+                >
+                  TV Series
+                </Button>
+              </div>
               <Link 
                 to="/top-box-office" 
                 className="hover:text-primary transition-colors"

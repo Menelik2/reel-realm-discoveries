@@ -11,6 +11,7 @@ import { AdBanner } from '@/components/AdBanner';
 
 const Contact = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,6 +40,8 @@ const Contact = () => {
           setSearchQuery={() => {}}
           isDarkMode={isDarkMode}
           setIsDarkMode={setIsDarkMode}
+          contentType={contentType}
+          setContentType={setContentType}
         />
         
         <main className="container mx-auto px-4 py-8 max-w-4xl">
