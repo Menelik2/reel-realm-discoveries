@@ -61,17 +61,6 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
                 <Play className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                 <span className="hidden sm:inline">Trailer</span>
               </Button>
-              <Button 
-                size="sm" 
-                variant="secondary" 
-                className="px-2 py-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Handle favorite click
-                }}
-              >
-                <Heart className="h-3 w-3 md:h-4 md:w-4" />
-              </Button>
               {movie.media_type === 'tv' && telegramUrl && (
                 <Button 
                   size="sm" 
@@ -85,6 +74,17 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
                   <Send className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
               )}
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                className="px-2 py-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Handle favorite click
+                }}
+              >
+                <Heart className="h-3 w-3 md:h-4 md:w-4" />
+              </Button>
             </div>
           </div>
         </div>
