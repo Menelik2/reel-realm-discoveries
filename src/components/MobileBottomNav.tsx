@@ -9,10 +9,9 @@ export const MobileBottomNav = () => {
 
   const navItems = [
     { category: 'popular', to: '/?category=popular', icon: Home, label: 'Home' },
-    { category: 'now_playing', to: '/?category=now_playing', icon: Play, label: 'Playing' },
-    { category: 'top_rated', to: '/?category=top_rated', icon: Star, label: 'Top Rated' },
-    { category: 'upcoming', to: '/?category=upcoming', icon: TrendingUp, label: 'Upcoming' },
-    { category: 'box_office', to: '/top-box-office', icon: BarChart3, label: 'Box Office' },
+    { category: 'movies', to: '/?category=popular&type=movie', icon: Play, label: 'Movies' },
+    { category: 'tv', to: '/?category=popular&type=tv', icon: Star, label: 'TV Series' },
+    { category: 'box_office', to: '/top-box-office', icon: BarChart3, label: 'Top Box Office' },
   ];
 
   return (
