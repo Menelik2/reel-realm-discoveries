@@ -14,10 +14,11 @@ interface MovieDownloadResponse {
 
 export interface DownloadResult {
   tmdbId: string;
-  type: 'movie';
-  categories: {
+  type: 'movie' | 'tv';
+  categories?: {
     [key: string]: string[];
   };
+  downloadLinks?: string[];
   error?: string;
 }
 
@@ -151,6 +152,53 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
   }
 };
 
-export const getDownloadLinks = async (tmdbId: string): Promise<DownloadResult> => {
+export const fetchSeriesDownloadLinks = async (tmdbId: string, title: string, imdbId?: string): Promise<DownloadResult> => {
+  try {
+    console.log('🔍 Fetching TV series download links for TMDB ID:', tmdbId);
+    
+    // Call our Supabase edge function
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    const { data, error } = await supabase.functions.invoke('fetch-series', {
+      body: {
+        tmdbId,
+        title,
+        imdbId
+      }
+    });
+
+    if (error) {
+      console.error('❌ Edge function error:', error);
+      throw new Error(`Edge function error: ${error.message}`);
+    }
+
+    if (!data || !data.success) {
+      console.error('❌ Edge function returned error:', data?.message);
+      throw new Error(data?.message || 'Failed to fetch series data');
+    }
+
+    console.log('✅ Series data fetched successfully:', data.data);
+
+    return {
+      tmdbId,
+      type: 'tv',
+      downloadLinks: data.data?.downloadLinks || [],
+    };
+
+  } catch (error) {
+    console.error('❌ Series download service error:', error);
+    return {
+      tmdbId,
+      type: 'tv',
+      downloadLinks: [],
+      error: error instanceof Error ? error.message : 'Failed to fetch series download links'
+    };
+  }
+};
+
+export const getDownloadLinks = async (tmdbId: string, contentType?: 'movie' | 'tv', title?: string, imdbId?: string): Promise<DownloadResult> => {
+  if (contentType === 'tv') {
+    return fetchSeriesDownloadLinks(tmdbId, title || 'Unknown Series', imdbId);
+  }
   return fetchMovieDownloadLinks(tmdbId);
 };

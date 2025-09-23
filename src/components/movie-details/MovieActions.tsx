@@ -123,6 +123,8 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         onClose={() => setIsDownloadOpen(false)}
         tmdbId={movieId.toString()}
         title={title}
+        contentType={contentType}
+        imdbId={imdbId}
       />
     </>
   );
