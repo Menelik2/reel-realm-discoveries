@@ -12,9 +12,16 @@ export const MovieDetailsHeader = ({ backdropPath, title, onClose }: MovieDetail
   return (
     <div className="relative h-64 md:h-80 lg:h-96">
       <img
-        src={`https://image.tmdb.org/t/p/original${backdropPath}`}
+        src={`https://image.tmdb.org/t/p/w1280${backdropPath}`}
+        srcSet={`
+          https://image.tmdb.org/t/p/w780${backdropPath} 780w,
+          https://image.tmdb.org/t/p/w1280${backdropPath} 1280w
+        `}
+        sizes="(max-width: 768px) 780px, 1280px"
         alt={title}
         className="w-full h-full object-cover"
+        loading="eager"
+        decoding="async"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       

@@ -86,12 +86,21 @@ export const HeroCarousel = () => {
   return (
     <div className="relative h-[50vh] md:h-[70vh] overflow-hidden">
       {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-gray-800 transition-all duration-1000"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(https://image.tmdb.org/t/p/original${currentMovie.backdrop_path})`
-        }}
-      />
+      <div className="absolute inset-0 bg-gray-800 transition-all duration-1000">
+        <img
+          src={`https://image.tmdb.org/t/p/w1280${currentMovie.backdrop_path}`}
+          srcSet={`
+            https://image.tmdb.org/t/p/w780${currentMovie.backdrop_path} 780w,
+            https://image.tmdb.org/t/p/w1280${currentMovie.backdrop_path} 1280w
+          `}
+          sizes="(max-width: 768px) 780px, 1280px"
+          alt={currentMovie.title}
+          className="w-full h-full object-cover"
+          loading="eager"
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60" />
+      </div>
       
       {/* Content */}
       <div className="relative z-10 h-full flex items-center">

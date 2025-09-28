@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import type { BoxOfficeMovie } from '@/hooks/useTopBoxOffice';
 import { Card, CardContent } from '@/components/ui/card';
+import { OptimizedImage } from '@/components/OptimizedImage';
 
 interface BoxOfficeMovieCardProps {
   movie: BoxOfficeMovie;
@@ -22,15 +23,13 @@ export const BoxOfficeMovieCard = ({ movie, rank }: BoxOfficeMovieCardProps) => 
             <div className="absolute top-2 left-2 z-10 bg-primary text-primary-foreground rounded-full h-8 w-8 flex items-center justify-center text-base font-bold shadow-lg border-2 border-background">
               {rank}
             </div>
-            <img
+            <OptimizedImage
               src={posterUrl}
+              tmdbPath={movie.poster_path}
+              imageType="poster"
               alt={movie.title}
               className="w-full h-auto aspect-[2/3] object-cover"
-              loading="lazy"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/placeholder.svg';
-              }}
+              placeholder="blur"
             />
             <div className="p-3">
               <h3 className="font-bold text-base truncate" title={movie.title}>

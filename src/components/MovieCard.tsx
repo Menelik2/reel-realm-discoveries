@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import type { Movie } from '@/types/tmdb';
 
 interface MovieCardProps {
@@ -34,14 +35,13 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
     <Card className="group hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer" onClick={handleCardClick}>
       <CardContent className="p-0">
         <div className="relative aspect-[2/3] overflow-hidden">
-          <img
+          <OptimizedImage
             src={posterUrl}
-            alt={movie.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/placeholder.svg';
-            }}
+            tmdbPath={movie.poster_path}
+            imageType="poster"
+            alt={movie.title || 'Movie poster'}
+            className="transition-transform duration-300 group-hover:scale-110"
+            placeholder="blur"
           />
         </div>
         

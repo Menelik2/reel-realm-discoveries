@@ -34,7 +34,7 @@ export const SEOMetadata = ({
     : 'YENI MOVIE - Your destination for discovering and watching the latest movies and TV series online. Find trailers, ratings, cast information, and streaming links.';
   
   const pageUrl = movieId && contentType ? `https://yenimovie.lovable.app/${contentType}/${movieId}` : 'https://yenimovie.lovable.app/';
-  const ogImage = imageUrl ? `https://image.tmdb.org/t/p/w1280${imageUrl}` : 'https://lovable.dev/opengraph-image-p98pqg.png';
+  const ogImage = imageUrl ? `https://image.tmdb.org/t/p/w780${imageUrl}` : 'https://lovable.dev/opengraph-image-p98pqg.png';
   
   // Generate enhanced keywords for better SEO
   const keywords = [
@@ -134,8 +134,8 @@ export const SEOMetadata = ({
       <meta property="og:description" content={pageDescription} />
       <meta property="og:url" content={pageUrl} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:image:width" content="1280" />
-      <meta property="og:image:height" content="720" />
+      <meta property="og:image:width" content="780" />
+      <meta property="og:image:height" content="439" />
       <meta property="og:image:alt" content={title || 'YENI MOVIE'} />
       <meta property="og:site_name" content="YENI MOVIE" />
       <meta property="og:locale" content="en_US" />

@@ -30,7 +30,14 @@ export const MovieCast = ({ cast, onActorClick }: MovieCastProps) => {
                   ? `https://image.tmdb.org/t/p/w185${actor.profile_path}`
                   : '/placeholder.svg'
                 }
+                srcSet={actor.profile_path ? `
+                  https://image.tmdb.org/t/p/w45${actor.profile_path} 45w,
+                  https://image.tmdb.org/t/p/w185${actor.profile_path} 185w
+                ` : undefined}
+                sizes="185px"
                 alt={actor.name}
+                loading="lazy"
+                decoding="async"
                 className="w-full aspect-[2/3] object-cover rounded-lg mb-2 transition-transform duration-300 group-hover:scale-105"
               />
             </div>
