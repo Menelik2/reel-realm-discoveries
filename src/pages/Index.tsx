@@ -24,7 +24,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [contentType, setContentType] = useState<"movie" | "tv">("movie");
+  const [contentType, setContentType] = useState<"movie" | "tv" | "all">("all");
   const [movies, setMovies] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -70,7 +70,16 @@ const Index = () => {
   };
 
   const handleMovieClick = (movieId: number, typeOverride?: "movie" | "tv") => {
-    const type: 'movie' | 'tv' = typeOverride ?? contentType;
+    // For 'all' content type, we need to determine the actual type from the movie data or typeOverride
+    let type: 'movie' | 'tv';
+    if (typeOverride) {
+      type = typeOverride;
+    } else if (contentType === 'all') {
+      // This should be handled by the movie card which knows the media_type
+      type = 'movie'; // fallback, but the MovieCard should provide typeOverride
+    } else {
+      type = contentType;
+    }
     navigate(`/${type}/${movieId}`);
   };
 

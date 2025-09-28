@@ -43,13 +43,31 @@ const fetchFromTMDB = async (url: string) => {
 
 interface FetchMoviesParams {
   currentCategory: string;
-  contentType: 'movie' | 'tv';
+  contentType: 'movie' | 'tv' | 'all';
   selectedGenre: string;
   selectedYear: string;
   currentPage: number;
 }
 
 export const fetchMovies = async ({ currentCategory, contentType, selectedGenre, selectedYear, currentPage }: FetchMoviesParams) => {
+    // If contentType is 'all', fetch both movies and TV shows and combine results
+    if (contentType === 'all') {
+        const [movieResults, tvResults] = await Promise.all([
+            fetchMovies({ currentCategory, contentType: 'movie', selectedGenre, selectedYear, currentPage }),
+            fetchMovies({ currentCategory, contentType: 'tv', selectedGenre, selectedYear, currentPage })
+        ]);
+        
+        // Combine and sort by popularity/vote average
+        const combinedMovies = [...movieResults.movies, ...tvResults.movies]
+            .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+            .slice(0, 20); // Limit to 20 items per page
+        
+        return {
+            movies: combinedMovies,
+            totalPages: Math.max(movieResults.totalPages, tvResults.totalPages),
+        };
+    }
+
     const supportsFiltering = currentCategory === 'popular' || currentCategory === 'top_rated';
     const useDiscover = (selectedGenre !== 'all' || selectedYear !== 'all') && supportsFiltering;
 
@@ -110,7 +128,7 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
 interface SearchContentParams {
   searchQuery: string;
   currentPage: number;
-  contentType?: 'movie' | 'tv';
+  contentType?: 'movie' | 'tv' | 'all';
 }
 
 export const searchContent = async ({ searchQuery, currentPage, contentType }: SearchContentParams) => {
@@ -120,12 +138,12 @@ export const searchContent = async ({ searchQuery, currentPage, contentType }: S
     params.append('_t', Date.now().toString());
 
     // Use specific search endpoint if contentType is provided, otherwise search all
-    const searchEndpoint = contentType ? `search/${contentType}` : 'search/multi';
+    const searchEndpoint = (contentType && contentType !== 'all') ? `search/${contentType}` : 'search/multi';
     const url = `${TMDB_BASE_URL}/${searchEndpoint}?${params.toString()}`;
     const data = await fetchFromTMDB(url);
 
     return {
-        movies: processTMDbResults(data.results, contentType),
+        movies: processTMDbResults(data.results, contentType === 'all' ? undefined : contentType),
         totalPages: Math.min(data.total_pages || 1, 100),
     };
 };

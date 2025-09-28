@@ -11,7 +11,7 @@ interface MovieGridContentProps {
   totalPages: number;
   onMovieClick: (movieId: number) => void;
   onPageChange: (page: number) => void;
-  contentType: 'movie' | 'tv';
+  contentType: 'movie' | 'tv' | 'all';
   searchQuery: string;
   currentCategory: string;
 }
@@ -45,7 +45,7 @@ export const MovieGridContent = ({
             ? `No results found for "${searchQuery}".`
             : currentCategory === 'custom'
             ? 'Your list is empty. Add new content from the admin page.'
-            : `No ${contentType === 'movie' ? 'movies' : 'series'} found. Try adjusting your filters.`}
+            : `No ${contentType === 'movie' ? 'movies' : contentType === 'tv' ? 'series' : 'content'} found. Try adjusting your filters.`}
         </p>
         <p className="text-muted-foreground text-sm">
           Try another search or change category.
@@ -118,7 +118,7 @@ export const MovieGridContent = ({
           </Pagination>
           
           <div className="text-center mt-4 text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages} (Showing up to 2000 {!!searchQuery ? 'results' : (contentType === 'movie' ? 'movies' : 'series')})
+            Page {currentPage} of {totalPages} (Showing up to 2000 {!!searchQuery ? 'results' : (contentType === 'movie' ? 'movies' : contentType === 'tv' ? 'series' : 'items')})
           </div>
         </div>
       )}

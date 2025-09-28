@@ -3,7 +3,7 @@ import type { Movie } from '@/types/tmdb';
 
 interface MovieCardProps {
   movie: Movie;
-  onMovieClick?: (movieId: number) => void;
+  onMovieClick?: (movieId: number, mediaType?: 'movie' | 'tv') => void;
   fullPosterUrl?: string;
 }
 
@@ -17,7 +17,9 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
 
   const handleCardClick = () => {
     if (onMovieClick) {
-      onMovieClick(movie.id);
+      // Pass the media_type from the movie object for correct navigation
+      const mediaType = movie.media_type || 'movie';
+      onMovieClick(movie.id, mediaType);
     }
   };
 

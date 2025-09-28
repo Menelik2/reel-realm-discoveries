@@ -4,15 +4,21 @@ import { Button } from '@/components/ui/button';
 interface CategoryTabsProps {
   currentCategory: string;
   setCurrentCategory: (category: string) => void;
-  contentType: 'movie' | 'tv';
+  contentType: 'movie' | 'tv' | 'all';
 }
 
 export const CategoryTabs = ({ currentCategory, setCurrentCategory, contentType }: CategoryTabsProps) => {
   const categories = [
     { key: 'popular', label: 'Popular' },
     { key: 'top_rated', label: 'Top Rated' },
-    { key: 'upcoming', label: contentType === 'movie' ? 'Upcoming' : 'On The Air' },
-    { key: 'now_playing', label: contentType === 'movie' ? 'Now Playing' : 'Airing Today' }
+    { 
+      key: 'upcoming', 
+      label: contentType === 'movie' ? 'Upcoming' : contentType === 'tv' ? 'On The Air' : 'Upcoming & On Air'
+    },
+    { 
+      key: 'now_playing', 
+      label: contentType === 'movie' ? 'Now Playing' : contentType === 'tv' ? 'Airing Today' : 'Now Playing & Airing'
+    }
   ];
 
   return (

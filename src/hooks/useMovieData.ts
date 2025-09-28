@@ -8,7 +8,7 @@ interface UseMovieDataProps {
   searchQuery: string;
   selectedGenre: string;
   selectedYear: string;
-  contentType: 'movie' | 'tv';
+  contentType: 'movie' | 'tv' | 'all';
   currentCategory: string;
   currentPage: number;
   refreshKey?: number;

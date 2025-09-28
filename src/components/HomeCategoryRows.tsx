@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Movie } from '@/types/tmdb';
 
 interface HomeCategoryRowsProps {
-  contentType: 'movie' | 'tv';
-  setContentType: (type: 'movie' | 'tv') => void;
+  contentType: 'movie' | 'tv' | 'all';
+  setContentType: (type: 'movie' | 'tv' | 'all') => void;
   onMovieClick: (movieId: number) => void;
 }
 
@@ -88,7 +88,7 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 
 interface CategorySectionProps {
   category: { key: string; label: string };
-  contentType: 'movie' | 'tv';
+  contentType: 'movie' | 'tv' | 'all';
   selectedGenre: string;
   onMovieClick: (movieId: number) => void;
   showAdAfter?: boolean;

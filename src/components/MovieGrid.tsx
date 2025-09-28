@@ -13,8 +13,8 @@ interface MovieGridProps {
   selectedYear: string;
   setSelectedYear: (year: string) => void;
   onMovieClick: (movieId: number) => void;
-  contentType: 'movie' | 'tv';
-  setContentType: (type: 'movie' | 'tv') => void;
+  contentType: 'movie' | 'tv' | 'all';
+  setContentType: (type: 'movie' | 'tv' | 'all') => void;
   movies: Movie[];
   loading: boolean;
   totalPages: number;
