@@ -125,7 +125,10 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen transition-colors ${isDarkMode ? 'dark' : ''}`}>
-      <SEOMetadata />
+        <SEOMetadata 
+          title="Watch Movies and TV Series Online Free - YENI MOVIE"
+          description="Discover and watch the latest movies and TV series online for free. Browse thousands of titles, read reviews, watch trailers, and find your next favorite show on YENI MOVIE - your ultimate entertainment destination."
+        />
       <div className="bg-background text-foreground transition-colors">
         <Header
           searchQuery={searchQuery}

@@ -36,19 +36,45 @@ export const SEOMetadata = ({
   const pageUrl = movieId && contentType ? `https://yenimovie.lovable.app/${contentType}/${movieId}` : 'https://yenimovie.lovable.app/';
   const ogImage = imageUrl ? `https://image.tmdb.org/t/p/w1280${imageUrl}` : 'https://lovable.dev/opengraph-image-p98pqg.png';
   
-  // Generate keywords for better SEO
+  // Generate enhanced keywords for better SEO
   const keywords = [
-    'watch movies online',
-    'free movies',
-    'streaming',
-    'TV series',
-    'movie database',
+    'watch movies online free',
+    'stream movies online',
+    'watch TV series online',
+    'free streaming',
+    'movie streaming site',
+    'TV show streaming',
+    'online cinema',
+    'free movies and series',
+    'HD movies online',
+    'latest movies',
+    'popular TV series',
     'YENI MOVIE',
-    ...(title ? [title, `${title} movie`, `${title} streaming`] : []),
-    ...genres.map(genre => `${genre} movies`),
-    ...(cast.length > 0 ? [`${cast[0]} movies`] : []),
-    ...(director ? [`${director} movies`] : [])
-  ].join(', ');
+    'movie database',
+    'film streaming',
+    'series online',
+    ...(title ? [
+      title, 
+      `${title} ${contentType === 'tv' ? 'series' : 'movie'}`, 
+      `${title} streaming`, 
+      `watch ${title} online`,
+      `${title} free online`,
+      `${title} HD streaming`
+    ] : []),
+    ...genres.map(genre => [
+      `${genre} movies`,
+      `${genre} series`,
+      `watch ${genre} online`,
+      `best ${genre} ${contentType === 'tv' ? 'shows' : 'movies'}`
+    ]).flat(),
+    ...(cast.length > 0 ? [
+      `${cast[0]} movies`,
+      `${cast[0]} ${contentType === 'tv' ? 'TV shows' : 'films'}`,
+      ...cast.slice(0, 3).map(actor => `${actor} streaming`)
+    ] : []),
+    ...(director ? [`${director} movies`, `${director} films`, `${director} director`] : []),
+    ...(releaseDate ? [`${releaseDate.split('-')[0]} movies`, `${releaseDate.split('-')[0]} releases`] : [])
+  ].filter(Boolean).join(', ');
 
   // JSON-LD structured data for better search engine understanding
   const structuredData = contentType && title ? {
@@ -153,29 +179,92 @@ export const SEOMetadata = ({
         </script>
       )}
 
-      {/* Additional Website Schema for homepage */}
+      {/* Enhanced Website Schema for homepage */}
       {!contentType && (
+        <>
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "YENI MOVIE",
+              "alternateName": ["Watch Movies and TV Series Online", "Free Movie Streaming", "Online Cinema"],
+              "url": "https://yenimovie.lovable.app",
+              "description": "Watch the latest movies and TV series online for free. Discover new content, read reviews, and find streaming links. Your ultimate destination for entertainment.",
+              "keywords": "free movies, streaming, TV series, online cinema, movie database, watch online",
+              "inLanguage": "en-US",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://yenimovie.lovable.app/?search={search_term_string}"
+                },
+                "query-input": "required name=search_term_string"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "YENI MOVIE",
+                "url": "https://yenimovie.lovable.app",
+                "description": "Leading platform for watching movies and TV series online",
+                "sameAs": [
+                  "https://yenimovie.lovable.app"
+                ]
+              },
+              "mainEntity": {
+                "@type": "ItemList",
+                "name": "Movies and TV Series Collection",
+                "description": "Comprehensive collection of movies and TV series available for streaming"
+              }
+            })}
+          </script>
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "YENI MOVIE",
+              "url": "https://yenimovie.lovable.app",
+              "description": "Premier destination for watching movies and TV series online for free",
+              "foundingDate": "2024",
+              "knowsAbout": [
+                "Movies",
+                "TV Series",
+                "Streaming",
+                "Entertainment",
+                "Cinema",
+                "Television Shows"
+              ],
+              "serviceType": "Entertainment Streaming Platform",
+              "areaServed": "Worldwide"
+            })}
+          </script>
+        </>
+      )}
+
+      {/* Breadcrumb Navigation Schema */}
+      {contentType && title && (
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "WebSite",
-            "name": "YENI MOVIE",
-            "alternateName": "Watch Movies and TV Series Online",
-            "url": "https://yenimovie.lovable.app",
-            "description": "Watch the latest movies and TV series online for free. Discover new content, read reviews, and find streaming links.",
-            "potentialAction": {
-              "@type": "SearchAction",
-              "target": {
-                "@type": "EntryPoint",
-                "urlTemplate": "https://yenimovie.lovable.app/?search={search_term_string}"
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://yenimovie.lovable.app"
               },
-              "query-input": "required name=search_term_string"
-            },
-            "publisher": {
-              "@type": "Organization",
-              "name": "YENI MOVIE",
-              "url": "https://yenimovie.lovable.app"
-            }
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": contentType === 'movie' ? 'Movies' : 'TV Series',
+                "item": `https://yenimovie.lovable.app/${contentType}`
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": title,
+                "item": pageUrl
+              }
+            ]
           })}
         </script>
       )}
