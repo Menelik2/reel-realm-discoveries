@@ -61,11 +61,7 @@ export const ActorDetails = ({ actorId, onClose, onMovieClick }: ActorDetailsPro
                 <SheetHeader className="p-6 space-y-0 gap-6 text-left">
                     <div className="flex flex-col sm:flex-row items-start gap-6">
                         <Avatar className="h-28 w-28 sm:h-36 sm:w-36 text-lg">
-                            <AvatarImage 
-                              src={actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : undefined}
-                              alt={actor.name} 
-                              loading="lazy"
-                            />
+                            <AvatarImage src={`https://image.tmdb.org/t/p/h632${actor.profile_path}`} alt={actor.name} />
                             <AvatarFallback>{actor.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="pt-2">

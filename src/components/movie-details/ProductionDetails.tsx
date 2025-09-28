@@ -77,16 +77,8 @@ export const ProductionDetails = ({
                 {company.logo_path && (
                   <img
                     src={`https://image.tmdb.org/t/p/w92${company.logo_path}`}
-                    srcSet={`
-                      https://image.tmdb.org/t/p/w45${company.logo_path} 45w,
-                      https://image.tmdb.org/t/p/w92${company.logo_path} 92w,
-                      https://image.tmdb.org/t/p/w185${company.logo_path} 185w
-                    `}
-                    sizes="(max-width: 640px) 45px, (max-width: 768px) 92px, 185px"
                     alt={company.name}
                     className="h-8 w-auto"
-                    loading="lazy"
-                    decoding="async"
                   />
                 )}
                 <span className="text-sm">{company.name}</span>

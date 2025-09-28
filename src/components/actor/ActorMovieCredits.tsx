@@ -27,16 +27,9 @@ export const ActorMovieCredits = ({ credits, onMovieClick }: ActorMovieCreditsPr
               >
                 <img
                   src={`https://image.tmdb.org/t/p/w342${credit.poster_path}`}
-                  srcSet={`
-                    https://image.tmdb.org/t/p/w185${credit.poster_path} 185w,
-                    https://image.tmdb.org/t/p/w342${credit.poster_path} 342w,
-                    https://image.tmdb.org/t/p/w500${credit.poster_path} 500w
-                  `}
-                  sizes="(max-width: 640px) 185px, (max-width: 768px) 342px, 500px"
                   alt={credit.title || credit.name}
                   className="rounded-lg aspect-[2/3] object-cover"
                   loading="lazy"
-                  decoding="async"
                 />
                 <p className="font-semibold text-sm mt-2 truncate">{credit.title || credit.name}</p>
                 <p className="text-xs text-muted-foreground truncate">{credit.character}</p>

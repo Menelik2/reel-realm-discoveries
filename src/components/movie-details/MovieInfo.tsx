@@ -1,6 +1,5 @@
 import { Badge } from '@/components/ui/badge';
 import { Star, Calendar, Clock } from 'lucide-react';
-import { OptimizedImage } from '@/components/OptimizedImage';
 import { MovieActions } from './MovieActions';
 
 interface Genre {
@@ -43,22 +42,14 @@ export const MovieInfo = ({
   seasons,
   imdbId,
 }: MovieInfoProps) => {
-  const posterUrl = posterPath 
-    ? `https://image.tmdb.org/t/p/w500${posterPath}`
-    : '/placeholder.svg';
-    
   return (
     <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
       {/* Poster - responsive sizing */}
       <div className="flex-shrink-0 mx-auto lg:mx-0">
-        <OptimizedImage
-          src={posterUrl}
-          tmdbPath={posterPath}
-          imageType="poster"
+        <img
+          src={`https://image.tmdb.org/t/p/w500${posterPath}`}
           alt={title}
-          className="w-40 h-60 sm:w-48 sm:h-72 lg:w-56 lg:h-84 rounded-lg shadow-xl"
-          priority={true}
-          placeholder="blur"
+          className="w-40 h-60 sm:w-48 sm:h-72 lg:w-56 lg:h-84 object-cover rounded-lg shadow-xl"
         />
       </div>
 
