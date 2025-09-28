@@ -52,28 +52,46 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
   const fetchSimilarMovies = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/similar?page=1`, {
-        headers: {
-          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json;charset=utf-8'
-        }
-      });
+      // Fetch both similar and recommended content for better variety
+      const [similarResponse, recommendedResponse] = await Promise.all([
+        fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/similar?page=1`, {
+          headers: {
+            'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json;charset=utf-8'
+          }
+        }),
+        fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/recommendations?page=1`, {
+          headers: {
+            'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json;charset=utf-8'
+          }
+        })
+      ]);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!similarResponse.ok && !recommendedResponse.ok) {
+        throw new Error(`HTTP error! status: ${similarResponse.status}`);
       }
       
-      const data = await response.json();
+      const [similarData, recommendedData] = await Promise.all([
+        similarResponse.ok ? similarResponse.json() : { results: [] },
+        recommendedResponse.ok ? recommendedResponse.json() : { results: [] }
+      ]);
       
-      // Normalize the data to ensure required fields are present
-      const normalizedResults: Movie[] = data.results?.slice(0, 10).map((item: TMDBMovie) => ({
+      // Combine and deduplicate results for better similar content
+      const allResults = [...(similarData.results || []), ...(recommendedData.results || [])];
+      const uniqueResults = allResults.filter((item, index, self) => 
+        index === self.findIndex(t => t.id === item.id)
+      );
+      
+      // Normalize and get top 10 results
+      const normalizedResults: Movie[] = uniqueResults.slice(0, 10).map((item: TMDBMovie) => ({
         id: item.id,
         title: item.title || item.name || 'Unknown Title',
         poster_path: item.poster_path,
         vote_average: item.vote_average,
         release_date: item.release_date || item.first_air_date || '',
         genre_ids: item.genre_ids
-      })).filter((item: Movie) => item.title !== 'Unknown Title') || [];
+      })).filter((item: Movie) => item.title !== 'Unknown Title' && item.poster_path);
       
       setSimilarMovies(normalizedResults);
     } catch (error) {
@@ -106,22 +124,20 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
           </Badge>
         </div>
         
-        <div className="relative">
-          <div className="flex gap-4 overflow-hidden">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div 
-                key={i} 
-                className="min-w-[180px] space-y-3 animate-pulse"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="aspect-[2/3] bg-gradient-to-br from-muted to-muted/60 rounded-xl" />
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div 
+              key={i} 
+              className="space-y-3 animate-pulse"
+              style={{ animationDelay: `${i * 0.1}s` }}
+            >
+              <div className="aspect-[2/3] bg-gradient-to-br from-muted to-muted/60 rounded-xl" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
     );
@@ -174,30 +190,16 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
         </Badge>
       </div>
       
-      <div className="relative group">
-        <Carousel
-          opts={{
-            align: "start",
-            loop: similarMovies.length > 5,
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-4">
-            {similarMovies.map((movie, index) => (
-              <CarouselItem 
-                key={movie.id} 
-                className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 animate-scale-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="hover-scale">
-                  <MovieCard movie={movie} onMovieClick={handleSimilarMovieClick} />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="hidden md:flex -left-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background/90 hover:border-border group-hover:opacity-100 opacity-0 transition-opacity duration-300" />
-          <CarouselNext className="hidden md:flex -right-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-background/90 hover:border-border group-hover:opacity-100 opacity-0 transition-opacity duration-300" />
-        </Carousel>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {similarMovies.map((movie, index) => (
+          <div 
+            key={movie.id} 
+            className="animate-scale-in hover-scale"
+            style={{ animationDelay: `${index * 0.05}s` }}
+          >
+            <MovieCard movie={movie} onMovieClick={handleSimilarMovieClick} />
+          </div>
+        ))}
       </div>
     </section>
   );

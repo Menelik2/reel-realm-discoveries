@@ -97,9 +97,6 @@ export const Footer = () => {
           </div>
         </div>
         
-        <div className="border-t border-border mt-8 pt-8">
-          <AdBanner slot="1234567890" />
-        </div>
 
         <div className="mt-8 pt-6 text-center">
           <p className="text-sm text-muted-foreground">
