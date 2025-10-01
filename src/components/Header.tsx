@@ -27,6 +27,8 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link to="/?type=movie" className="hover:text-primary transition-colors">Movies</Link>
+            <Link to="/?type=tv" className="hover:text-primary transition-colors">TV Series</Link>
             <Link to="/top-box-office" className="hover:text-primary transition-colors">Top Box Office</Link>
             <Link to="/about" className="hover:text-primary transition-colors">About</Link>
             <Link to="/contact" className="hover:text-primary transition-colors">Contact</Link>
@@ -103,6 +105,20 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Home
+              </Link>
+              <Link 
+                to="/?type=movie" 
+                className="hover:text-primary transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Movies
+              </Link>
+              <Link 
+                to="/?type=tv" 
+                className="hover:text-primary transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                TV Series
               </Link>
               <Link 
                 to="/top-box-office" 

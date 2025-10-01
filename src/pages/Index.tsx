@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -20,11 +20,16 @@ const getInitialDarkMode = () => {
 
 const Index = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [contentType, setContentType] = useState<"movie" | "tv" | "all">("all");
+  const [contentType, setContentType] = useState<"movie" | "tv" | "all">(() => {
+    const typeParam = searchParams.get('type');
+    if (typeParam === 'movie' || typeParam === 'tv') return typeParam;
+    return 'all';
+  });
   const [movies, setMovies] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,6 +37,17 @@ const Index = () => {
   const [currentCategory, setCurrentCategory] = useState<string>("popular");
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Update content type from URL params
+  useEffect(() => {
+    const typeParam = searchParams.get('type');
+    if (typeParam === 'movie' || typeParam === 'tv') {
+      setContentType(typeParam);
+    } else if (typeParam === null && contentType !== 'all') {
+      // Only reset to 'all' if explicitly on home without type param
+      setContentType('all');
+    }
+  }, [searchParams]);
 
   // Detect mobile
   useEffect(() => {
