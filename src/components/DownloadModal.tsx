@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Download, ExternalLink, AlertCircle, Search } from 'lucide-react';
 import { getDownloadLinks, type DownloadResult } from '@/api/downloadService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DownloadModalProps {
   open: boolean;
@@ -22,6 +23,7 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (open && tmdbId) {
@@ -196,7 +198,14 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                             size="sm"
                             className="shrink-0"
                           >
-                            <Download className="h-4 w-4" />
+                            {isMobile ? (
+                              <>
+                                <Download className="h-4 w-4 mr-1" />
+                                Download
+                              </>
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -231,6 +240,14 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
           </Badge>
         </div>
         
+        {isMobile && (
+          <Alert className="mb-4">
+            <AlertDescription className="text-sm">
+              Click Download to open Telegram and access the series files. You'll need Telegram app to download.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="space-y-2">
           {downloadData.downloadLinks.map((link, index) => (
             <div
@@ -246,8 +263,17 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                 size="sm"
                 variant="outline"
               >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Open
+                {isMobile ? (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open
+                  </>
+                )}
               </Button>
             </div>
           ))}
