@@ -12,29 +12,6 @@ interface MovieDownloadResponse {
   "480p"?: MessageIdObject[];
 }
 
-interface TylerMoviesQuality {
-  id: string;
-  name: string;
-  size: string;
-}
-
-interface TylerMoviesResponse {
-  success: boolean;
-  data?: {
-    qualities?: {
-      "720p"?: TylerMoviesQuality;
-      [key: string]: any;
-    };
-  };
-}
-
-export interface DirectDownload {
-  url: string;
-  filename: string;
-  size: string;
-  quality: string;
-}
-
 export interface DownloadResult {
   tmdbId: string;
   type: 'movie' | 'tv';
@@ -42,76 +19,10 @@ export interface DownloadResult {
     [key: string]: string[];
   };
   downloadLinks?: string[];
-  directDownload?: DirectDownload;
   error?: string;
 }
 
 const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
-
-export const fetchTylerMoviesDirectLink = async (tmdbId: string): Promise<DirectDownload | null> => {
-  try {
-    // Validate TMDb ID input
-    const cleanTmdbId = tmdbId.trim();
-    if (!cleanTmdbId || !/^\d+$/.test(cleanTmdbId)) {
-      throw new Error('Invalid TMDb ID format. Must be numeric.');
-    }
-    
-    console.log('🎬 Fetching Tyler Movies Empire direct link for TMDB ID:', cleanTmdbId);
-    
-    const apiUrl = `https://api.tylermoviesempire.com/api/id/${cleanTmdbId}/1`;
-    console.log('📡 API URL:', apiUrl);
-    
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      const errorMsg = `API request failed with status ${response.status}`;
-      console.log('❌', errorMsg);
-      throw new Error(errorMsg);
-    }
-    
-    const data: TylerMoviesResponse = await response.json();
-    console.log('📦 Tyler Movies API response:', data);
-    
-    if (!data.success) {
-      throw new Error('API returned unsuccessful response');
-    }
-    
-    if (!data.data?.qualities?.["720p"]) {
-      throw new Error('No 720p quality available for this movie');
-    }
-    
-    const quality720p = data.data.qualities["720p"];
-    const { id, name, size } = quality720p;
-    
-    if (!id || !name) {
-      throw new Error('Invalid quality data: missing id or filename');
-    }
-    
-    // URL encode the filename properly using encodeURIComponent
-    // This handles special characters like [], spaces, etc.
-    const encodedFilename = encodeURIComponent(name);
-    const directUrl = `https://api.tylermoviesempire.com/dl/${id}/${encodedFilename}`;
-    
-    console.log('✅ Generated direct download URL:', directUrl);
-    console.log('📁 Filename:', name);
-    console.log('📏 Size:', size);
-    
-    return {
-      url: directUrl,
-      filename: name,
-      size: size || 'Unknown',
-      quality: '720p'
-    };
-    
-  } catch (error) {
-    console.error('❌ Tyler Movies Empire API error:', error);
-    throw error instanceof Error ? error : new Error('Failed to fetch download link');
-  }
-};
 
 export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadResult> => {
   try {
@@ -289,15 +200,5 @@ export const getDownloadLinks = async (tmdbId: string, contentType?: 'movie' | '
   if (contentType === 'tv') {
     return fetchSeriesDownloadLinks(tmdbId, title || 'Unknown Series', imdbId);
   }
-  
-  // For movies, fetch both Telegram links and Tyler Movies direct link
-  const [telegramResult, tylerDirectLink] = await Promise.all([
-    fetchMovieDownloadLinks(tmdbId),
-    fetchTylerMoviesDirectLink(tmdbId)
-  ]);
-  
-  return {
-    ...telegramResult,
-    directDownload: tylerDirectLink || undefined
-  };
+  return fetchMovieDownloadLinks(tmdbId);
 };
