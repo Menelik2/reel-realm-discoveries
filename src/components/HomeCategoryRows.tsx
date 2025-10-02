@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useMovieData } from '@/hooks/useMovieData';
 import { MovieCard } from '@/components/MovieCard';
 import { AdBanner } from '@/components/AdBanner';
@@ -27,6 +27,13 @@ const genres = [
 
 export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: HomeCategoryRowsProps) => {
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
+  const displayedIdsRef = useRef<Set<number>>(new Set());
+  
+  // Reset displayed IDs when filters change
+  const resetKey = `${contentType}-${selectedGenre}`;
+  if (displayedIdsRef.current.size > 0 && resetKey) {
+    displayedIdsRef.current.clear();
+  }
   
   const categories = [
     { key: 'trending_week', label: 'Trending This Week' },
@@ -73,13 +80,14 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 
       {categories.map((category, index) => (
         <CategorySection 
-          key={category.key}
+          key={`${category.key}-${resetKey}`}
           category={category}
           contentType={contentType}
           selectedGenre={selectedGenre}
           onMovieClick={onMovieClick}
           showAdAfter={index === 1} // Show ad after second category
           sectionIndex={index}
+          displayedIds={displayedIdsRef.current}
         />
       ))}
     </div>
@@ -93,9 +101,10 @@ interface CategorySectionProps {
   onMovieClick: (movieId: number) => void;
   showAdAfter?: boolean;
   sectionIndex: number;
+  displayedIds: Set<number>;
 }
 
-const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, showAdAfter, sectionIndex }: CategorySectionProps) => {
+const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, showAdAfter, sectionIndex, displayedIds }: CategorySectionProps) => {
   const { movies, loading } = useMovieData({
     searchQuery: '',
     selectedGenre,
@@ -105,6 +114,12 @@ const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, s
     currentPage: 1,
     enabled: true,
   });
+
+  // Filter out already displayed movies/shows
+  const uniqueMovies = movies.filter(movie => !displayedIds.has(movie.id));
+  
+  // Add new movies to displayed IDs
+  uniqueMovies.forEach(movie => displayedIds.add(movie.id));
 
   if (loading) {
     return (
@@ -126,7 +141,7 @@ const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, s
     );
   }
 
-  if (movies.length === 0) {
+  if (uniqueMovies.length === 0) {
     return showAdAfter ? (
       <div className="container mx-auto px-4">
         <AdBanner slot={`892642019${sectionIndex}`} className="my-6" />
@@ -139,7 +154,7 @@ const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, s
       <section className="py-6 md:py-8 container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-4">{category.label}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
-          {movies.map(movie => (
+          {uniqueMovies.map(movie => (
             <MovieCard 
               key={movie.id} 
               movie={movie} 
