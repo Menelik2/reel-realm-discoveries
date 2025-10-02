@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Heart, Globe, Download, Eye, Send } from 'lucide-react';
+import { Play, Heart, Globe, Download, Eye, Send, Copy, Check } from 'lucide-react';
 import LiveWatchModal from '@/components/LiveWatchModal';
 import DownloadModal from '@/components/DownloadModal';
 import { useTelegramUrl } from '@/hooks/useTelegramUrl';
-import { fetchTylerMoviesDirectLink } from '@/api/downloadService';
+import { fetchTylerMoviesDirectLink, DirectDownload } from '@/api/downloadService';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface MovieActionsProps {
   trailerUrl: string | null;
@@ -21,6 +28,9 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [directDownloadData, setDirectDownloadData] = useState<DirectDownload | null>(null);
+  const [showDirectDownloadDialog, setShowDirectDownloadDialog] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   // Get Telegram URL for TV series
   const { data: telegramUrl } = useTelegramUrl(contentType === 'tv' ? {
@@ -42,23 +52,45 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
     }
 
     setIsDownloading(true);
-    toast.loading('Fetching download link...');
+    const loadingToast = toast.loading('Fetching download link from Tyler Movies Empire...');
 
     try {
       const directLink = await fetchTylerMoviesDirectLink(movieId.toString());
       
+      toast.dismiss(loadingToast);
+      
       if (directLink) {
-        toast.success('Download started!');
-        window.open(directLink.url, '_blank');
-      } else {
-        toast.error('Download link not available for this movie');
+        setDirectDownloadData(directLink);
+        setShowDirectDownloadDialog(true);
+        toast.success('Download link generated successfully!');
       }
     } catch (error) {
+      toast.dismiss(loadingToast);
       console.error('Direct download error:', error);
-      toast.error('Failed to get download link');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get download link';
+      toast.error(errorMessage);
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleCopyUrl = async () => {
+    if (!directDownloadData) return;
+    
+    try {
+      await navigator.clipboard.writeText(directDownloadData.url);
+      setCopied(true);
+      toast.success('Download URL copied to clipboard!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error('Failed to copy URL');
+    }
+  };
+
+  const handleOpenDownload = () => {
+    if (!directDownloadData) return;
+    window.open(directDownloadData.url, '_blank');
+    toast.success('Opening download link...');
   };
 
   return (
@@ -160,6 +192,79 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         contentType={contentType}
         imdbId={imdbId}
       />
+
+      {/* Direct Download Dialog */}
+      <Dialog open={showDirectDownloadDialog} onOpenChange={setShowDirectDownloadDialog}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Direct Download Link Generated</DialogTitle>
+            <DialogDescription>
+              720p quality from Tyler Movies Empire
+            </DialogDescription>
+          </DialogHeader>
+          
+          {directDownloadData && (
+            <div className="space-y-4">
+              {/* File Info */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-muted-foreground">Filename</p>
+                    <p className="text-sm font-mono break-all">{directDownloadData.filename}</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Quality</p>
+                    <p className="text-sm font-semibold">{directDownloadData.quality}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Size</p>
+                    <p className="text-sm font-semibold">{directDownloadData.size}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Download URL */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Download URL</p>
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-muted rounded-md p-3 overflow-x-auto">
+                    <code className="text-xs break-all">{directDownloadData.url}</code>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyUrl}
+                    className="shrink-0"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-2">
+                <Button onClick={handleOpenDownload} className="flex-1">
+                  <Download className="mr-2 h-4 w-4" />
+                  Start Download
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDirectDownloadDialog(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

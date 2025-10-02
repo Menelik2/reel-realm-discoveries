@@ -50,39 +50,55 @@ const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
 
 export const fetchTylerMoviesDirectLink = async (tmdbId: string): Promise<DirectDownload | null> => {
   try {
-    console.log('🎬 Fetching Tyler Movies Empire direct link for TMDB ID:', tmdbId);
+    // Validate TMDb ID input
+    const cleanTmdbId = tmdbId.trim();
+    if (!cleanTmdbId || !/^\d+$/.test(cleanTmdbId)) {
+      throw new Error('Invalid TMDb ID format. Must be numeric.');
+    }
     
-    const apiUrl = `https://api.tylermoviesempire.com/api/id/${tmdbId}/1`;
+    console.log('🎬 Fetching Tyler Movies Empire direct link for TMDB ID:', cleanTmdbId);
+    
+    const apiUrl = `https://api.tylermoviesempire.com/api/id/${cleanTmdbId}/1`;
     console.log('📡 API URL:', apiUrl);
     
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
     
     if (!response.ok) {
-      console.log('❌ Tyler Movies API failed with status:', response.status);
-      return null;
+      const errorMsg = `API request failed with status ${response.status}`;
+      console.log('❌', errorMsg);
+      throw new Error(errorMsg);
     }
     
     const data: TylerMoviesResponse = await response.json();
     console.log('📦 Tyler Movies API response:', data);
     
-    if (!data.success || !data.data?.qualities?.["720p"]) {
-      console.log('❌ No 720p quality found in response');
-      return null;
+    if (!data.success) {
+      throw new Error('API returned unsuccessful response');
+    }
+    
+    if (!data.data?.qualities?.["720p"]) {
+      throw new Error('No 720p quality available for this movie');
     }
     
     const quality720p = data.data.qualities["720p"];
     const { id, name, size } = quality720p;
     
     if (!id || !name) {
-      console.log('❌ Missing id or name in 720p quality data');
-      return null;
+      throw new Error('Invalid quality data: missing id or filename');
     }
     
-    // URL encode the filename properly
+    // URL encode the filename properly using encodeURIComponent
+    // This handles special characters like [], spaces, etc.
     const encodedFilename = encodeURIComponent(name);
     const directUrl = `https://api.tylermoviesempire.com/dl/${id}/${encodedFilename}`;
     
     console.log('✅ Generated direct download URL:', directUrl);
+    console.log('📁 Filename:', name);
+    console.log('📏 Size:', size);
     
     return {
       url: directUrl,
@@ -93,7 +109,7 @@ export const fetchTylerMoviesDirectLink = async (tmdbId: string): Promise<Direct
     
   } catch (error) {
     console.error('❌ Tyler Movies Empire API error:', error);
-    return null;
+    throw error instanceof Error ? error : new Error('Failed to fetch download link');
   }
 };
 
