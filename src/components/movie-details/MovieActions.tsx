@@ -4,6 +4,8 @@ import { Play, Heart, Globe, Download, Eye, Send } from 'lucide-react';
 import LiveWatchModal from '@/components/LiveWatchModal';
 import DownloadModal from '@/components/DownloadModal';
 import { useTelegramUrl } from '@/hooks/useTelegramUrl';
+import { fetchTylerMoviesDirectLink } from '@/api/downloadService';
+import { toast } from 'sonner';
 
 interface MovieActionsProps {
   trailerUrl: string | null;
@@ -18,6 +20,7 @@ interface MovieActionsProps {
 export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title, seasons, imdbId }: MovieActionsProps) => {
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // Get Telegram URL for TV series
   const { data: telegramUrl } = useTelegramUrl(contentType === 'tv' ? {
@@ -30,6 +33,32 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
 
   const handleDownload = () => {
     setIsDownloadOpen(true);
+  };
+
+  const handleDirectDownload = async () => {
+    if (contentType !== 'movie') {
+      toast.error('Direct download is only available for movies');
+      return;
+    }
+
+    setIsDownloading(true);
+    toast.loading('Fetching download link...');
+
+    try {
+      const directLink = await fetchTylerMoviesDirectLink(movieId.toString());
+      
+      if (directLink) {
+        toast.success('Download started!');
+        window.open(directLink.url, '_blank');
+      } else {
+        toast.error('Download link not available for this movie');
+      }
+    } catch (error) {
+      console.error('Direct download error:', error);
+      toast.error('Failed to get download link');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -57,10 +86,15 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
             </Button>
           )}
           
-          <Button variant="outline" className="flex-1 sm:flex-none">
+          <Button 
+            variant="outline" 
+            className="flex-1 sm:flex-none"
+            onClick={handleDirectDownload}
+            disabled={isDownloading || contentType !== 'movie'}
+          >
             <Heart className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Favorite</span>
-            <span className="sm:hidden">Like</span>
+            <span className="hidden sm:inline">{isDownloading ? 'Getting Link...' : 'Direct Download'}</span>
+            <span className="sm:hidden">{isDownloading ? 'Wait...' : 'Direct'}</span>
           </Button>
           
           {/* Download button for both movies and TV series */}
