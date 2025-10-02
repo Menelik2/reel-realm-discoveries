@@ -101,20 +101,24 @@ serve(async (req) => {
         if (telegramResponse.ok) {
           const telegramData = await telegramResponse.json();
           
-          // Only parse if invite_link exists and is a string
           if (telegramData.invite_link && typeof telegramData.invite_link === 'string') {
-            // Parse multi-line invite_link and extract only Telegram URLs
-            const lines = telegramData.invite_link.split('\n');
-            telegramLinks = lines
-              .map((line: string) => {
-                const match = line.match(/(https:\/\/telegram\.dog\/[^\s]+)/);
-                return match ? match[1] : null;
-              })
-              .filter((url: string | null) => url !== null);
-            
-            console.log(`Found ${telegramLinks.length} Telegram URLs from invite_link`);
-          } else {
-            console.log('No invite_link found in response');
+            // Check if invite_link contains multiple lines (new format)
+            if (telegramData.invite_link.includes('\n')) {
+              // Parse multi-line invite_link and extract only Telegram URLs
+              const lines = telegramData.invite_link.split('\n');
+              telegramLinks = lines
+                .map((line: string) => {
+                  const match = line.match(/(https:\/\/telegram\.dog\/[^\s]+)/);
+                  return match ? match[1] : null;
+                })
+                .filter((url: string | null) => url !== null);
+              
+              console.log(`Found ${telegramLinks.length} Telegram URLs from multi-line invite_link`);
+            } else {
+              // Old format: single URL
+              telegramLinks = [telegramData.invite_link];
+              console.log(`Using single invite_link URL`);
+            }
           }
         }
       } catch (error) {
