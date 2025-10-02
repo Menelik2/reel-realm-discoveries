@@ -100,7 +100,9 @@ serve(async (req) => {
         
         if (telegramResponse.ok) {
           const telegramData = await telegramResponse.json();
-          if (telegramData.invite_link) {
+          
+          // Only parse if invite_link exists and is a string
+          if (telegramData.invite_link && typeof telegramData.invite_link === 'string') {
             // Parse multi-line invite_link and extract only Telegram URLs
             const lines = telegramData.invite_link.split('\n');
             telegramLinks = lines
@@ -110,7 +112,9 @@ serve(async (req) => {
               })
               .filter((url: string | null) => url !== null);
             
-            console.log(`Found ${telegramLinks.length} Telegram URLs`);
+            console.log(`Found ${telegramLinks.length} Telegram URLs from invite_link`);
+          } else {
+            console.log('No invite_link found in response');
           }
         }
       } catch (error) {
