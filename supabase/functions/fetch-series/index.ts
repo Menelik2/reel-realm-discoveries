@@ -92,7 +92,7 @@ serve(async (req) => {
     const finalImdbId = imdbId || seriesData.external_ids?.imdb_id;
 
     // Try to fetch from Telegram API
-    let telegramUrl = null;
+    let telegramLinks: string[] = [];
     if (finalImdbId) {
       try {
         const formattedImdbId = finalImdbId.startsWith('tt') ? finalImdbId : `tt${finalImdbId}`;
@@ -101,8 +101,16 @@ serve(async (req) => {
         if (telegramResponse.ok) {
           const telegramData = await telegramResponse.json();
           if (telegramData.invite_link) {
-            telegramUrl = telegramData.invite_link;
-            console.log(`Telegram URL found: ${telegramUrl}`);
+            // Parse multi-line invite_link and extract only Telegram URLs
+            const lines = telegramData.invite_link.split('\n');
+            telegramLinks = lines
+              .map((line: string) => {
+                const match = line.match(/(https:\/\/telegram\.dog\/[^\s]+)/);
+                return match ? match[1] : null;
+              })
+              .filter((url: string | null) => url !== null);
+            
+            console.log(`Found ${telegramLinks.length} Telegram URLs`);
           }
         }
       } catch (error) {
@@ -119,7 +127,7 @@ serve(async (req) => {
         title: seriesData.name || title,
         imdbId: finalImdbId,
         fetchedAt: new Date().toISOString(),
-        downloadLinks: telegramUrl ? [telegramUrl] : []
+        downloadLinks: telegramLinks
       }
     };
 
