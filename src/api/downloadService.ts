@@ -12,6 +12,29 @@ interface MovieDownloadResponse {
   "480p"?: MessageIdObject[];
 }
 
+interface TylerMoviesQuality {
+  id: string;
+  name: string;
+  size: string;
+}
+
+interface TylerMoviesResponse {
+  success: boolean;
+  data?: {
+    qualities?: {
+      "720p"?: TylerMoviesQuality;
+      [key: string]: any;
+    };
+  };
+}
+
+export interface DirectDownload {
+  url: string;
+  filename: string;
+  size: string;
+  quality: string;
+}
+
 export interface DownloadResult {
   tmdbId: string;
   type: 'movie' | 'tv';
@@ -19,10 +42,60 @@ export interface DownloadResult {
     [key: string]: string[];
   };
   downloadLinks?: string[];
+  directDownload?: DirectDownload;
   error?: string;
 }
 
 const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
+
+export const fetchTylerMoviesDirectLink = async (tmdbId: string): Promise<DirectDownload | null> => {
+  try {
+    console.log('🎬 Fetching Tyler Movies Empire direct link for TMDB ID:', tmdbId);
+    
+    const apiUrl = `https://api.tylermoviesempire.com/api/id/${tmdbId}/1`;
+    console.log('📡 API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      console.log('❌ Tyler Movies API failed with status:', response.status);
+      return null;
+    }
+    
+    const data: TylerMoviesResponse = await response.json();
+    console.log('📦 Tyler Movies API response:', data);
+    
+    if (!data.success || !data.data?.qualities?.["720p"]) {
+      console.log('❌ No 720p quality found in response');
+      return null;
+    }
+    
+    const quality720p = data.data.qualities["720p"];
+    const { id, name, size } = quality720p;
+    
+    if (!id || !name) {
+      console.log('❌ Missing id or name in 720p quality data');
+      return null;
+    }
+    
+    // URL encode the filename properly
+    const encodedFilename = encodeURIComponent(name);
+    const directUrl = `https://api.tylermoviesempire.com/dl/${id}/${encodedFilename}`;
+    
+    console.log('✅ Generated direct download URL:', directUrl);
+    
+    return {
+      url: directUrl,
+      filename: name,
+      size: size || 'Unknown',
+      quality: '720p'
+    };
+    
+  } catch (error) {
+    console.error('❌ Tyler Movies Empire API error:', error);
+    return null;
+  }
+};
 
 export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadResult> => {
   try {
@@ -200,5 +273,15 @@ export const getDownloadLinks = async (tmdbId: string, contentType?: 'movie' | '
   if (contentType === 'tv') {
     return fetchSeriesDownloadLinks(tmdbId, title || 'Unknown Series', imdbId);
   }
-  return fetchMovieDownloadLinks(tmdbId);
+  
+  // For movies, fetch both Telegram links and Tyler Movies direct link
+  const [telegramResult, tylerDirectLink] = await Promise.all([
+    fetchMovieDownloadLinks(tmdbId),
+    fetchTylerMoviesDirectLink(tmdbId)
+  ]);
+  
+  return {
+    ...telegramResult,
+    directDownload: tylerDirectLink || undefined
+  };
 };

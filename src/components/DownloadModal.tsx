@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Download, ExternalLink, AlertCircle, Search } from 'lucide-react';
+import { Loader2, Download, ExternalLink, AlertCircle, Search, Link as LinkIcon } from 'lucide-react';
 import { getDownloadLinks, type DownloadResult } from '@/api/downloadService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Separator } from '@/components/ui/separator';
 
 interface DownloadModalProps {
   open: boolean;
@@ -120,6 +121,46 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const renderDirectDownload = () => {
+    if (!downloadData?.directDownload) return null;
+
+    const { url, filename, size, quality } = downloadData.directDownload;
+
+    return (
+      <div className="space-y-4 mb-6">
+        <div className="flex items-center gap-2">
+          <LinkIcon className="h-4 w-4 text-primary" />
+          <h4 className="font-semibold text-sm uppercase tracking-wide">Direct Download (720p)</h4>
+          <Badge variant="default" className="text-xs">Recommended</Badge>
+        </div>
+        
+        <div className="border-2 border-primary/20 rounded-lg p-4 bg-primary/5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm mb-1">{filename}</p>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Badge variant="secondary" className="text-xs">{quality}</Badge>
+                </span>
+                <span>•</span>
+                <span className="font-mono">{size}</span>
+              </div>
+            </div>
+            <Button
+              onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+              className="shrink-0"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+          </div>
+        </div>
+        
+        <Separator className="my-6" />
+      </div>
+    );
+  };
+
   const renderMovieDownloads = () => {
     if (!downloadData?.categories) return null;
     
@@ -136,6 +177,12 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
 
     return (
       <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <h4 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">
+            Alternative Downloads (Telegram)
+          </h4>
+        </div>
+        
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4">
             {availableQualities.map(quality => {
@@ -308,7 +355,10 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
           ) : contentType === 'tv' ? (
             renderTVDownloads()
           ) : (
-            renderMovieDownloads()
+            <>
+              {renderDirectDownload()}
+              {renderMovieDownloads()}
+            </>
           )}
         </div>
       </DialogContent>
