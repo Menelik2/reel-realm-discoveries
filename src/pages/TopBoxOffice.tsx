@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { AdBanner } from '@/components/AdBanner';
 import { BoxOfficeMovieCard } from '@/components/BoxOfficeMovieCard';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const TopBoxOffice = () => {
   const { data: movies, isLoading, error } = useTopBoxOffice();
@@ -59,6 +60,7 @@ const TopBoxOffice = () => {
       </main>
 
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

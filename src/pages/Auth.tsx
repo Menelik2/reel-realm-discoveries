@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { toast } from 'sonner';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -75,6 +75,7 @@ const Auth = () => {
         </Card>
       </main>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

@@ -1,9 +1,9 @@
-
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { MovieDetails } from '@/components/MovieDetails';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const MoviePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,12 +43,15 @@ const MoviePage = () => {
   }
 
   return (
-    <MovieDetails 
-      movieId={parseInt(id)}
-      contentType={contentType as 'movie' | 'tv'}
-      onClose={handleClose}
-      onMovieClick={handleMovieClick}
-    />
+    <>
+      <MovieDetails 
+        movieId={parseInt(id)}
+        contentType={contentType as 'movie' | 'tv'}
+        onClose={handleClose}
+        onMovieClick={handleMovieClick}
+      />
+      <MobileBottomNav />
+    </>
   );
 };
 

@@ -1,9 +1,9 @@
-
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
 import { Film, Users, Target, Heart } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const About = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -113,6 +113,7 @@ const About = () => {
         </main>
 
         <Footer />
+        <MobileBottomNav />
       </div>
     </div>
   );

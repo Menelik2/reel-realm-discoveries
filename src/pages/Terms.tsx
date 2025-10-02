@@ -1,8 +1,8 @@
-
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
 import { AdBanner } from '@/components/AdBanner';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const Terms = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -140,6 +140,7 @@ const Terms = () => {
         </main>
 
         <Footer />
+        <MobileBottomNav />
       </div>
     </div>
   );

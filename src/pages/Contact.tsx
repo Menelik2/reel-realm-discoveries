@@ -1,4 +1,3 @@
-
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdBanner } from '@/components/AdBanner';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const Contact = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -197,6 +197,7 @@ const Contact = () => {
         </main>
 
         <Footer />
+        <MobileBottomNav />
       </div>
     </div>
   );
