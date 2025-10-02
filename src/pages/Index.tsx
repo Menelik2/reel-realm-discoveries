@@ -6,6 +6,7 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { HomeCategoryRows } from "@/components/HomeCategoryRows";
 import { SEOMetadata } from "@/components/SEOMetadata";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { fetchMovies, searchContent } from "@/api/tmdbService";
 
 const getInitialDarkMode = () => {
@@ -186,6 +187,7 @@ const Index = () => {
         </main>
 
         {!isMobile && <Footer />}
+        <MobileBottomNav />
       </div>
     </div>
   );
