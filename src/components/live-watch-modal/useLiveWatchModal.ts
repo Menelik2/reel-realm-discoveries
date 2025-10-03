@@ -35,6 +35,7 @@ export const useLiveWatchModal = ({
     if (isOpen) {
       document.documentElement.classList.add('dark');
       document.body.style.overflow = 'hidden';
+      document.body.setAttribute('data-video-modal-open', 'true');
       if (hasSeasons) {
         const validSeasons = seasons.filter(s => s.season_number > 0);
         const initialSeason = validSeasons[0];
@@ -48,13 +49,15 @@ export const useLiveWatchModal = ({
     } else {
       document.documentElement.classList.remove('dark');
       document.body.style.overflow = 'unset';
+      document.body.removeAttribute('data-video-modal-open');
       setSelectedSeasonNumber(undefined);
       setSelectedEpisodeNumber(undefined);
       setCurrentSeason(null);
     }
     return () => { 
       document.documentElement.classList.remove('dark');
-      document.body.style.overflow = 'unset'; 
+      document.body.style.overflow = 'unset';
+      document.body.removeAttribute('data-video-modal-open');
     };
   }, [isOpen, hasSeasons, seasons, setCurrentSeason, setSelectedSeasonNumber, setSelectedEpisodeNumber, setSelectedSource]);
 };

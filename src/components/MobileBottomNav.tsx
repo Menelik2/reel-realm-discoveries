@@ -15,7 +15,7 @@ export const MobileBottomNav = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50 md:hidden [body[data-video-modal-open]_&]:hidden">
       <nav className="flex justify-around items-center h-16">
         {navItems.map(({ category, to, icon: Icon, label }) => (
           <Link
