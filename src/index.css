@@ -109,3 +109,8 @@ html {
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide mobile bottom nav when video modal is open */
+body[data-video-modal-open] .mobile-bottom-nav {
+  display: none !important;
+}
