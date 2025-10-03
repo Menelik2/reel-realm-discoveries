@@ -39,6 +39,14 @@ const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Update search query from URL params
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, [searchParams]);
+
   // Update content type from URL params
   useEffect(() => {
     const typeParam = searchParams.get('type');
