@@ -36,12 +36,15 @@ interface SimilarMoviesProps {
   movieId: number;
   contentType: 'movie' | 'tv';
   onMovieClick: (movieId: number) => void;
+  currentGenres?: number[]; // Current movie/series genres for better matching
+  currentRating?: number;   // Current movie/series rating for similarity
+  currentYear?: string;     // Current movie/series year for proximity
 }
 
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMoviesProps) => {
+export const SimilarMovies = ({ movieId, contentType, onMovieClick, currentGenres = [], currentRating = 0, currentYear = '' }: SimilarMoviesProps) => {
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,11 +52,46 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
     fetchSimilarMovies();
   }, [movieId, contentType]);
 
+  // Calculate similarity score based on multiple factors
+  const calculateSimilarityScore = (item: TMDBMovie): number => {
+    let score = 0;
+    
+    // Genre overlap (most important - 50 points max)
+    if (currentGenres.length > 0 && item.genre_ids) {
+      const genreOverlap = item.genre_ids.filter(genre => currentGenres.includes(genre)).length;
+      const genreScore = (genreOverlap / Math.max(currentGenres.length, item.genre_ids.length)) * 50;
+      score += genreScore;
+    }
+    
+    // Rating similarity (30 points max)
+    if (currentRating > 0 && item.vote_average > 0) {
+      const ratingDiff = Math.abs(currentRating - item.vote_average);
+      const ratingScore = Math.max(0, 30 - (ratingDiff * 3)); // Penalty for rating difference
+      score += ratingScore;
+    }
+    
+    // Release year proximity (20 points max)
+    if (currentYear) {
+      const itemYear = item.release_date || item.first_air_date || '';
+      if (itemYear) {
+        const currentYearNum = parseInt(currentYear);
+        const itemYearNum = parseInt(itemYear.split('-')[0]);
+        if (!isNaN(currentYearNum) && !isNaN(itemYearNum)) {
+          const yearDiff = Math.abs(currentYearNum - itemYearNum);
+          const yearScore = Math.max(0, 20 - yearDiff); // 1 point penalty per year difference
+          score += yearScore;
+        }
+      }
+    }
+    
+    return score;
+  };
+
   const fetchSimilarMovies = async () => {
     setLoading(true);
     try {
-      // Fetch both similar and recommended content for better variety
-      const [similarResponse, recommendedResponse] = await Promise.all([
+      // Fetch similar, recommended, and discover (by genre) for maximum relevance
+      const requests = [
         fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/similar?page=1`, {
           headers: {
             'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
@@ -66,32 +104,62 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick }: SimilarMov
             'Content-Type': 'application/json;charset=utf-8'
           }
         })
-      ]);
+      ];
       
-      if (!similarResponse.ok && !recommendedResponse.ok) {
-        throw new Error(`HTTP error! status: ${similarResponse.status}`);
+      // Add discover by genre if we have genres
+      if (currentGenres.length > 0) {
+        const genreParam = currentGenres.slice(0, 2).join(','); // Use top 2 genres
+        requests.push(
+          fetch(`${TMDB_BASE_URL}/discover/${contentType}?with_genres=${genreParam}&sort_by=vote_average.desc&vote_count.gte=100&page=1`, {
+            headers: {
+              'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json;charset=utf-8'
+            }
+          })
+        );
       }
       
-      const [similarData, recommendedData] = await Promise.all([
-        similarResponse.ok ? similarResponse.json() : { results: [] },
-        recommendedResponse.ok ? recommendedResponse.json() : { results: [] }
-      ]);
+      const responses = await Promise.all(requests);
       
-      // Combine and deduplicate results for better similar content
-      const allResults = [...(similarData.results || []), ...(recommendedData.results || [])];
-      const uniqueResults = allResults.filter((item, index, self) => 
-        index === self.findIndex(t => t.id === item.id)
-      );
+      const dataPromises = responses.map(async (response, index) => {
+        if (response.ok) {
+          return await response.json();
+        }
+        return { results: [] };
+      });
       
-      // Normalize and get top 10 results
-      const normalizedResults: Movie[] = uniqueResults.slice(0, 10).map((item: TMDBMovie) => ({
-        id: item.id,
-        title: item.title || item.name || 'Unknown Title',
-        poster_path: item.poster_path,
-        vote_average: item.vote_average,
-        release_date: item.release_date || item.first_air_date || '',
-        genre_ids: item.genre_ids
-      })).filter((item: Movie) => item.title !== 'Unknown Title' && item.poster_path);
+      const allData = await Promise.all(dataPromises);
+      
+      // Combine all results
+      const allResults: TMDBMovie[] = allData.flatMap(data => data.results || []);
+      
+      // Deduplicate and filter out the current movie/series
+      const uniqueResults = allResults
+        .filter((item, index, self) => 
+          item.id !== movieId && // Don't include the current item
+          index === self.findIndex(t => t.id === item.id)
+        );
+      
+      // Calculate similarity scores and sort
+      const scoredResults = uniqueResults
+        .map(item => ({
+          ...item,
+          similarityScore: calculateSimilarityScore(item)
+        }))
+        .sort((a, b) => b.similarityScore - a.similarityScore);
+      
+      // Normalize and get top 10-15 most similar results
+      const normalizedResults: Movie[] = scoredResults
+        .slice(0, 15)
+        .map((item: TMDBMovie & { similarityScore: number }) => ({
+          id: item.id,
+          title: item.title || item.name || 'Unknown Title',
+          poster_path: item.poster_path,
+          vote_average: item.vote_average,
+          release_date: item.release_date || item.first_air_date || '',
+          genre_ids: item.genre_ids
+        }))
+        .filter((item: Movie) => item.title !== 'Unknown Title' && item.poster_path);
       
       setSimilarMovies(normalizedResults);
     } catch (error) {
