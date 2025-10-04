@@ -1,7 +1,5 @@
-
 import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { AdBanner } from '@/components/AdBanner';
 import type { Movie } from '@/types/tmdb';
 
 interface MovieGridContentProps {
@@ -60,11 +58,6 @@ export const MovieGridContent = ({
         {movies.map(movie => (
           <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
         ))}
-      </div>
-      
-      {/* AdSense Banner between content and pagination */}
-      <div className="my-8">
-        <AdBanner slot="1571190203" />
       </div>
       
       {/* Pagination */}
