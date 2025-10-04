@@ -71,7 +71,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
           >
             <Download className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Download</span>
-            <span className="sm:hidden">Save</span>
+            <span className="sm:hidden">Download</span>
           </Button>
           
           {/* Telegram button for TV series */}
@@ -83,7 +83,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
             >
               <Send className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Telegram</span>
-              <span className="sm:hidden">TG</span>
+              <span className="sm:hidden">Telegram Download</span>
             </Button>
           )}
           
