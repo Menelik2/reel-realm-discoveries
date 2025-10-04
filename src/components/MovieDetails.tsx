@@ -160,9 +160,6 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             imdbId={movie.imdb_id}
           />
 
-          {/* Ad after movie info */}
-          <AdBanner slot="4392847561" className="my-6" />
-
           <div className="mt-8">
             <ProductionDetails 
               budget={movie.budget || 0}
