@@ -37,8 +37,6 @@ const TopBoxOffice = () => {
                 This weekend's top-grossing movies, updated daily.
             </p>
         </div>
-
-        <AdBanner slot="1571190208" className="mb-8" />
         
         {error && (
            <Alert variant="destructive" className="max-w-2xl mx-auto">
