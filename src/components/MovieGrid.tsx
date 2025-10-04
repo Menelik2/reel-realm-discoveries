@@ -45,12 +45,6 @@ export const MovieGrid = ({
 }: MovieGridProps) => {
   return (
     <section className="container mx-auto px-4 py-6 md:py-8">
-      {/* AdSense Banner */}
-      <AdBanner 
-        slot="1571190209"
-        className="mb-6"
-      />
-
       {!searchQuery ? (
         currentCategory === 'custom' ? (
           <div className="mb-6 md:mb-8">
