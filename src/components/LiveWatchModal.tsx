@@ -63,6 +63,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             frameBorder={0}
             title="Watch Now"
             style={{ border: 'none' }}
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+            referrerPolicy="no-referrer"
           />
         </div>
       </div>
