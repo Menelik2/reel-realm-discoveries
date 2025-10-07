@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { useTelegramUrl } from '@/hooks/useTelegramUrl';
 import type { Movie } from '@/types/tmdb';
@@ -33,16 +32,15 @@ export const LiveWatchModalHeader = ({
       <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4 overflow-hidden">
-            {/* Back Button - No background, just icon and text */}
-            <Button
-              variant="ghost"
-              size="lg"
+            {/* Back Button - only text and icon, no background */}
+            <button
               onClick={onClose}
-              className="flex-shrink-0"
+              className="flex items-center px-0 py-0 bg-transparent shadow-none border-none focus:outline-none flex-shrink-0"
+              type="button"
             >
               <ArrowLeft className="h-5 w-5 sm:mr-2" />
               <span className="hidden sm:inline">Back</span>
-            </Button>
+            </button>
             <div className="flex items-baseline gap-3 overflow-hidden">
               <h1 className="text-xl font-bold truncate" title={title}>
                 {title}
@@ -59,20 +57,19 @@ export const LiveWatchModalHeader = ({
           {content?.media_type === 'tv' && (
             <div className="flex-shrink-0">
               {telegramLoading ? (
-                <Button variant="outline" size="sm" disabled>
+                <button className="flex items-center px-3 py-1 rounded border text-sm text-gray-400 bg-transparent border-gray-300 cursor-not-allowed" disabled>
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Loading...
-                </Button>
+                </button>
               ) : telegramUrl ? (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={handleTelegramClick}
-                  className="bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20"
+                  className="flex items-center px-3 py-1 rounded border text-sm text-blue-400 bg-transparent border-blue-500/20 hover:bg-blue-500/10"
+                  type="button"
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  Telegram
-                </Button>
+                  Download Via Telegram
+                </button>
               ) : null}
             </div>
           )}
