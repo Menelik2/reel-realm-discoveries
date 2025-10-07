@@ -29,16 +29,16 @@ export const LiveWatchModalHeader = ({
   };
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-b">
+    <div className="absolute top-0 left-0 right-0 z-10 bg-background/40 backdrop-blur-lg border-b border-white/20 shadow-lg">
       <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4 overflow-hidden">
             {/* Back Button - No background, just icon and text */}
             <Button
-              variant="ghost" // or "link" if available in your UI library
+              variant="ghost"
               size="lg"
               onClick={onClose}
-              className="flex-shrink-0" // Removed hover:bg-accent and -ml-4
+              className="flex-shrink-0"
             >
               <ArrowLeft className="h-5 w-5 sm:mr-2" />
               <span className="hidden sm:inline">Back</span>
