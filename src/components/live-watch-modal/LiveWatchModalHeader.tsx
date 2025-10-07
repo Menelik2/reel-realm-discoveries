@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { useTelegramUrl } from '@/hooks/useTelegramUrl';
@@ -13,7 +12,14 @@ interface LiveWatchModalHeaderProps {
   content?: Movie;
 }
 
-export const LiveWatchModalHeader = ({ onClose, title, hasSeasons, selectedSeasonNumber, selectedEpisodeNumber, content }: LiveWatchModalHeaderProps) => {
+export const LiveWatchModalHeader = ({
+  onClose,
+  title,
+  hasSeasons,
+  selectedSeasonNumber,
+  selectedEpisodeNumber,
+  content,
+}: LiveWatchModalHeaderProps) => {
   const { data: telegramUrl, isLoading: telegramLoading } = useTelegramUrl(content);
 
   const handleTelegramClick = () => {
@@ -21,12 +27,19 @@ export const LiveWatchModalHeader = ({ onClose, title, hasSeasons, selectedSeaso
       window.open(telegramUrl, '_blank', 'noopener,noreferrer');
     }
   };
+
   return (
     <div className="absolute top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-b">
       <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4 overflow-hidden">
-            <Button variant="ghost" size="lg" onClick={onClose} className="hover:bg-accent -ml-4 flex-shrink-0">
+            {/* Back Button - No background, just icon and text */}
+            <Button
+              variant="ghost" // or "link" if available in your UI library
+              size="lg"
+              onClick={onClose}
+              className="flex-shrink-0" // Removed hover:bg-accent and -ml-4
+            >
               <ArrowLeft className="h-5 w-5 sm:mr-2" />
               <span className="hidden sm:inline">Back</span>
             </Button>
@@ -41,7 +54,7 @@ export const LiveWatchModalHeader = ({ onClose, title, hasSeasons, selectedSeaso
               )}
             </div>
           </div>
-          
+
           {/* Telegram Button - Only show for TV series */}
           {content?.media_type === 'tv' && (
             <div className="flex-shrink-0">
@@ -51,9 +64,9 @@ export const LiveWatchModalHeader = ({ onClose, title, hasSeasons, selectedSeaso
                   Loading...
                 </Button>
               ) : telegramUrl ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleTelegramClick}
                   className="bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20"
                 >
