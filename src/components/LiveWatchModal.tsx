@@ -46,8 +46,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             allow="autoplay; fullscreen"
             allowFullScreen
             title="Watch Now"
-            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups-to-escape-sandbox"
-            referrerPolicy="no-referrer"
           />
         </div>
       </div>
