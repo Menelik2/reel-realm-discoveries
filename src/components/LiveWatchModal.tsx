@@ -25,25 +25,11 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   return (
     <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        zIndex: 1000,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(0,0,0,0.9)",
-      }}
+      className="fixed inset-0 z-[1000] bg-black"
       onClick={onClose}
     >
       <div
-        style={{
-          position: "relative",
-          width: "100vw",
-          height: "100vh",
-          background: "#000",
-          overflow: "hidden",
-        }}
+        className="relative w-full h-full flex flex-col bg-black overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         <LiveWatchModalHeader 
@@ -53,16 +39,13 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           content={content}
         />
         
-        <div style={{ paddingTop: '70px', height: '100%' }}>
+        <div className="flex-1 w-full h-full">
           <iframe
             src={embedUrl}
-            width="100%"
-            height="100%"
+            className="w-full h-full"
             allow="autoplay; fullscreen"
             allowFullScreen
-            frameBorder={0}
             title="Watch Now"
-            style={{ border: 'none' }}
             sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups-to-escape-sandbox"
             referrerPolicy="no-referrer"
           />
