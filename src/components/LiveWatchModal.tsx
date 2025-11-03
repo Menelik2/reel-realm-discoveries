@@ -43,7 +43,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           <iframe
             src={embedUrl}
             className="w-full h-full"
-            allow="autoplay; fullscreen"
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
             allowFullScreen
             title="Watch Now"
           />
