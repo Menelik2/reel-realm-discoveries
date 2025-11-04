@@ -20,6 +20,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   content
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -37,6 +38,27 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     };
   }, []);
 
+  // Auto-request fullscreen when modal opens
+  useEffect(() => {
+    if (open && containerRef.current) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        if (containerRef.current) {
+          const elem = containerRef.current;
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(err => console.log('Fullscreen request failed:', err));
+          } else if ((elem as any).webkitRequestFullscreen) {
+            (elem as any).webkitRequestFullscreen();
+          } else if ((elem as any).mozRequestFullScreen) {
+            (elem as any).mozRequestFullScreen();
+          }
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   if (!open) return null;
 
   const embedUrl = `https://vidsrc.net/embed/${type}/${id}`;
@@ -47,6 +69,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
       onClick={onClose}
     >
       <div
+        ref={containerRef}
         className="relative w-full h-full flex flex-col bg-black overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
