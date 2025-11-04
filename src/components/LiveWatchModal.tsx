@@ -59,6 +59,44 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     }
   }, [open]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Escape - Exit fullscreen or close modal
+      if (e.key === 'Escape') {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          onClose();
+        }
+      }
+      
+      // F - Toggle fullscreen
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        if (containerRef.current) {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            const elem = containerRef.current;
+            if (elem.requestFullscreen) {
+              elem.requestFullscreen().catch(err => console.log('Fullscreen request failed:', err));
+            } else if ((elem as any).webkitRequestFullscreen) {
+              (elem as any).webkitRequestFullscreen();
+            } else if ((elem as any).mozRequestFullScreen) {
+              (elem as any).mozRequestFullScreen();
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const embedUrl = `https://vidsrc.net/embed/${type}/${id}`;
