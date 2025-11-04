@@ -8,4 +8,4 @@ project_id = "suxbqdcnidvdfmkrshem"
   verify_jwt = true
 
 [functions.fetch-series]
-  verify_jwt = false
+  verify_jwt = true

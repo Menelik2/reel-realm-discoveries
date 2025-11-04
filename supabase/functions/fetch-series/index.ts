@@ -5,10 +5,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Input validation patterns
+const TMDB_ID_PATTERN = /^\d{1,10}$/;
+const IMDB_ID_PATTERN = /^tt\d{7,8}$/;
+const MAX_TITLE_LENGTH = 500;
+
 interface FetchSeriesRequest {
   tmdbId: string;
   title: string;
   imdbId?: string;
+}
+
+// Validation function
+function validateInput(tmdbId: string, title: string, imdbId?: string): { valid: boolean; error?: string } {
+  if (!tmdbId || !TMDB_ID_PATTERN.test(tmdbId)) {
+    return { valid: false, error: 'Invalid TMDB ID format' };
+  }
+  
+  if (!title || title.length > MAX_TITLE_LENGTH) {
+    return { valid: false, error: 'Invalid title length' };
+  }
+  
+  if (imdbId && !IMDB_ID_PATTERN.test(imdbId)) {
+    return { valid: false, error: 'Invalid IMDb ID format' };
+  }
+  
+  return { valid: true };
 }
 
 interface SeriesResponse {
@@ -42,11 +64,13 @@ serve(async (req) => {
 
     const { tmdbId, title, imdbId }: FetchSeriesRequest = await req.json();
 
-    if (!tmdbId || !title) {
+    // Validate inputs
+    const validation = validateInput(tmdbId, title, imdbId);
+    if (!validation.valid) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Missing required fields: tmdbId and title' 
+          message: validation.error || 'Invalid input parameters' 
         }),
         { 
           status: 400, 
