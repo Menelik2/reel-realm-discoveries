@@ -12,6 +12,7 @@ export const HeroCarousel = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [trailerKeys, setTrailerKeys] = useState<Record<number, string>>({});
 
   useEffect(() => {
     fetchTrendingMovies();
@@ -47,7 +48,37 @@ export const HeroCarousel = () => {
       
       console.log('Trending movies response:', data);
       // Take only the first 5 movies for the carousel
-      setMovies(data.results?.slice(0, 5) || []);
+      const topMovies = data.results?.slice(0, 5) || [];
+      setMovies(topMovies);
+      
+      // Fetch trailer keys for each movie
+      topMovies.forEach(async (movie: Movie) => {
+        try {
+          const videoUrl = `${TMDB_BASE_URL}/movie/${movie.id}/videos`;
+          const videoResponse = await fetch(videoUrl, {
+            headers: {
+              'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json;charset=utf-8'
+            }
+          });
+          
+          if (videoResponse.ok) {
+            const videoData = await videoResponse.json();
+            const trailer = videoData.results?.find(
+              (video: any) => video.type === 'Trailer' && video.site === 'YouTube'
+            );
+            
+            if (trailer) {
+              setTrailerKeys(prev => ({
+                ...prev,
+                [movie.id]: trailer.key
+              }));
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching trailer for movie ${movie.id}:`, error);
+        }
+      });
     } catch (error) {
       console.error('Error fetching trending movies:', error);
       setMovies([]);
@@ -69,7 +100,14 @@ export const HeroCarousel = () => {
       return date.substring(0, 4);
     }
     return 'N/A';
-  }
+  };
+
+  const handleWatchTrailer = () => {
+    const trailerKey = trailerKeys[currentMovie.id];
+    if (trailerKey) {
+      window.open(`https://www.youtube.com/watch?v=${trailerKey}`, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   if (loading || movies.length === 0) {
     return (
@@ -112,7 +150,12 @@ export const HeroCarousel = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-              <Button size="sm" className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
+              <Button 
+                size="sm" 
+                className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+                onClick={handleWatchTrailer}
+                disabled={!trailerKeys[currentMovie.id]}
+              >
                 <Play className="mr-2 h-3 w-3 md:h-4 md:w-4" />
                 Watch Trailer
               </Button>
