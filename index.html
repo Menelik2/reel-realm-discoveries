@@ -49,47 +49,34 @@
     <meta name="twitter:creator" content="@yeni_movie" />
     <meta name="twitter:image" content="https://dev-yenimovie.pantheonsite.io/wp-content/uploads/2024/12/yeni-movies.jpg" />
 
-    <!-- Preconnect to Google services for faster ad loading -->
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com">
-    <link rel="preconnect" href="https://googleads.g.doubleclick.net">
+    <!-- Preconnect to critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.themoviedb.org" crossorigin>
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+    <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
+    <link rel="dns-prefetch" href="https://googleads.g.doubleclick.net">
     <link rel="dns-prefetch" href="https://www.google.com">
     <link rel="dns-prefetch" href="https://www.gstatic.com">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
-    <!-- Enhanced Google AdSense script with better error handling -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8938310552882401"
-         crossorigin="anonymous"
-         onerror="console.warn('AdSense script failed to load')"></script>
-    
-    <!-- Initialize AdSense properly -->
+    <!-- Deferred Google AdSense for better TTI -->
     <script>
+      // Initialize adsbygoogle array immediately
       window.adsbygoogle = window.adsbygoogle || [];
       
-      // Error handling for AdSense
-      window.addEventListener('error', function(e) {
-        if (e.filename && e.filename.includes('adsbygoogle')) {
-          console.warn('AdSense error detected:', e.message);
-        }
+      // Defer AdSense loading until after page interactive
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var adsScript = document.createElement('script');
+          adsScript.async = true;
+          adsScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8938310552882401';
+          adsScript.crossOrigin = 'anonymous';
+          adsScript.onerror = function() { console.warn('AdSense script failed to load'); };
+          document.head.appendChild(adsScript);
+        }, 1000);
       });
-      
-      // Ensure AdSense is ready
-      function initializeAds() {
-        if (typeof window.adsbygoogle !== 'undefined') {
-          console.log('AdSense initialized successfully');
-        } else {
-          console.warn('AdSense failed to initialize');
-        }
-      }
-      
-      // Initialize when page loads
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeAds);
-      } else {
-        initializeAds();
-      }
     </script>
     <meta property="og:title" content="YENI MOVIE">
   <meta name="twitter:title" content="YENI MOVIE">
