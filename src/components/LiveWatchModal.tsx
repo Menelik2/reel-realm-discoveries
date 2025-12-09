@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { LiveWatchModalHeader } from '@/components/live-watch-modal/LiveWatchModalHeader';
 import type { Movie } from '@/types/tmdb';
 
 interface LiveWatchModalProps {
   open: boolean;
   onClose: () => void;
-  id: string;
+  id: string; // TMDB/IMDB ID (e.g., "tt1234567" or "12345")
   type: "movie" | "tv";
   title?: string;
   content?: Movie;
@@ -19,31 +19,83 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   title = "Watch Now",
   content
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // Close on escape key
-  React.useEffect(() => {
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Auto-request fullscreen when modal opens
+  useEffect(() => {
+    if (open && containerRef.current) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        if (containerRef.current) {
+          const elem = containerRef.current;
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(err => console.log('Fullscreen request failed:', err));
+          } else if ((elem as any).webkitRequestFullscreen) {
+            (elem as any).webkitRequestFullscreen();
+          } else if ((elem as any).mozRequestFullScreen) {
+            (elem as any).mozRequestFullScreen();
+          }
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
     if (!open) return;
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Escape - Exit fullscreen or close modal
       if (e.key === 'Escape') {
-        onClose();
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          onClose();
+        }
+      }
+      
+      // F - Toggle fullscreen
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        if (containerRef.current) {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            const elem = containerRef.current;
+            if (elem.requestFullscreen) {
+              elem.requestFullscreen().catch(err => console.log('Fullscreen request failed:', err));
+            } else if ((elem as any).webkitRequestFullscreen) {
+              (elem as any).webkitRequestFullscreen();
+            } else if ((elem as any).mozRequestFullScreen) {
+              (elem as any).mozRequestFullScreen();
+            }
+          }
+        }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
   }, [open, onClose]);
-
-  // Lock body scroll when modal is open
-  React.useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [open]);
 
   if (!open) return null;
 
@@ -52,29 +104,33 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const embedUrl = `https://vidsrc.net/embed/${type}/${contentId}`;
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-black flex flex-col">
-      <LiveWatchModalHeader 
-        onClose={onClose}
-        title={title}
-        hasSeasons={type === 'tv'}
-        content={content}
-      />
-      
-      <div className="flex-1 relative">
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
+    <div
+      className="fixed inset-0 z-[1000] bg-black"
+      onClick={onClose}
+    >
+      <div
+        ref={containerRef}
+        className="relative w-full h-full flex flex-col bg-black overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {!isFullscreen && (
+          <LiveWatchModalHeader 
+            onClose={onClose}
+            title={title}
+            hasSeasons={type === 'tv'}
+            content={content}
+          />
         )}
-        <iframe
-          src={embedUrl}
-          className="w-full h-full border-0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-          allowFullScreen
-          onLoad={() => setIsLoading(false)}
-          referrerPolicy="origin"
-          title={title}
-        />
+        
+        <div className="flex-1 w-full h-full">
+          <iframe
+            src={embedUrl}
+            className="w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            allowFullScreen
+            title="Watch Now"
+          />
+        </div>
       </div>
     </div>
   );
