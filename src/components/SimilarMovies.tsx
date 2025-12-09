@@ -90,15 +90,29 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick, currentGenre
   const fetchSimilarMovies = async () => {
     setLoading(true);
     try {
-      // Fetch similar, recommended, and discover (by genre) for maximum relevance
+      // Fetch similar, recommended, and discover (by genre) with multiple pages for more results
       const requests = [
+        // Similar - pages 1 and 2
         fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/similar?page=1`, {
           headers: {
             'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
             'Content-Type': 'application/json;charset=utf-8'
           }
         }),
+        fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/similar?page=2`, {
+          headers: {
+            'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json;charset=utf-8'
+          }
+        }),
+        // Recommendations - pages 1 and 2
         fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/recommendations?page=1`, {
+          headers: {
+            'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json;charset=utf-8'
+          }
+        }),
+        fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/recommendations?page=2`, {
           headers: {
             'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
             'Content-Type': 'application/json;charset=utf-8'
@@ -106,11 +120,17 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick, currentGenre
         })
       ];
       
-      // Add discover by genre if we have genres
+      // Add discover by genre if we have genres - multiple pages
       if (currentGenres.length > 0) {
         const genreParam = currentGenres.slice(0, 2).join(','); // Use top 2 genres
         requests.push(
           fetch(`${TMDB_BASE_URL}/discover/${contentType}?with_genres=${genreParam}&sort_by=vote_average.desc&vote_count.gte=100&page=1`, {
+            headers: {
+              'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+              'Content-Type': 'application/json;charset=utf-8'
+            }
+          }),
+          fetch(`${TMDB_BASE_URL}/discover/${contentType}?with_genres=${genreParam}&sort_by=popularity.desc&vote_count.gte=50&page=1`, {
             headers: {
               'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
               'Content-Type': 'application/json;charset=utf-8'
@@ -148,9 +168,9 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick, currentGenre
         }))
         .sort((a, b) => b.similarityScore - a.similarityScore);
       
-      // Normalize and get top 10-15 most similar results
+      // Normalize and get top 30 most similar results
       const normalizedResults: Movie[] = scoredResults
-        .slice(0, 15)
+        .slice(0, 30)
         .map((item: TMDBMovie & { similarityScore: number }) => ({
           id: item.id,
           title: item.title || item.name || 'Unknown Title',
@@ -192,8 +212,8 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick, currentGenre
           </Badge>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
             <div 
               key={i} 
               className="space-y-3 animate-pulse"
@@ -258,7 +278,7 @@ export const SimilarMovies = ({ movieId, contentType, onMovieClick, currentGenre
         </Badge>
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {similarMovies.map((movie, index) => (
           <div 
             key={movie.id} 
