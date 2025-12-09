@@ -125,10 +125,12 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         <div className="flex-1 w-full h-full">
           <iframe
             src={embedUrl}
-            className="w-full h-full"
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
             allowFullScreen
+            referrerPolicy="no-referrer"
             title="Watch Now"
+            style={{ border: 'none' }}
           />
         </div>
       </div>
