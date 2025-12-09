@@ -99,7 +99,9 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   if (!open) return null;
 
-  const embedUrl = `https://vidsrc.net/embed/${type}/${id}`;
+  // Use IMDB ID if available for better compatibility, otherwise use TMDB ID
+  const contentId = (content as any)?.imdb_id || id;
+  const embedUrl = `https://vidsrc.net/embed/${type}/${contentId}`;
 
   return (
     <div
