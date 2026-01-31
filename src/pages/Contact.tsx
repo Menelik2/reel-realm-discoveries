@@ -80,50 +80,7 @@ const Contact = () => {
               <AdBanner slot="1571190205" />
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>
-
-
-​</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-1">
-                      Name
-                    </label>
-                    <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
-                  </div>
-
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-1">
-                      Email
-                    </label>
-                    <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-                  </div>
-
-                  <div>
-                    <label htmlFor="subject" className="block text-sm font-medium mb-1">
-                      Subject
-                    </label>
-                    <Input id="subject" name="subject" type="text" value={formData.subject} onChange={handleChange} required />
-                  </div>
-
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium mb-1">
-                      Message
-                    </label>
-                    <Textarea id="message" name="message" rows={4} value={formData.message} onChange={handleChange} required />
-                  </div>
-
-                  <Button type="submit" className="w-full">
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Message
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+            
           </div>
 
           <div className="mt-12 text-center">
