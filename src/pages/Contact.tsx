@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdBanner } from '@/components/AdBanner';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
-
 const Contact = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [formData, setFormData] = useState({
@@ -17,29 +16,20 @@ const Contact = () => {
     subject: '',
     message: ''
   });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission here
     console.log('Form submitted:', formData);
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
-
-  return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+  return <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
       <div className="bg-background text-foreground transition-colors">
-        <Header 
-          searchQuery=""
-          setSearchQuery={() => {}}
-          isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
-        />
+        <Header searchQuery="" setSearchQuery={() => {}} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
         
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="text-center mb-12">
@@ -71,12 +61,7 @@ const Contact = () => {
                     <Send className="h-5 w-5 text-primary" />
                     <div>
                       <p className="font-medium">Telegram</p>
-                      <a 
-                        href="https://t.me/medebereya" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline"
-                      >
+                      <a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
                         @medebereya
                       </a>
                     </div>
@@ -86,7 +71,7 @@ const Contact = () => {
                     <Globe className="h-5 w-5 text-primary" />
                     <div>
                       <p className="font-medium">Website</p>
-                      <p className="text-sm text-muted-foreground">yenimovie.lovable.app</p>
+                      <p className="text-sm text-muted-foreground">​</p>
                     </div>
                   </div>
                 </CardContent>
@@ -105,56 +90,28 @@ const Contact = () => {
                     <label htmlFor="name" className="block text-sm font-medium mb-1">
                       Name
                     </label>
-                    <Input
-                      id="name"
-                      name="name"
-                      type="text"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
                   </div>
 
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium mb-1">
                       Email
                     </label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
                   </div>
 
                   <div>
                     <label htmlFor="subject" className="block text-sm font-medium mb-1">
                       Subject
                     </label>
-                    <Input
-                      id="subject"
-                      name="subject"
-                      type="text"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="subject" name="subject" type="text" value={formData.subject} onChange={handleChange} required />
                   </div>
 
                   <div>
                     <label htmlFor="message" className="block text-sm font-medium mb-1">
                       Message
                     </label>
-                    <Textarea
-                      id="message"
-                      name="message"
-                      rows={4}
-                      value={formData.message}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Textarea id="message" name="message" rows={4} value={formData.message} onChange={handleChange} required />
                   </div>
 
                   <Button type="submit" className="w-full">
@@ -199,8 +156,6 @@ const Contact = () => {
         <Footer />
         <MobileBottomNav />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Contact;
