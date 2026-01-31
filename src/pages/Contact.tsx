@@ -52,7 +52,7 @@ const Contact = () => {
                   <div className="flex items-center space-x-3">
                     <Mail className="h-5 w-5 text-primary" />
                     <div>
-                      <p className="font-medium">Email</p>
+                      
                       <p className="text-sm text-muted-foreground">contact@yenimovie.com</p>
                     </div>
                   </div>
