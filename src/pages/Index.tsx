@@ -7,6 +7,7 @@ import { MovieGrid } from "@/components/MovieGrid";
 import { HomeCategoryRows } from "@/components/HomeCategoryRows";
 import { SEOMetadata } from "@/components/SEOMetadata";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { DesktopInstallPrompt } from "@/components/DesktopInstallPrompt";
 import { fetchMovies, searchContent } from "@/api/tmdbService";
 
 const getInitialDarkMode = () => {
@@ -196,6 +197,7 @@ const Index = () => {
 
         {!isMobile && <Footer />}
         <MobileBottomNav />
+        <DesktopInstallPrompt />
       </div>
     </div>
   );
