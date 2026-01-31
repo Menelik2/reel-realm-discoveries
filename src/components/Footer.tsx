@@ -1,11 +1,8 @@
-
 import { Link } from 'react-router-dom';
 import { Film } from 'lucide-react';
 import { AdBanner } from './AdBanner';
-
 export const Footer = () => {
-  return (
-    <footer className="bg-muted/50 mt-auto">
+  return <footer className="bg-muted/50 mt-auto">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           <div className="space-y-4">
@@ -64,8 +61,8 @@ export const Footer = () => {
             <h3 className="font-semibold mb-4">Follow Us</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="https://x.com/lovable_dev" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Twitter
+                <a target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" href="https://t.me/medebereya">
+                  ​Telegram 
                 </a>
               </li>
               <li>
@@ -86,12 +83,7 @@ export const Footer = () => {
             <p className="text-sm text-muted-foreground">
               This product uses the TMDB API but is not endorsed or certified by TMDB.
             </p>
-            <a 
-              href="https://www.themoviedb.org/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline"
-            >
+            <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
               The Movie Database
             </a>
           </div>
@@ -104,6 +96,5 @@ export const Footer = () => {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
