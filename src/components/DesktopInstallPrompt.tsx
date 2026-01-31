@@ -32,22 +32,15 @@ export const DesktopInstallPrompt = () => {
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(promptEvent);
       setShowPrompt(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Fallback: show prompt anyway after 3 seconds for browsers that support PWA
-    const timer = setTimeout(() => {
-      if (!deferredPrompt) {
-        setShowPrompt(true);
-      }
-    }, 3000);
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      clearTimeout(timer);
     };
   }, []);
 
