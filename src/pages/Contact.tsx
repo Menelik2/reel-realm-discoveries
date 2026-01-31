@@ -49,13 +49,7 @@ const Contact = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Mail className="h-5 w-5 text-primary" />
-                    <div>
-                      
-                      <p className="text-sm text-muted-foreground">contact@yenimovie.com</p>
-                    </div>
-                  </div>
+                  
                   
                   <div className="flex items-center space-x-3">
                     <Send className="h-5 w-5 text-primary" />
