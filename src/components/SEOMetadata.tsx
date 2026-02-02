@@ -33,8 +33,9 @@ export const SEOMetadata = ({
     ? `${description.substring(0, 140)}... Watch ${title} online on YENI MOVIE.`
     : 'YENI MOVIE - Your destination for discovering and watching the latest movies and TV series online. Find trailers, ratings, cast information, and streaming links.';
   
-  const pageUrl = movieId && contentType ? `https://yenimovie.lovable.app/${contentType}/${movieId}` : 'https://yenimovie.lovable.app/';
-  const ogImage = imageUrl ? `https://image.tmdb.org/t/p/w1280${imageUrl}` : 'https://lovable.dev/opengraph-image-p98pqg.png';
+  const pageUrl = movieId && contentType ? `https://yeni-movies.lovable.app/${contentType}/${movieId}` : 'https://yeni-movies.lovable.app/';
+  // Use w780 for poster images - optimal for social sharing
+  const ogImage = imageUrl ? `https://image.tmdb.org/t/p/w780${imageUrl}` : 'https://yeni-movies.lovable.app/og-image.png';
   
   // Generate enhanced keywords for better SEO
   const keywords = [
@@ -116,7 +117,7 @@ export const SEOMetadata = ({
     "provider": {
       "@type": "Organization",
       "name": "YENI MOVIE",
-      "url": "https://yenimovie.lovable.app"
+      "url": "https://yeni-movies.lovable.app"
     }
   } : null;
 
@@ -134,8 +135,8 @@ export const SEOMetadata = ({
       <meta property="og:description" content={pageDescription} />
       <meta property="og:url" content={pageUrl} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:image:width" content="1280" />
-      <meta property="og:image:height" content="720" />
+      <meta property="og:image:width" content={imageUrl ? "780" : "1200"} />
+      <meta property="og:image:height" content={imageUrl ? "1170" : "630"} />
       <meta property="og:image:alt" content={title || 'YENI MOVIE'} />
       <meta property="og:site_name" content="YENI MOVIE" />
       <meta property="og:locale" content="en_US" />
@@ -188,7 +189,7 @@ export const SEOMetadata = ({
               "@type": "WebSite",
               "name": "YENI MOVIE",
               "alternateName": ["Watch Movies and TV Series Online", "Free Movie Streaming", "Online Cinema"],
-              "url": "https://yenimovie.lovable.app",
+              "url": "https://yeni-movies.lovable.app",
               "description": "Watch the latest movies and TV series online for free. Discover new content, read reviews, and find streaming links. Your ultimate destination for entertainment.",
               "keywords": "free movies, streaming, TV series, online cinema, movie database, watch online",
               "inLanguage": "en-US",
@@ -196,17 +197,17 @@ export const SEOMetadata = ({
                 "@type": "SearchAction",
                 "target": {
                   "@type": "EntryPoint",
-                  "urlTemplate": "https://yenimovie.lovable.app/?search={search_term_string}"
+                  "urlTemplate": "https://yeni-movies.lovable.app/?search={search_term_string}"
                 },
                 "query-input": "required name=search_term_string"
               },
               "publisher": {
                 "@type": "Organization",
                 "name": "YENI MOVIE",
-                "url": "https://yenimovie.lovable.app",
+                "url": "https://yeni-movies.lovable.app",
                 "description": "Leading platform for watching movies and TV series online",
                 "sameAs": [
-                  "https://yenimovie.lovable.app"
+                  "https://yeni-movies.lovable.app"
                 ]
               },
               "mainEntity": {
@@ -221,7 +222,7 @@ export const SEOMetadata = ({
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "YENI MOVIE",
-              "url": "https://yenimovie.lovable.app",
+              "url": "https://yeni-movies.lovable.app",
               "description": "Premier destination for watching movies and TV series online for free",
               "foundingDate": "2024",
               "knowsAbout": [
@@ -250,13 +251,13 @@ export const SEOMetadata = ({
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://yenimovie.lovable.app"
+                "item": "https://yeni-movies.lovable.app"
               },
               {
                 "@type": "ListItem",
                 "position": 2,
                 "name": contentType === 'movie' ? 'Movies' : 'TV Series',
-                "item": `https://yenimovie.lovable.app/${contentType}`
+                "item": `https://yeni-movies.lovable.app/${contentType}`
               },
               {
                 "@type": "ListItem",
