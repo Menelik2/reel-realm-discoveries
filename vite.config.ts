@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'placeholder.svg'],
+      includeAssets: ['favicon.ico', 'placeholder.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'YENI MOVIE',
         short_name: 'YENI MOVIE',
@@ -26,9 +26,16 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         icons: [
           {
-            src: 'favicon.ico',
-            sizes: '64x64 32x32 24x24 16x16',
-            type: 'image/x-icon'
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       },
