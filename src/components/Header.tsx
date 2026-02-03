@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Search, Menu, X, Moon, Sun } from 'lucide-react';
+import { Search, Menu, X, Moon, Sun, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface HeaderProps {
   searchQuery: string;
@@ -14,6 +14,7 @@ interface HeaderProps {
 
 export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { canInstall, isInstalled, install } = usePWAInstall();
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
@@ -49,8 +50,20 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
             </div>
           </div>
 
-          {/* Theme Toggle & Mobile Menu */}
+          {/* Install, Theme Toggle & Mobile Menu */}
           <div className="flex items-center space-x-2">
+            {canInstall && !isInstalled && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={install}
+                className="hidden md:flex items-center gap-2 text-xs font-medium"
+              >
+                <Download className="h-3 w-3" />
+                <span>Install</span>
+              </Button>
+            )}
+            
             <Button
               variant="outline"
               size="sm"
