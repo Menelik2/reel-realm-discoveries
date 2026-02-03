@@ -5,7 +5,7 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 export const DesktopInstallPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-  const { canInstall, isInstalled, install } = usePWAInstall();
+  const { canInstall, isInstalled, isSupported, install } = usePWAInstall();
 
   useEffect(() => {
     // Only show on desktop (width >= 768px)
@@ -21,15 +21,31 @@ export const DesktopInstallPrompt = () => {
       return;
     }
 
-    // Show prompt after a short delay when canInstall becomes true
-    if (canInstall && !isInstalled) {
+    // Show prompt after a short delay when supported and not installed
+    if (isSupported && !isInstalled) {
       const timer = setTimeout(() => setShowPrompt(true), 3000);
       return () => clearTimeout(timer);
     }
-  }, [canInstall, isInstalled]);
+  }, [isSupported, isInstalled]);
 
   const handleInstall = async () => {
-    await install();
+    if (canInstall) {
+      await install();
+    } else {
+      // Show manual instructions
+      const isChrome = /Chrome/.test(navigator.userAgent);
+      const isEdge = /Edg/.test(navigator.userAgent);
+      
+      let message = 'To install this app:\n\n';
+      if (isChrome) {
+        message += '1. Click the menu (⋮) in the top right\n2. Select "Install YENI MOVIE..."';
+      } else if (isEdge) {
+        message += '1. Click the menu (⋯) in the top right\n2. Select "Apps" → "Install this site as an app"';
+      } else {
+        message += '1. Click the browser menu\n2. Look for "Install" or "Add to Home Screen"';
+      }
+      alert(message);
+    }
     setShowPrompt(false);
   };
 
@@ -38,7 +54,7 @@ export const DesktopInstallPrompt = () => {
     localStorage.setItem('pwaInstallDismissed', Date.now().toString());
   };
 
-  if (!showPrompt || !canInstall || isInstalled) return null;
+  if (!showPrompt || !isSupported || isInstalled) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 hidden md:block animate-in slide-in-from-bottom-4 duration-300">

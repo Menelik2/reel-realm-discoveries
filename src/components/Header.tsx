@@ -14,7 +14,30 @@ interface HeaderProps {
 
 export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { canInstall, isInstalled, install } = usePWAInstall();
+  const { canInstall, isInstalled, isSupported, install } = usePWAInstall();
+
+  const handleInstallClick = async () => {
+    if (canInstall) {
+      await install();
+    } else {
+      // Show manual install instructions
+      const isChrome = /Chrome/.test(navigator.userAgent);
+      const isEdge = /Edg/.test(navigator.userAgent);
+      
+      let message = 'To install this app:\n\n';
+      if (isChrome) {
+        message += '1. Click the menu (⋮) in the top right\n2. Select "Install YENI MOVIE..."';
+      } else if (isEdge) {
+        message += '1. Click the menu (⋯) in the top right\n2. Select "Apps" → "Install this site as an app"';
+      } else {
+        message += '1. Click the browser menu\n2. Look for "Install" or "Add to Home Screen"';
+      }
+      alert(message);
+    }
+  };
+
+  // Show install button if: supported browser AND not installed
+  const showInstallButton = isSupported && !isInstalled;
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
@@ -52,11 +75,11 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
           {/* Install, Theme Toggle & Mobile Menu */}
           <div className="flex items-center space-x-2">
-            {canInstall && !isInstalled && (
+            {showInstallButton && (
               <Button
                 variant="default"
                 size="sm"
-                onClick={install}
+                onClick={handleInstallClick}
                 className="hidden md:flex items-center gap-2 text-xs font-medium"
               >
                 <Download className="h-3 w-3" />
