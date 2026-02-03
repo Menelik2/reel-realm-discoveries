@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 export const DesktopInstallPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const { canInstall, isInstalled, install } = usePWAInstall();
 
   useEffect(() => {
     // Only show on desktop (width >= 768px)
@@ -25,37 +21,16 @@ export const DesktopInstallPrompt = () => {
       return;
     }
 
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      return;
+    // Show prompt after a short delay when canInstall becomes true
+    if (canInstall && !isInstalled) {
+      const timer = setTimeout(() => setShowPrompt(true), 3000);
+      return () => clearTimeout(timer);
     }
-
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      const promptEvent = e as BeforeInstallPromptEvent;
-      setDeferredPrompt(promptEvent);
-      setShowPrompt(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
+  }, [canInstall, isInstalled]);
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setShowPrompt(false);
-      }
-      setDeferredPrompt(null);
-    } else {
-      // Show manual instructions for browsers without beforeinstallprompt
-      alert('To install: Click the browser menu (⋮) and select "Install app" or "Add to Home Screen"');
-    }
+    await install();
+    setShowPrompt(false);
   };
 
   const handleDismiss = () => {
@@ -63,7 +38,7 @@ export const DesktopInstallPrompt = () => {
     localStorage.setItem('pwaInstallDismissed', Date.now().toString());
   };
 
-  if (!showPrompt) return null;
+  if (!showPrompt || !canInstall || isInstalled) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 hidden md:block animate-in slide-in-from-bottom-4 duration-300">
