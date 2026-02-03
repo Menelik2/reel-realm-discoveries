@@ -17,7 +17,23 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
   const { canInstall, isInstalled, isSupported, install } = usePWAInstall();
 
   const handleInstallClick = async () => {
-    await install();
+    const success = await install();
+    
+    // If native prompt wasn't available, show manual instructions
+    if (!success) {
+      const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg/.test(navigator.userAgent);
+      const isEdge = /Edg/.test(navigator.userAgent);
+      
+      let message = 'To install this app:\n\n';
+      if (isChrome) {
+        message += '1. Click the menu (⋮) in the top right corner\n2. Select "Install YENI MOVIE..." or "Add to Home screen"';
+      } else if (isEdge) {
+        message += '1. Click the menu (⋯) in the top right\n2. Select "Apps" → "Install this site as an app"';
+      } else {
+        message += '1. Click the browser menu\n2. Look for "Install" or "Add to Home Screen"';
+      }
+      alert(message);
+    }
   };
 
   // Show install button if: supported browser AND not installed
