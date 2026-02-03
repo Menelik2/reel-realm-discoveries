@@ -8,6 +8,7 @@ interface BeforeInstallPromptEvent extends Event {
 interface PWAInstallState {
   canInstall: boolean;
   isInstalled: boolean;
+  isSupported: boolean;
   install: () => Promise<void>;
 }
 
@@ -19,9 +20,19 @@ const notifyListeners = () => {
   listeners.forEach(listener => listener());
 };
 
+// Check if browser supports PWA installation
+const isPWASupported = (): boolean => {
+  const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg/.test(navigator.userAgent);
+  const isEdge = /Edg/.test(navigator.userAgent);
+  const isSamsung = /SamsungBrowser/.test(navigator.userAgent);
+  const isOpera = /OPR/.test(navigator.userAgent);
+  return isChrome || isEdge || isSamsung || isOpera;
+};
+
 export const usePWAInstall = (): PWAInstallState => {
   const [canInstall, setCanInstall] = useState(!!globalDeferredPrompt);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isSupported] = useState(isPWASupported());
 
   useEffect(() => {
     // Check if already installed
@@ -72,5 +83,5 @@ export const usePWAInstall = (): PWAInstallState => {
     }
   }, []);
 
-  return { canInstall, isInstalled, install };
+  return { canInstall, isInstalled, isSupported, install };
 };
