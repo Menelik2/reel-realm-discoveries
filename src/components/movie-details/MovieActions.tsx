@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Heart, Globe, Download, Eye, Send } from 'lucide-react';
+import { Play, Heart, Globe, Download, Eye, Send, Share2 } from 'lucide-react';
 import LiveWatchModal from '@/components/LiveWatchModal';
 import DownloadModal from '@/components/DownloadModal';
 import { useTelegramUrl } from '@/hooks/useTelegramUrl';
+import { toast } from 'sonner';
+
+const SUPABASE_URL = "https://suxbqdcnidvdfmkrshem.supabase.co";
 
 interface MovieActionsProps {
   trailerUrl: string | null;
@@ -30,6 +33,35 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
 
   const handleDownload = () => {
     setIsDownloadOpen(true);
+  };
+
+  const handleShare = async () => {
+    // Generate shareable URL with OG meta tags
+    const shareUrl = `${SUPABASE_URL}/functions/v1/og-image/${contentType}/${movieId}`;
+    
+    // Try native share API first (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: `Watch ${title} on YENI MOVIE`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // User cancelled or share failed, fall back to clipboard
+      }
+    }
+    
+    // Fall back to copying to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied to clipboard!', {
+        description: 'Share this link to show the movie poster on social media',
+      });
+    } catch (err) {
+      toast.error('Failed to copy link');
+    }
   };
 
   return (
@@ -86,6 +118,17 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
               <span className="sm:hidden">Telegram Download</span>
             </Button>
           )}
+          
+          {/* Share button */}
+          <Button 
+            variant="outline" 
+            className="flex-1 sm:flex-none"
+            onClick={handleShare}
+          >
+            <Share2 className="mr-2 h-4 w-4" />
+            <span className="hidden sm:inline">Share</span>
+            <span className="sm:hidden">Share</span>
+          </Button>
           
           {/* Official button - use homepage if available, otherwise TMDB page */}
           <Button variant="outline" asChild className="flex-1 sm:flex-none">
