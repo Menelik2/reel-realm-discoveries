@@ -139,7 +139,7 @@ serve(async (req) => {
     }
 
     // App URL for links
-    const APP_URL = 'https://yeni-movies.lovable.app';
+    const APP_URL = 'https://yeni-movie.vercel.app';
 
     console.log('Fetching trending content from TMDB...');
     const trendingContent = await fetchTrendingContent();
