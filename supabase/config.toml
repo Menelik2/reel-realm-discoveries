@@ -1,11 +1,16 @@
-
 project_id = "suxbqdcnidvdfmkrshem"
 
 [functions.create-payment-session]
-  verify_jwt = true
+verify_jwt = true
 
 [functions.verify-payment-session]
-  verify_jwt = true
+verify_jwt = true
 
 [functions.fetch-series]
-  verify_jwt = true
+verify_jwt = true
+
+[functions.og-image]
+verify_jwt = false
+
+[functions.telegram-auto-post]
+verify_jwt = false
