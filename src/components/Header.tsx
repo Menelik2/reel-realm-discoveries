@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   searchQuery: string;
@@ -19,20 +20,28 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
   const handleInstallClick = async () => {
     const success = await install();
     
-    // If native prompt wasn't available, show manual instructions
-    if (!success) {
-      const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg/.test(navigator.userAgent);
-      const isEdge = /Edg/.test(navigator.userAgent);
-      
-      let message = 'To install this app:\n\n';
-      if (isChrome) {
-        message += '1. Click the menu (⋮) in the top right corner\n2. Select "Install YENI MOVIE..." or "Add to Home screen"';
-      } else if (isEdge) {
-        message += '1. Click the menu (⋯) in the top right\n2. Select "Apps" → "Install this site as an app"';
-      } else {
-        message += '1. Click the browser menu\n2. Look for "Install" or "Add to Home Screen"';
-      }
-      alert(message);
+    if (success) {
+      toast.success('App installed successfully!');
+      return;
+    }
+    
+    // If native prompt wasn't available, show helpful toast instructions
+    const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg/.test(navigator.userAgent);
+    const isEdge = /Edg/.test(navigator.userAgent);
+    
+    if (isChrome) {
+      toast.info('To install: Click the ⋮ menu → "Install YENI MOVIE..."', {
+        duration: 8000,
+        description: 'Or look for the install icon in the address bar',
+      });
+    } else if (isEdge) {
+      toast.info('To install: Click the ⋯ menu → Apps → "Install this site as an app"', {
+        duration: 8000,
+      });
+    } else {
+      toast.info('To install: Open browser menu and look for "Install" or "Add to Home Screen"', {
+        duration: 8000,
+      });
     }
   };
 
