@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { toast } from 'sonner';
 
 export const DesktopInstallPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
@@ -29,22 +30,32 @@ export const DesktopInstallPrompt = () => {
   }, [isSupported, isInstalled]);
 
   const handleInstall = async () => {
-    if (canInstall) {
-      await install();
+    // Try native install prompt first
+    const installed = await install();
+    
+    if (installed) {
+      toast.success('App installed successfully!');
+      setShowPrompt(false);
+      return;
+    }
+    
+    // If native prompt didn't work, show helpful instructions
+    const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+    const isEdge = /Edg/.test(navigator.userAgent);
+    
+    if (isChrome) {
+      toast.info('To install: Click the ⋮ menu → "Install YENI MOVIE..."', {
+        duration: 8000,
+        description: 'Or look for the install icon in the address bar',
+      });
+    } else if (isEdge) {
+      toast.info('To install: Click the ⋯ menu → Apps → "Install this site as an app"', {
+        duration: 8000,
+      });
     } else {
-      // Show manual instructions
-      const isChrome = /Chrome/.test(navigator.userAgent);
-      const isEdge = /Edg/.test(navigator.userAgent);
-      
-      let message = 'To install this app:\n\n';
-      if (isChrome) {
-        message += '1. Click the menu (⋮) in the top right\n2. Select "Install YENI MOVIE..."';
-      } else if (isEdge) {
-        message += '1. Click the menu (⋯) in the top right\n2. Select "Apps" → "Install this site as an app"';
-      } else {
-        message += '1. Click the browser menu\n2. Look for "Install" or "Add to Home Screen"';
-      }
-      alert(message);
+      toast.info('To install: Open browser menu and look for "Install" or "Add to Home Screen"', {
+        duration: 8000,
+      });
     }
     setShowPrompt(false);
   };
