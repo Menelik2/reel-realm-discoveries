@@ -36,8 +36,8 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   };
 
   const handleShare = async () => {
-    // Generate shareable URL with OG meta tags
-    const shareUrl = `${SUPABASE_URL}/functions/v1/og-image/${contentType}/${movieId}`;
+    // Generate shareable URL for the movie/series
+    const shareUrl = `https://yeni-movie.vercel.app/${contentType}/${movieId}`;
     
     // Try native share API first (mobile)
     if (navigator.share) {
