@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { Search, Menu, X, Moon, Sun, Download } from 'lucide-react';
+import { Search, Menu, X, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { toast } from 'sonner';
 
 interface HeaderProps {
   searchQuery: string;
@@ -15,38 +13,6 @@ interface HeaderProps {
 
 export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { canInstall, isInstalled, isSupported, install } = usePWAInstall();
-
-  const handleInstallClick = async () => {
-    const success = await install();
-    
-    if (success) {
-      toast.success('App installed successfully!');
-      return;
-    }
-    
-    // If native prompt wasn't available, show helpful toast instructions
-    const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg/.test(navigator.userAgent);
-    const isEdge = /Edg/.test(navigator.userAgent);
-    
-    if (isChrome) {
-      toast.info('To install: Click the ⋮ menu → "Install YENI MOVIE..."', {
-        duration: 8000,
-        description: 'Or look for the install icon in the address bar',
-      });
-    } else if (isEdge) {
-      toast.info('To install: Click the ⋯ menu → Apps → "Install this site as an app"', {
-        duration: 8000,
-      });
-    } else {
-      toast.info('To install: Open browser menu and look for "Install" or "Add to Home Screen"', {
-        duration: 8000,
-      });
-    }
-  };
-
-  // Show install button if: supported browser AND not installed
-  const showInstallButton = isSupported && !isInstalled;
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
@@ -84,18 +50,6 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
           {/* Install, Theme Toggle & Mobile Menu */}
           <div className="flex items-center space-x-2">
-            {showInstallButton && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleInstallClick}
-                className="hidden md:flex items-center gap-2 text-xs font-medium"
-              >
-                <Download className="h-3 w-3" />
-                <span>Install</span>
-              </Button>
-            )}
-            
             <Button
               variant="outline"
               size="sm"
