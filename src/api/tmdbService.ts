@@ -115,7 +115,7 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
         url = `${TMDB_BASE_URL}/${contentType}/${apiCategory}`;
     }
 
-    params.append('_t', Date.now().toString());
+    // Removed cache-busting timestamp - react-query handles cache invalidation
     const finalUrl = `${url}?${params.toString()}`;
     const data = await fetchFromTMDB(finalUrl);
 
