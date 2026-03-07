@@ -127,7 +127,7 @@ export const HeroCarousel = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-gray-800 transition-all duration-1000"
         style={{
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(https://image.tmdb.org/t/p/original${currentMovie.backdrop_path})`
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(https://image.tmdb.org/t/p/w1280${currentMovie.backdrop_path})`
         }}
       />
       

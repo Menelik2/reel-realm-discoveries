@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useMovieData } from '@/hooks/useMovieData';
+import { useLazyVisible } from '@/hooks/useLazyVisible';
 import { MovieCard } from '@/components/MovieCard';
 import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Movie } from '@/types/tmdb';
 
 interface HomeCategoryRowsProps {
   contentType: 'movie' | 'tv' | 'all';
@@ -39,7 +39,6 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 
   return (
     <div className="space-y-8">
-      {/* Content Type Toggle & Genre Filter */}
       <div className="container mx-auto px-4 pt-6">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <ContentTypeToggle 
@@ -66,36 +65,64 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
         </div>
       </div>
 
-      {/* Ad Banner */}
       <div className="container mx-auto px-4">
         <AdBanner slot="1571190202" />
       </div>
 
       {categories.map((category, index) => (
-        <CategorySection 
+        <LazyCategorySection 
           key={category.key}
           category={category}
           contentType={contentType}
           selectedGenre={selectedGenre}
           onMovieClick={onMovieClick}
-          showAdAfter={index === 1} // Show ad after second category
+          showAdAfter={index === 1}
           sectionIndex={index}
+          eager={index < 2} // Only first 2 categories load immediately
         />
       ))}
     </div>
   );
 };
 
-interface CategorySectionProps {
+interface LazyCategorySectionProps {
   category: { key: string; label: string };
   contentType: 'movie' | 'tv' | 'all';
   selectedGenre: string;
   onMovieClick: (movieId: number) => void;
   showAdAfter?: boolean;
   sectionIndex: number;
+  eager?: boolean;
 }
 
-const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, showAdAfter, sectionIndex }: CategorySectionProps) => {
+const LazyCategorySection = memo(({ eager, ...props }: LazyCategorySectionProps) => {
+  const { ref, isVisible } = useLazyVisible('400px');
+
+  if (eager) {
+    return <CategorySection {...props} />;
+  }
+
+  return (
+    <div ref={ref}>
+      {isVisible ? (
+        <CategorySection {...props} />
+      ) : (
+        <section className="py-6 md:py-8 container mx-auto px-4">
+          <h2 className="text-2xl font-bold mb-4">{props.category.label}</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="aspect-[2/3] bg-muted rounded-lg" />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+});
+
+LazyCategorySection.displayName = 'LazyCategorySection';
+
+const CategorySection = memo(({ category, contentType, selectedGenre, onMovieClick, showAdAfter, sectionIndex }: Omit<LazyCategorySectionProps, 'eager'>) => {
   const { movies, loading } = useMovieData({
     searchQuery: '',
     selectedGenre,
@@ -112,7 +139,7 @@ const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, s
         <section className="py-6 md:py-8 container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-4">{category.label}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
             ))}
           </div>
@@ -155,4 +182,6 @@ const CategorySection = ({ category, contentType, selectedGenre, onMovieClick, s
       )}
     </>
   );
-};
+});
+
+CategorySection.displayName = 'CategorySection';

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Movie } from '@/types/tmdb';
 
@@ -7,28 +8,26 @@ interface MovieCardProps {
   fullPosterUrl?: string;
 }
 
-export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps) => {
-  
+const getReleaseYear = (date?: string) => {
+  if (date && date.length >= 4) {
+    return date.substring(0, 4);
+  }
+  return 'N/A';
+};
+
+export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCardProps) => {
   const posterUrl = fullPosterUrl
     ? fullPosterUrl
     : movie.poster_path 
-    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '/placeholder.svg';
 
   const handleCardClick = () => {
     if (onMovieClick) {
-      // Pass the media_type from the movie object for correct navigation
       const mediaType = movie.media_type || 'movie';
       onMovieClick(movie.id, mediaType);
     }
   };
-
-  const getReleaseYear = (date?: string) => {
-    if (date && date.length >= 4) {
-      return date.substring(0, 4);
-    }
-    return 'N/A';
-  }
 
   return (
     <Card className="group hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer" onClick={handleCardClick}>
@@ -37,6 +36,8 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
           <img
             src={posterUrl}
             alt={movie.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
@@ -61,4 +62,6 @@ export const MovieCard = ({ movie, onMovieClick, fullPosterUrl }: MovieCardProps
       </CardContent>
     </Card>
   );
-};
+});
+
+MovieCard.displayName = 'MovieCard';

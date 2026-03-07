@@ -115,7 +115,7 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
         url = `${TMDB_BASE_URL}/${contentType}/${apiCategory}`;
     }
 
-    params.append('_t', Date.now().toString());
+    // Removed cache-busting timestamp - react-query handles cache invalidation
     const finalUrl = `${url}?${params.toString()}`;
     const data = await fetchFromTMDB(finalUrl);
 
@@ -135,7 +135,6 @@ export const searchContent = async ({ searchQuery, currentPage, contentType }: S
     const params = new URLSearchParams();
     params.append('query', searchQuery);
     params.append('page', currentPage.toString());
-    params.append('_t', Date.now().toString());
 
     // Use specific search endpoint if contentType is provided, otherwise search all
     const searchEndpoint = (contentType && contentType !== 'all') ? `search/${contentType}` : 'search/multi';
