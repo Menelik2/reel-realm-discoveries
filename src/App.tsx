@@ -46,25 +46,27 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/movie/:id" element={<Movie />} />
-            <Route path="/tv/:id" element={<Movie />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/top-box-office" element={<TopBoxOffice />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-            <Route path="/admin" element={
-              <AdminRoute>
-                <Admin />
-              </AdminRoute>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/movie/:id" element={<Movie />} />
+              <Route path="/tv/:id" element={<Movie />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/top-box-office" element={<TopBoxOffice />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+              <Route path="/admin" element={
+                <AdminRoute>
+                  <Admin />
+                </AdminRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
