@@ -135,7 +135,6 @@ export const searchContent = async ({ searchQuery, currentPage, contentType }: S
     const params = new URLSearchParams();
     params.append('query', searchQuery);
     params.append('page', currentPage.toString());
-    params.append('_t', Date.now().toString());
 
     // Use specific search endpoint if contentType is provided, otherwise search all
     const searchEndpoint = (contentType && contentType !== 'all') ? `search/${contentType}` : 'search/multi';
