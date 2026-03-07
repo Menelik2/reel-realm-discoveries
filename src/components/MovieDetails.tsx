@@ -182,6 +182,7 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
                 currentGenres={movie.genres?.map(g => g.id) || []}
                 currentRating={movie.vote_average}
                 currentYear={releaseDate.split('-')[0] || ''}
+                currentOverview={movie.overview || ''}
               />
             </div>
           )}
