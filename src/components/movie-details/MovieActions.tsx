@@ -69,11 +69,11 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         {/* Primary action - Live Watch */}
         <Button 
           onClick={() => setIsLiveWatchOpen(true)}
-          size="default"
-          className="w-full sm:w-auto"
+          size="lg"
+          className="w-full bg-[hsl(348,83%,55%)] hover:bg-[hsl(348,83%,48%)] text-white rounded-xl py-6 text-lg font-bold shadow-lg shadow-[hsl(348,83%,55%)]/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
-          <Eye className="mr-2 h-4 w-4" />
-          <span className="font-semibold">Watch Now</span>
+          <Eye className="mr-3 h-5 w-5" />
+          Watch Now
         </Button>
         
         {/* Secondary actions */}
