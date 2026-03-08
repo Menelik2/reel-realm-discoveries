@@ -16,7 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    // Fetch content details from TMDB using bearer token
     const tmdbUrl = `https://api.themoviedb.org/3/${contentType}/${id}`;
     
     const response = await fetch(tmdbUrl, {
@@ -33,45 +32,58 @@ serve(async (req) => {
     const data = await response.json();
     
     const title = data.title || data.name || "YENI MOVIE";
-    const description = data.overview 
-      ? `${data.overview.substring(0, 140)}... Watch ${title} online on YENI MOVIE.`
-      : `Watch ${title} online on YENI MOVIE - Your destination for movies and TV series.`;
+    const year = (data.release_date || data.first_air_date || '').substring(0, 4);
+    const rating = data.vote_average ? data.vote_average.toFixed(1) : '';
+    const genres = (data.genres || []).map((g: any) => g.name).slice(0, 3).join(', ');
     
-    // Use w780 for poster
+    const description = data.overview 
+      ? `${data.overview.substring(0, 150)}...`
+      : `Watch ${title} online on YENI MOVIE.`;
+    
+    const metaDescription = `⭐ ${rating}/10 ${genres ? `• ${genres}` : ''} ${year ? `• ${year}` : ''} — ${description}`;
+    
+    // Use w780 poster for portrait image, w1280 backdrop for landscape
     const posterImage = data.poster_path 
       ? `https://image.tmdb.org/t/p/w780${data.poster_path}`
       : `${SITE_URL}/og-image.png`;
     
+    // Use backdrop for twitter summary_large_image (landscape)
+    const backdropImage = data.backdrop_path
+      ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}`
+      : posterImage;
+    
     const pageUrl = `${SITE_URL}/${contentType}/${id}`;
-    const pageTitle = `${title} - Watch ${contentType === 'tv' ? 'TV Series' : 'Movie'} Online | YENI MOVIE`;
+    const pageTitle = `${title}${year ? ` (${year})` : ''} — Watch on YENI MOVIE`;
 
-    // Return HTML with proper OG meta tags
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(pageTitle)}</title>
-  <meta name="description" content="${escapeHtml(description)}">
+  <meta name="description" content="${escapeHtml(metaDescription)}">
   
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph / Facebook / WhatsApp / Telegram -->
   <meta property="og:type" content="video.movie">
   <meta property="og:url" content="${pageUrl}">
   <meta property="og:title" content="${escapeHtml(pageTitle)}">
-  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:description" content="${escapeHtml(metaDescription)}">
   <meta property="og:image" content="${posterImage}">
   <meta property="og:image:width" content="780">
   <meta property="og:image:height" content="1170">
-  <meta property="og:image:alt" content="${escapeHtml(title)}">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="${escapeHtml(title)} poster">
   <meta property="og:site_name" content="YENI MOVIE">
+  <meta property="og:locale" content="en_US">
   
-  <!-- Twitter -->
+  <!-- Twitter / X — use backdrop for landscape preview -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="${pageUrl}">
   <meta name="twitter:title" content="${escapeHtml(pageTitle)}">
-  <meta name="twitter:description" content="${escapeHtml(description)}">
-  <meta name="twitter:image" content="${posterImage}">
+  <meta name="twitter:description" content="${escapeHtml(metaDescription)}">
+  <meta name="twitter:image" content="${backdropImage}">
   <meta name="twitter:image:alt" content="${escapeHtml(title)}">
+  <meta name="twitter:site" content="@yenimovie">
   
   <!-- Redirect to actual page -->
   <meta http-equiv="refresh" content="0;url=${pageUrl}">
@@ -85,12 +97,11 @@ serve(async (req) => {
     return new Response(html, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "public, max-age=86400, s-maxage=86400",
       },
     });
   } catch (error) {
     console.error("Error:", error);
-    // Fallback redirect
     return new Response(`<meta http-equiv="refresh" content="0;url=${SITE_URL}">`, {
       headers: { "Content-Type": "text/html" },
     });
