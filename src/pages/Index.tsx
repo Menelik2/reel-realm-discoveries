@@ -9,6 +9,7 @@ import { SEOMetadata } from "@/components/SEOMetadata";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 import { fetchMovies, searchContent } from "@/api/tmdbService";
+import { useMovieData } from "@/hooks/useMovieData";
 
 const getInitialDarkMode = () => {
   if (typeof window !== "undefined") {
@@ -17,7 +18,7 @@ const getInitialDarkMode = () => {
     return window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
-  return false; // Default to light mode
+  return false;
 };
 
 const Index = () => {
@@ -32,10 +33,7 @@ const Index = () => {
     if (typeParam === 'movie' || typeParam === 'tv') return typeParam;
     return 'all';
   });
-  const [movies, setMovies] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [currentCategory, setCurrentCategory] = useState<string>("popular");
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
