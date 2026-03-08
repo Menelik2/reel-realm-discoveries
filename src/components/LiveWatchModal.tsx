@@ -146,14 +146,14 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
         {/* Source selector */}
         {!isFullscreen && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-black/80 border-b border-white/10 overflow-x-auto">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Source:</span>
+          <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-background/95 border-b border-border overflow-x-auto">
+            <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">Source:</span>
             {SOURCES.map(source => (
               <Button
                 key={source.url}
-                variant={selectedSource === source.url ? 'default' : 'secondary'}
+                variant={selectedSource === source.url ? 'default' : 'outline'}
                 size="sm"
-                className="text-xs h-7 px-3 whitespace-nowrap"
+                className="text-xs h-7 px-3 whitespace-nowrap flex-shrink-0"
                 onClick={(e) => { e.stopPropagation(); handleSourceChange(source.url); }}
               >
                 {source.name}
@@ -162,7 +162,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           </div>
         )}
         
-        <div className="flex-1 w-full h-full relative">
+        <div className="flex-1 w-full relative min-h-0">
           <iframe
             key={embedUrl}
             src={embedUrl}
