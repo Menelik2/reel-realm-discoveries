@@ -33,21 +33,18 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
       return null;
     };
 
-    // Block beforeunload/unload navigation attempts
-    const blockNavigation = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', blockNavigation);
+    // Prevent body scroll while modal is open
+    document.body.style.overflow = 'hidden';
 
     return () => {
       window.open = originalOpen;
-      window.removeEventListener('beforeunload', blockNavigation);
+      document.body.style.overflow = '';
     };
   }, [open]);
 
-  // Click shield: absorbs first click (which is usually an ad trigger), then reveals iframe
-  const handleShieldClick = useCallback(() => {
+  // Click shield: absorbs first click (ad trigger), then reveals iframe
+  const handleShieldClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     setShowClickShield(false);
   }, []);
 
@@ -72,22 +69,15 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     };
   }, []);
 
-  // Auto-request fullscreen when modal opens
-  useEffect(() => {
-    if (open && containerRef.current) {
-      const timer = setTimeout(() => {
-        if (containerRef.current) {
-          const elem = containerRef.current;
-          if (elem.requestFullscreen) {
-            elem.requestFullscreen().catch(() => {});
-          } else if ((elem as any).webkitRequestFullscreen) {
-            (elem as any).webkitRequestFullscreen();
-          }
-        }
-      }, 500);
-      return () => clearTimeout(timer);
+  // Toggle fullscreen helper
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      containerRef.current.requestFullscreen?.().catch(() => {});
     }
-  }, [open]);
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -95,6 +85,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
         if (document.fullscreenElement) {
           document.exitFullscreen();
         } else {
@@ -103,19 +95,13 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
       }
       if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
-        if (containerRef.current) {
-          if (document.fullscreenElement) {
-            document.exitFullscreen();
-          } else {
-            containerRef.current.requestFullscreen?.().catch(() => {});
-          }
-        }
+        toggleFullscreen();
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [open, onClose]);
+    window.addEventListener('keydown', handleKeyPress, true);
+    return () => window.removeEventListener('keydown', handleKeyPress, true);
+  }, [open, onClose, toggleFullscreen]);
 
   if (!open) return null;
 
@@ -124,13 +110,18 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[1000] bg-black"
-      onClick={onClose}
+      className="fixed inset-0 z-[9999] bg-black"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       <div
         ref={containerRef}
         className="relative w-full h-full flex flex-col bg-black overflow-hidden"
         onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
       >
         {!isFullscreen && (
           <LiveWatchModalHeader 
@@ -158,6 +149,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             <div 
               className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/60 backdrop-blur-sm transition-opacity"
               onClick={handleShieldClick}
+              onMouseDown={e => e.stopPropagation()}
             >
               <div className="flex flex-col items-center gap-3 text-white animate-pulse">
                 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="text-primary">
@@ -168,6 +160,19 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* Fullscreen toggle button */}
+        {!isFullscreen && (
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+            className="absolute bottom-4 right-4 z-20 bg-white/20 hover:bg-white/30 text-white rounded-lg p-2 backdrop-blur-sm transition-colors"
+            title="Toggle Fullscreen (F)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );
