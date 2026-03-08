@@ -28,7 +28,7 @@ export const LiveWatchModalHeader = ({
   };
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-10 bg-background/40 backdrop-blur-lg border-b border-white/20 shadow-lg">
+    <div className="flex-shrink-0 z-10 bg-background/90 backdrop-blur-lg border-b border-border shadow-lg">
       <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4 overflow-hidden">
