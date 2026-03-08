@@ -7,12 +7,21 @@ serve(async (req) => {
   const url = new URL(req.url);
   const pathParts = url.pathname.split('/').filter(Boolean);
   
-  // Expected path: /og-image/movie/12345 or /og-image/tv/12345
-  const contentType = pathParts[1]; // 'movie' or 'tv'
-  const id = pathParts[2];
+  // Supabase may or may not include the function name in the path
+  // Handle both /og-image/movie/123 and /movie/123
+  let contentType: string | undefined;
+  let id: string | undefined;
+
+  if (pathParts.length >= 3 && pathParts[0] === 'og-image') {
+    contentType = pathParts[1];
+    id = pathParts[2];
+  } else if (pathParts.length >= 2) {
+    contentType = pathParts[0];
+    id = pathParts[1];
+  }
   
   if (!contentType || !id || !['movie', 'tv'].includes(contentType)) {
-    return new Response("Invalid request", { status: 400 });
+    return new Response("Invalid request. Use /movie/{id} or /tv/{id}", { status: 400 });
   }
 
   try {
