@@ -7,8 +7,7 @@ import { MovieGrid } from "@/components/MovieGrid";
 import { HomeCategoryRows } from "@/components/HomeCategoryRows";
 import { SEOMetadata } from "@/components/SEOMetadata";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
-
-import { fetchMovies, searchContent } from "@/api/tmdbService";
+import { useMovieData } from "@/hooks/useMovieData";
 
 const getInitialDarkMode = () => {
   if (typeof window !== "undefined") {
@@ -17,7 +16,7 @@ const getInitialDarkMode = () => {
     return window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
-  return false; // Default to light mode
+  return false;
 };
 
 const Index = () => {
@@ -32,10 +31,7 @@ const Index = () => {
     if (typeParam === 'movie' || typeParam === 'tv') return typeParam;
     return 'all';
   });
-  const [movies, setMovies] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [currentCategory, setCurrentCategory] = useState<string>("popular");
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -54,7 +50,6 @@ const Index = () => {
     if (typeParam === 'movie' || typeParam === 'tv') {
       setContentType(typeParam);
     } else if (typeParam === null && contentType !== 'all') {
-      // Only reset to 'all' if explicitly on home without type param
       setContentType('all');
     }
   }, [searchParams]);
@@ -73,7 +68,6 @@ const Index = () => {
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
-    
     if (isDarkMode) {
       root.classList.add('dark');
       body.classList.add('dark');
@@ -89,6 +83,18 @@ const Index = () => {
     setCurrentPage(1);
   }, [currentCategory, selectedGenre, selectedYear, searchQuery, contentType]);
 
+  // Only fetch via react-query when searching (HomeCategoryRows handles browse)
+  const { movies, totalPages, loading } = useMovieData({
+    searchQuery,
+    selectedGenre: selectedGenre || 'all',
+    selectedYear: selectedYear || 'all',
+    contentType,
+    currentCategory,
+    currentPage,
+    refreshKey,
+    enabled: !!searchQuery,
+  });
+
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -96,53 +102,16 @@ const Index = () => {
   };
 
   const handleMovieClick = (movieId: number, typeOverride?: "movie" | "tv") => {
-    // For 'all' content type, we need to determine the actual type from the movie data or typeOverride
     let type: 'movie' | 'tv';
     if (typeOverride) {
       type = typeOverride;
     } else if (contentType === 'all') {
-      // This should be handled by the movie card which knows the media_type
-      type = 'movie'; // fallback, but the MovieCard should provide typeOverride
+      type = 'movie';
     } else {
       type = contentType;
     }
     navigate(`/${type}/${movieId}`);
   };
-
-  // Fetch movies from TMDB API
-  useEffect(() => {
-    const loadContent = async () => {
-      setLoading(true);
-      try {
-        let result;
-        if (searchQuery) {
-          result = await searchContent({
-            searchQuery,
-            currentPage,
-            contentType,
-          });
-        } else {
-          result = await fetchMovies({
-            currentCategory,
-            contentType,
-            selectedGenre: selectedGenre || 'all',
-            selectedYear: selectedYear || 'all',
-            currentPage,
-          });
-        }
-        setMovies(result.movies);
-        setTotalPages(result.totalPages);
-      } catch (error) {
-        console.error('Error fetching content:', error);
-        setMovies([]);
-        setTotalPages(1);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadContent();
-  }, [searchQuery, selectedGenre, selectedYear, contentType, currentCategory, currentPage, refreshKey]);
 
   const handleSetCurrentCategory = (category: string) => {
     setCurrentCategory(category);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Play, Star } from 'lucide-react';
 import type { Movie } from '@/types/tmdb';
@@ -6,15 +7,55 @@ import type { Movie } from '@/types/tmdb';
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
+const fetchTrending = async (): Promise<Movie[]> => {
+  const response = await fetch(`${TMDB_BASE_URL}/trending/movie/week`, {
+    headers: {
+      'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json;charset=utf-8'
+    }
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  return data.results?.slice(0, 5) || [];
+};
+
+const fetchTrailerKey = async (movieId: number): Promise<string | null> => {
+  try {
+    const response = await fetch(`${TMDB_BASE_URL}/movie/${movieId}/videos`, {
+      headers: {
+        'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json;charset=utf-8'
+      }
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const trailer = data.results?.find((v: any) => v.type === 'Trailer' && v.site === 'YouTube');
+    return trailer?.key || null;
+  } catch {
+    return null;
+  }
+};
+
 export const HeroCarousel = () => {
-  const [movies, setMovies] = useState<Movie[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [trailerKeys, setTrailerKeys] = useState<Record<number, string>>({});
 
+  const { data: movies = [], isLoading } = useQuery({
+    queryKey: ['heroCarousel'],
+    queryFn: fetchTrending,
+    staleTime: 10 * 60 * 1000, // 10 min
+  });
+
+  // Fetch trailers lazily after movies load (only for visible + next)
   useEffect(() => {
-    fetchTrendingMovies();
-  }, []);
+    if (movies.length === 0) return;
+    const currentMovie = movies[currentIndex];
+    if (currentMovie && !trailerKeys[currentMovie.id]) {
+      fetchTrailerKey(currentMovie.id).then(key => {
+        if (key) setTrailerKeys(prev => ({ ...prev, [currentMovie.id]: key }));
+      });
+    }
+  }, [movies, currentIndex]);
 
   useEffect(() => {
     if (movies.length > 0) {
@@ -25,49 +66,10 @@ export const HeroCarousel = () => {
     }
   }, [movies]);
 
-  const fetchTrendingMovies = async () => {
-    try {
-      const response = await fetch(`${TMDB_BASE_URL}/trending/movie/week`, {
-        headers: {
-          'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json;charset=utf-8'
-        }
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      const topMovies = data.results?.slice(0, 5) || [];
-      setMovies(topMovies);
-
-      topMovies.forEach(async (movie: Movie) => {
-        try {
-          const videoResponse = await fetch(`${TMDB_BASE_URL}/movie/${movie.id}/videos`, {
-            headers: {
-              'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-              'Content-Type': 'application/json;charset=utf-8'
-            }
-          });
-          if (videoResponse.ok) {
-            const videoData = await videoResponse.json();
-            const trailer = videoData.results?.find(
-              (v: any) => v.type === 'Trailer' && v.site === 'YouTube'
-            );
-            if (trailer) {
-              setTrailerKeys(prev => ({ ...prev, [movie.id]: trailer.key }));
-            }
-          }
-        } catch {}
-      });
-    } catch {
-      setMovies([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const nextSlide = useCallback(() => setCurrentIndex((p) => (p + 1) % movies.length), [movies.length]);
   const prevSlide = useCallback(() => setCurrentIndex((p) => (p - 1 + movies.length) % movies.length), [movies.length]);
 
-  if (loading || movies.length === 0) {
+  if (isLoading || movies.length === 0) {
     return (
       <div className="relative h-[55vh] md:h-[75vh] bg-secondary animate-pulse">
         <div className="absolute inset-0 flex items-center justify-center">
