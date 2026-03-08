@@ -71,7 +71,7 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
           onMovieClick={onMovieClick}
           showAdAfter={index === 1}
           sectionIndex={index}
-          eager={index < 2}
+          eager={index < 1}
         />
       ))}
     </div>
