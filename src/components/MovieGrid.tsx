@@ -78,6 +78,7 @@ export const MovieGrid = ({
                 setSelectedGenre={setSelectedGenre}
                 selectedYear={selectedYear}
                 setSelectedYear={setSelectedYear}
+                contentType={contentType}
               />
             )}
           </div>

@@ -1,29 +1,19 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getGenresForContentType } from '@/constants/genres';
 
 interface MovieFiltersProps {
   selectedGenre: string;
   setSelectedGenre: (genre: string) => void;
   selectedYear: string;
   setSelectedYear: (year: string) => void;
+  contentType?: 'movie' | 'tv' | 'all';
 }
-
-const genres = [
-  { id: 28, name: 'Action' },
-  { id: 35, name: 'Comedy' },
-  { id: 18, name: 'Drama' },
-  { id: 27, name: 'Horror' },
-  { id: 878, name: 'Sci-Fi' },
-  { id: 53, name: 'Thriller' },
-  { id: 16, name: 'Animation' },
-  { id: 12, name: 'Adventure' },
-  { id: 80, name: 'Crime' },
-  { id: 99, name: 'Documentary' },
-];
 
 const years = ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
 
-export const MovieFilters = ({ selectedGenre, setSelectedGenre, selectedYear, setSelectedYear }: MovieFiltersProps) => {
+export const MovieFilters = ({ selectedGenre, setSelectedGenre, selectedYear, setSelectedYear, contentType = 'movie' }: MovieFiltersProps) => {
+  const genres = getGenresForContentType(contentType);
   return (
     <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
       <Select value={selectedGenre} onValueChange={setSelectedGenre}>

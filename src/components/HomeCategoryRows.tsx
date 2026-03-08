@@ -6,19 +6,13 @@ import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, Flame, Star, Clock, Play, Sparkles } from 'lucide-react';
+import { getGenresForContentType } from '@/constants/genres';
 
 interface HomeCategoryRowsProps {
   contentType: 'movie' | 'tv' | 'all';
   setContentType: (type: 'movie' | 'tv' | 'all') => void;
   onMovieClick: (movieId: number) => void;
 }
-
-const genres = [
-  { id: 28, name: 'Action' }, { id: 35, name: 'Comedy' }, { id: 18, name: 'Drama' },
-  { id: 27, name: 'Horror' }, { id: 878, name: 'Sci-Fi' }, { id: 53, name: 'Thriller' },
-  { id: 16, name: 'Animation' }, { id: 12, name: 'Adventure' }, { id: 80, name: 'Crime' },
-  { id: 99, name: 'Documentary' },
-];
 
 const categoryIcons: Record<string, React.ReactNode> = {
   popular: <TrendingUp className="h-5 w-5 text-primary" />,
@@ -55,7 +49,7 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Genres</SelectItem>
-                {genres.map(g => (
+                {getGenresForContentType(contentType).map(g => (
                   <SelectItem key={g.id} value={g.id.toString()}>{g.name}</SelectItem>
                 ))}
               </SelectContent>
