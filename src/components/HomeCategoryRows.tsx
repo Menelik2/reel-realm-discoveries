@@ -8,6 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TrendingUp, Flame, Star, Clock, Play, Sparkles } from 'lucide-react';
 import { getGenresForContentType } from '@/constants/genres';
 
+interface HomeCategoryRowsProps {
+  contentType: 'movie' | 'tv' | 'all';
+  setContentType: (type: 'movie' | 'tv' | 'all') => void;
+  onMovieClick: (movieId: number) => void;
+}
+
 const categoryIcons: Record<string, React.ReactNode> = {
   popular: <TrendingUp className="h-5 w-5 text-primary" />,
   trending_week: <Flame className="h-5 w-5 text-primary" />,
