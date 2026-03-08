@@ -80,7 +80,11 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
 
     let url;
     const params = new URLSearchParams();
-    params.append('page', currentPage.toString());
+    // Apply daily rotation for popular/trending/top_rated so content changes each day
+    const dailyOffset = getDailyPageOffset();
+    const shouldRotate = currentCategory === 'popular' || currentCategory === 'trending_week' || currentCategory === 'top_rated';
+    const effectivePage = shouldRotate ? currentPage + dailyOffset : currentPage;
+    params.append('page', effectivePage.toString());
 
     let apiCategory = currentCategory;
     if (contentType === 'tv') {
