@@ -43,7 +43,7 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Genres</SelectItem>
-                {genres.map(g => (
+                {getGenresForContentType(contentType).map(g => (
                   <SelectItem key={g.id} value={g.id.toString()}>{g.name}</SelectItem>
                 ))}
               </SelectContent>

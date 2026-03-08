@@ -12,7 +12,8 @@ interface MovieFiltersProps {
 
 const years = ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
 
-export const MovieFilters = ({ selectedGenre, setSelectedGenre, selectedYear, setSelectedYear }: MovieFiltersProps) => {
+export const MovieFilters = ({ selectedGenre, setSelectedGenre, selectedYear, setSelectedYear, contentType = 'movie' }: MovieFiltersProps) => {
+  const genres = getGenresForContentType(contentType);
   return (
     <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
       <Select value={selectedGenre} onValueChange={setSelectedGenre}>
