@@ -162,7 +162,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           </div>
         )}
         
-        <div className="flex-1 w-full h-full relative">
+        <div className="flex-1 w-full relative min-h-0">
           <iframe
             key={embedUrl}
             src={embedUrl}
