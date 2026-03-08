@@ -36,9 +36,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   };
 
   const handleShare = async () => {
-    // Use the Supabase edge function URL for sharing — it serves proper OG meta tags
-    // (movie poster, title, description) for social media crawlers, then redirects users to the real page
-    const shareUrl = `${SUPABASE_URL}/functions/v1/og-image/${contentType}/${movieId}`;
+    const shareUrl = `https://yeni-movies.vercel.app/${contentType}/${movieId}`;
     
     // Try native share API first (mobile)
     if (navigator.share) {
