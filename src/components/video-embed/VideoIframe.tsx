@@ -17,13 +17,13 @@ const VideoIframe = forwardRef<HTMLIFrameElement, VideoIframeProps>(
         src={src}
         className={`w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}`}
         allowFullScreen
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        referrerPolicy="no-referrer-when-downgrade"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        referrerPolicy="no-referrer"
         title={`Watch ${title}`}
         loading="eager"
         onLoad={onLoad}
         onError={onError}
-        sandbox="allow-forms allow-same-origin allow-scripts allow-presentation"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
       />
     );
   }
