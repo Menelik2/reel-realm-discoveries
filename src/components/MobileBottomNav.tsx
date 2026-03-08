@@ -18,28 +18,33 @@ export const MobileBottomNav = () => {
 
   return (
     <>
-      <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-background border-t z-50 md:hidden">
-        <nav className="flex justify-around items-center h-16">
-          {navItems.map(({ category, to, icon: Icon, label }) => (
-            <Link
-              key={label}
-              to={to}
-              replace
-              className={cn(
-                'flex flex-col items-center justify-center text-muted-foreground w-full h-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-sm',
-                (currentCategory === category || (category === 'box_office' && window.location.pathname === '/top-box-office')) ? 'text-primary' : 'hover:text-foreground'
-              )}
-            >
-              <Icon className="h-5 w-5 mb-1" />
-              <span className="text-xs font-medium">{label}</span>
-            </Link>
-          ))}
+      <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-t border-border/50 z-50 md:hidden">
+        <nav className="flex justify-around items-center h-16 px-2">
+          {navItems.map(({ category, to, icon: Icon, label }) => {
+            const isActive = currentCategory === category || (category === 'box_office' && window.location.pathname === '/top-box-office');
+            return (
+              <Link
+                key={label}
+                to={to}
+                replace
+                className={cn(
+                  'flex flex-col items-center justify-center w-full h-full rounded-xl transition-all',
+                  isActive
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <Icon className={cn('h-5 w-5 mb-0.5', isActive && 'scale-110')} />
+                <span className="text-[10px] font-medium">{label}</span>
+              </Link>
+            );
+          })}
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex flex-col items-center justify-center text-muted-foreground w-full h-full transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-sm"
+            className="flex flex-col items-center justify-center text-muted-foreground w-full h-full rounded-xl transition-all hover:text-foreground"
           >
-            <Search className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Search</span>
+            <Search className="h-5 w-5 mb-0.5" />
+            <span className="text-[10px] font-medium">Search</span>
           </button>
         </nav>
       </div>

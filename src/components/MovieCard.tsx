@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Star } from 'lucide-react';
 import type { Movie } from '@/types/tmdb';
 
 interface MovieCardProps {
@@ -9,58 +9,63 @@ interface MovieCardProps {
 }
 
 const getReleaseYear = (date?: string) => {
-  if (date && date.length >= 4) {
-    return date.substring(0, 4);
-  }
-  return 'N/A';
+  if (date && date.length >= 4) return date.substring(0, 4);
+  return '';
 };
 
 export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCardProps) => {
   const posterUrl = fullPosterUrl
     ? fullPosterUrl
-    : movie.poster_path 
+    : movie.poster_path
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '/placeholder.svg';
 
   const handleCardClick = () => {
     if (onMovieClick) {
-      const mediaType = movie.media_type || 'movie';
-      onMovieClick(movie.id, mediaType);
+      onMovieClick(movie.id, movie.media_type || 'movie');
     }
   };
 
+  const year = getReleaseYear(movie.release_date);
+
   return (
-    <Card className="group hover:scale-105 transition-all duration-300 overflow-hidden cursor-pointer" onClick={handleCardClick}>
-      <CardContent className="p-0">
-        <div className="relative aspect-[2/3] overflow-hidden">
-          <img
-            src={posterUrl}
-            alt={movie.title}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/placeholder.svg';
-            }}
-          />
-        </div>
-        
-        <div className="p-2 md:p-3">
-          <h3 className="font-semibold text-xs md:text-sm line-clamp-2 mb-1">
-            {movie.title}
-          </h3>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            {movie.vote_average > 0 ? (
-              <span>⭐ {movie.vote_average.toFixed(1)}</span>
-            ) : (
-              <span />
-            )}
-            <span>{getReleaseYear(movie.release_date)}</span>
+    <button
+      onClick={handleCardClick}
+      className="group relative rounded-xl overflow-hidden bg-card text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all duration-300 hover:scale-[1.03] hover:shadow-[var(--card-shadow-hover)]"
+      style={{ boxShadow: 'var(--card-shadow)' }}
+    >
+      {/* Poster */}
+      <div className="relative aspect-[2/3] overflow-hidden">
+        <img
+          src={posterUrl}
+          alt={movie.title}
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+        />
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Rating badge */}
+        {movie.vote_average > 0 && (
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
+            <Star className="h-3 w-3 text-primary fill-primary" />
+            <span className="text-xs font-semibold text-foreground">{movie.vote_average.toFixed(1)}</span>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="p-2.5 md:p-3 space-y-0.5">
+        <h3 className="font-semibold text-xs md:text-sm text-card-foreground line-clamp-1">
+          {movie.title}
+        </h3>
+        {year && (
+          <p className="text-[11px] text-muted-foreground">{year}</p>
+        )}
+      </div>
+    </button>
   );
 });
 

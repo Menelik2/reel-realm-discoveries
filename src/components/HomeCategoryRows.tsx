@@ -5,6 +5,7 @@ import { MovieCard } from '@/components/MovieCard';
 import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TrendingUp, Flame, Star, Clock, Play, Sparkles } from 'lucide-react';
 
 interface HomeCategoryRowsProps {
   contentType: 'movie' | 'tv' | 'all';
@@ -13,21 +14,24 @@ interface HomeCategoryRowsProps {
 }
 
 const genres = [
-  { id: 28, name: 'Action' },
-  { id: 35, name: 'Comedy' },
-  { id: 18, name: 'Drama' },
-  { id: 27, name: 'Horror' },
-  { id: 878, name: 'Sci-Fi' },
-  { id: 53, name: 'Thriller' },
-  { id: 16, name: 'Animation' },
-  { id: 12, name: 'Adventure' },
-  { id: 80, name: 'Crime' },
+  { id: 28, name: 'Action' }, { id: 35, name: 'Comedy' }, { id: 18, name: 'Drama' },
+  { id: 27, name: 'Horror' }, { id: 878, name: 'Sci-Fi' }, { id: 53, name: 'Thriller' },
+  { id: 16, name: 'Animation' }, { id: 12, name: 'Adventure' }, { id: 80, name: 'Crime' },
   { id: 99, name: 'Documentary' },
 ];
 
+const categoryIcons: Record<string, React.ReactNode> = {
+  popular: <TrendingUp className="h-5 w-5 text-primary" />,
+  trending_week: <Flame className="h-5 w-5 text-primary" />,
+  top_rated: <Star className="h-5 w-5 text-primary" />,
+  upcoming: <Clock className="h-5 w-5 text-primary" />,
+  now_playing: <Play className="h-5 w-5 text-primary" />,
+  latest_releases: <Sparkles className="h-5 w-5 text-primary" />,
+};
+
 export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: HomeCategoryRowsProps) => {
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
-  
+
   const categories = [
     { key: 'popular', label: 'Popular' },
     { key: 'trending_week', label: 'Trending This Week' },
@@ -38,26 +42,21 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="container mx-auto px-4 pt-6">
+    <div className="space-y-10 pb-24 md:pb-8">
+      {/* Filters bar */}
+      <div className="container mx-auto px-4 pt-8">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <ContentTypeToggle 
-            contentType={contentType}
-            setContentType={setContentType}
-          />
-          
+          <ContentTypeToggle contentType={contentType} setContentType={setContentType} />
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Filter by Genre:</span>
+            <span className="text-sm font-medium text-muted-foreground">Genre:</span>
             <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[160px] h-9 rounded-full bg-secondary/50 border-border/50 text-sm">
                 <SelectValue placeholder="All Genres" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Genres</SelectItem>
-                {genres.map(genre => (
-                  <SelectItem key={genre.id} value={genre.id.toString()}>
-                    {genre.name}
-                  </SelectItem>
+                {genres.map(g => (
+                  <SelectItem key={g.id} value={g.id.toString()}>{g.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -70,7 +69,7 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
       </div>
 
       {categories.map((category, index) => (
-        <LazyCategorySection 
+        <LazyCategorySection
           key={category.key}
           category={category}
           contentType={contentType}
@@ -78,7 +77,7 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
           onMovieClick={onMovieClick}
           showAdAfter={index === 1}
           sectionIndex={index}
-          eager={index < 2} // Only first 2 categories load immediately
+          eager={index < 2}
         />
       ))}
     </div>
@@ -98,20 +97,21 @@ interface LazyCategorySectionProps {
 const LazyCategorySection = memo(({ eager, ...props }: LazyCategorySectionProps) => {
   const { ref, isVisible } = useLazyVisible('400px');
 
-  if (eager) {
-    return <CategorySection {...props} />;
-  }
+  if (eager) return <CategorySection {...props} />;
 
   return (
     <div ref={ref}>
       {isVisible ? (
         <CategorySection {...props} />
       ) : (
-        <section className="py-6 md:py-8 container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-4">{props.category.label}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+        <section className="container mx-auto px-4">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-1 h-6 rounded-full bg-primary" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">{props.category.label}</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-muted rounded-lg" />
+              <div key={i} className="aspect-[2/3] bg-secondary rounded-xl" />
             ))}
           </div>
         </section>
@@ -133,14 +133,19 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
     enabled: true,
   });
 
+  const icon = categoryIcons[category.key];
+
   if (loading) {
     return (
       <>
-        <section className="py-6 md:py-8 container mx-auto px-4">
-          <h2 className="text-2xl font-bold mb-4">{category.label}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+        <section className="container mx-auto px-4">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-1 h-6 rounded-full bg-primary" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">{category.label}</h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
+              <div key={i} className="aspect-[2/3] bg-secondary animate-pulse rounded-xl" />
             ))}
           </div>
         </section>
@@ -163,15 +168,17 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
 
   return (
     <>
-      <section className="py-6 md:py-8 container mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-4">{category.label}</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+      <section className="container mx-auto px-4">
+        <div className="flex items-center gap-3 mb-5">
+          {icon || <div className="w-1 h-6 rounded-full bg-primary" />}
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">{category.label}</h2>
+          <span className="text-xs font-medium text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
+            {movies.length}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
           {movies.map(movie => (
-            <MovieCard 
-              key={movie.id} 
-              movie={movie} 
-              onMovieClick={onMovieClick} 
-            />
+            <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
           ))}
         </div>
       </section>
