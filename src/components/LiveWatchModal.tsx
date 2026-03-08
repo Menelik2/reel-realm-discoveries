@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { LiveWatchModalHeader } from '@/components/live-watch-modal/LiveWatchModalHeader';
 import type { Movie } from '@/types/tmdb';
+import { Button } from '@/components/ui/button';
+
+const SOURCES = [
+  { name: 'VidSrc NET', url: 'https://vidsrc.net' },
+  { name: 'VidSrc XYZ', url: 'https://vidsrc.xyz' },
+  { name: 'VidSrc ME', url: 'https://vidsrc.me' },
+  { name: 'VidSrc PRO', url: 'https://vidsrc.pro' },
+];
 
 interface LiveWatchModalProps {
   open: boolean;
@@ -21,6 +29,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showClickShield, setShowClickShield] = useState(true);
+  const [selectedSource, setSelectedSource] = useState(SOURCES[0].url);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Block popups globally while modal is open
@@ -33,7 +42,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
       return null;
     };
 
-    // Prevent body scroll while modal is open
     document.body.style.overflow = 'hidden';
 
     return () => {
@@ -52,6 +60,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   useEffect(() => {
     if (open) {
       setShowClickShield(true);
+      setSelectedSource(SOURCES[0].url);
     }
   }, [open]);
 
@@ -69,7 +78,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     };
   }, []);
 
-  // Toggle fullscreen helper
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return;
     if (document.fullscreenElement) {
@@ -79,7 +87,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     }
   }, []);
 
-  // Keyboard shortcuts
   useEffect(() => {
     if (!open) return;
 
@@ -103,10 +110,15 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyPress, true);
   }, [open, onClose, toggleFullscreen]);
 
+  const handleSourceChange = useCallback((url: string) => {
+    setSelectedSource(url);
+    setShowClickShield(true);
+  }, []);
+
   if (!open) return null;
 
   const contentId = (content as any)?.imdb_id || id;
-  const embedUrl = `https://vidsrc.net/embed/${type}/${contentId}`;
+  const embedUrl = `${selectedSource}/embed/${type}/${contentId}`;
 
   return (
     <div
@@ -131,9 +143,28 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             content={content}
           />
         )}
+
+        {/* Source selector */}
+        {!isFullscreen && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-black/80 border-b border-white/10 overflow-x-auto">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">Source:</span>
+            {SOURCES.map(source => (
+              <Button
+                key={source.url}
+                variant={selectedSource === source.url ? 'default' : 'secondary'}
+                size="sm"
+                className="text-xs h-7 px-3 whitespace-nowrap"
+                onClick={(e) => { e.stopPropagation(); handleSourceChange(source.url); }}
+              >
+                {source.name}
+              </Button>
+            ))}
+          </div>
+        )}
         
         <div className="flex-1 w-full h-full relative">
           <iframe
+            key={embedUrl}
             src={embedUrl}
             className="w-full h-full border-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -141,7 +172,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             referrerPolicy="no-referrer"
             title="Watch Now"
             style={{ border: 'none' }}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
           />
           
           {/* Click shield - absorbs initial ad-triggering click */}
