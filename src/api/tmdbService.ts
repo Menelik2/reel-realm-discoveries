@@ -68,12 +68,23 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
         };
     }
 
+    // Rotate popular content daily by picking a different page offset based on the date
+    const getDailyPageOffset = () => {
+      const today = new Date();
+      const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+      return (dayOfYear % 10); // cycles through 0-9 extra pages
+    };
+
     const supportsFiltering = currentCategory === 'popular' || currentCategory === 'top_rated';
     const useDiscover = (selectedGenre !== 'all' || selectedYear !== 'all') && supportsFiltering;
 
     let url;
     const params = new URLSearchParams();
-    params.append('page', currentPage.toString());
+    // Apply daily rotation for popular/trending/top_rated so content changes each day
+    const dailyOffset = getDailyPageOffset();
+    const shouldRotate = currentCategory === 'popular' || currentCategory === 'trending_week' || currentCategory === 'top_rated';
+    const effectivePage = shouldRotate ? currentPage + dailyOffset : currentPage;
+    params.append('page', effectivePage.toString());
 
     let apiCategory = currentCategory;
     if (contentType === 'tv') {
