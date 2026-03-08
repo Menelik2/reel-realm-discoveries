@@ -150,7 +150,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             referrerPolicy="no-referrer"
             title="Watch Now"
             style={{ border: 'none' }}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups-to-escape-sandbox"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
           />
           
           {/* Click shield - absorbs initial ad-triggering click */}
