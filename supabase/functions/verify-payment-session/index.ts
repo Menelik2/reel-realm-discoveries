@@ -18,6 +18,22 @@ serve(async (req) => {
   }
 
   try {
+    // Verify the caller's identity
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Missing authorization header.");
+    }
+
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+    if (userError || !user) {
+      throw new Error("Unable to verify user identity.");
+    }
+
     const { session_id } = await req.json();
 
     if (!session_id) {
@@ -25,6 +41,12 @@ serve(async (req) => {
     }
     
     const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    // Verify the Stripe session belongs to the authenticated user
+    if (session.customer_email !== user.email) {
+      console.error("Session ownership mismatch:", session.customer_email, "vs", user.email);
+      throw new Error("You are not authorized to verify this payment session.");
+    }
 
     if (session.payment_status === "paid") {
       const supabaseService = createClient(
