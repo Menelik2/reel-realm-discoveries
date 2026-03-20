@@ -38,8 +38,9 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   const handleShare = async () => {
     const shareUrl = `https://yeni-movie.vercel.app/${contentType}/${movieId}`;
     
-    // Try native share API first (mobile)
-    if (navigator.share) {
+    // On mobile, use native share API
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile && navigator.share) {
       try {
         await navigator.share({
           title: title,
@@ -52,7 +53,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
       }
     }
     
-    // Fall back to copying to clipboard
+    // Desktop: just copy to clipboard
     try {
       await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copied to clipboard!', {
