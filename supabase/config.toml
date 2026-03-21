@@ -15,5 +15,8 @@ verify_jwt = false
 [functions.telegram-auto-post]
 verify_jwt = false
 
+[functions.telegram-box-office]
+verify_jwt = false
+
 [functions.setup-cron]
 verify_jwt = false
