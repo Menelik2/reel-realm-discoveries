@@ -38,14 +38,25 @@ serve(async (req) => {
     }
 
     // Schedule the daily job at 09:00 UTC
-    const command = `select net.http_post(url:='https://${projectRef}.supabase.co/functions/v1/telegram-auto-post', headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${anonKey}"}'::jsonb, body:='{}'::jsonb) as request_id;`;
+    const dailyCommand = `select net.http_post(url:='https://${projectRef}.supabase.co/functions/v1/telegram-auto-post', headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${anonKey}"}'::jsonb, body:='{}'::jsonb) as request_id;`;
 
-    const result = await sql`SELECT cron.schedule('daily-telegram-post', '0 9 * * *', ${command})`;
+    const result1 = await sql`SELECT cron.schedule('daily-telegram-post', '0 9 * * *', ${dailyCommand})`;
+    console.log('Daily cron job scheduled:', result1);
 
-    console.log('Cron job scheduled:', result);
+    // Schedule weekly box office post - every Sunday at 10:00 UTC
+    try {
+      await sql`SELECT cron.unschedule('weekly-box-office-post')`;
+    } catch (e) {
+      console.log('No existing box office job to remove');
+    }
+
+    const weeklyCommand = `select net.http_post(url:='https://${projectRef}.supabase.co/functions/v1/telegram-box-office', headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${anonKey}"}'::jsonb, body:='{}'::jsonb) as request_id;`;
+
+    const result2 = await sql`SELECT cron.schedule('weekly-box-office-post', '0 10 * * 0', ${weeklyCommand})`;
+    console.log('Weekly box office cron job scheduled:', result2);
 
     // Verify
-    const jobs = await sql`SELECT jobid, jobname, schedule FROM cron.job WHERE jobname = 'daily-telegram-post'`;
+    const jobs = await sql`SELECT jobid, jobname, schedule FROM cron.job WHERE jobname IN ('daily-telegram-post', 'weekly-box-office-post')`;
 
     await sql.end();
 
