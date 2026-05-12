@@ -5,6 +5,7 @@ import LiveWatchModal from '@/components/LiveWatchModal';
 import DownloadModal from '@/components/DownloadModal';
 import { useTelegramUrl } from '@/hooks/useTelegramUrl';
 import { toast } from 'sonner';
+import { trackEvent } from '@/utils/analytics';
 
 const SUPABASE_URL = "https://suxbqdcnidvdfmkrshem.supabase.co";
 
@@ -43,26 +44,45 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
       url: shareUrl,
     };
 
+    const baseProps = {
+      contentType,
+      contentId: movieId,
+      title,
+      url: shareUrl,
+    };
+
     // Try native Web Share API on any device that supports it
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         if (!navigator.canShare || navigator.canShare(shareData)) {
           await navigator.share(shareData);
+          trackEvent('share_native_success', { ...baseProps, method: 'native' });
           return;
         }
       } catch (err: any) {
-        if (err?.name === 'AbortError') return; // user cancelled
+        if (err?.name === 'AbortError') {
+          trackEvent('share_native_cancelled', { ...baseProps, method: 'native' });
+          return;
+        }
         // otherwise fall through to clipboard
       }
+    } else {
+      trackEvent('share_unsupported', baseProps);
     }
 
     // Fallback: copy to clipboard
     try {
       await navigator.clipboard.writeText(shareUrl);
+      trackEvent('share_clipboard_success', { ...baseProps, method: 'clipboard' });
       toast.success('Link copied to clipboard!', {
         description: 'Share this link to show the movie poster on social media',
       });
-    } catch (err) {
+    } catch (err: any) {
+      trackEvent('share_clipboard_failed', {
+        ...baseProps,
+        method: 'clipboard',
+        error: err?.message ?? String(err),
+      });
       toast.error('Failed to copy link');
     }
   };
