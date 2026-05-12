@@ -37,23 +37,26 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/${contentType}/${movieId}`;
-    
-    // On mobile, use native share API
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile && navigator.share) {
+    const shareData = {
+      title,
+      text: `Watch ${title} on YENI MOVIE`,
+      url: shareUrl,
+    };
+
+    // Try native Web Share API on any device that supports it
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
-        await navigator.share({
-          title: title,
-          text: `Watch ${title} on YENI MOVIE`,
-          url: shareUrl,
-        });
-        return;
-      } catch (err) {
-        // User cancelled or share failed, fall back to clipboard
+        if (!navigator.canShare || navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          return;
+        }
+      } catch (err: any) {
+        if (err?.name === 'AbortError') return; // user cancelled
+        // otherwise fall through to clipboard
       }
     }
-    
-    // Desktop: just copy to clipboard
+
+    // Fallback: copy to clipboard
     try {
       await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copied to clipboard!', {
