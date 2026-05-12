@@ -75,7 +75,12 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
       await navigator.clipboard.writeText(shareUrl);
       trackEvent('share_clipboard_success', { ...baseProps, method: 'clipboard' });
       toast.success('Link copied to clipboard!', {
-        description: 'Share this link to show the movie poster on social media',
+        description: shareUrl,
+        duration: 8000,
+        action: {
+          label: 'Open link',
+          onClick: () => window.open(shareUrl, '_blank', 'noopener,noreferrer'),
+        },
       });
     } catch (err: any) {
       trackEvent('share_clipboard_failed', {
