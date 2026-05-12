@@ -36,7 +36,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   };
 
   const handleShare = async () => {
-    const shareUrl = `https://yeni-movie.vercel.app/${contentType}/${movieId}`;
+    const shareUrl = `${window.location.origin}/${contentType}/${movieId}`;
     
     // On mobile, use native share API
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
