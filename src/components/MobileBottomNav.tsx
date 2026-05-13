@@ -6,14 +6,16 @@ import { MobileSearchDialog } from './MobileSearchDialog';
 
 export const MobileBottomNav = () => {
   const [searchParams] = useSearchParams();
-  const currentCategory = searchParams.get('category') || 'popular';
+  const currentType = searchParams.get('type');
+  const isHomePath = typeof window !== 'undefined' && window.location.pathname === '/';
+  const isBoxOfficePath = typeof window !== 'undefined' && window.location.pathname === '/top-box-office';
   const [searchOpen, setSearchOpen] = useState(false);
 
   const navItems = [
-    { category: 'popular', to: '/?category=popular', icon: Home, label: 'Home' },
-    { category: 'movies', to: '/?category=popular&type=movie', icon: Play, label: 'Movies' },
-    { category: 'tv', to: '/?category=popular&type=tv', icon: Star, label: 'Series' },
-    { category: 'box_office', to: '/top-box-office', icon: BarChart3, label: 'Box Office' },
+    { id: 'home', to: '/?category=popular', icon: Home, label: 'Home', isActive: isHomePath && !currentType },
+    { id: 'movies', to: '/?category=popular&type=movie', icon: Play, label: 'Movies', isActive: isHomePath && currentType === 'movie' },
+    { id: 'tv', to: '/?category=popular&type=tv', icon: Star, label: 'Series', isActive: isHomePath && currentType === 'tv' },
+    { id: 'box_office', to: '/top-box-office', icon: BarChart3, label: 'Box Office', isActive: isBoxOfficePath },
   ];
 
   return (
