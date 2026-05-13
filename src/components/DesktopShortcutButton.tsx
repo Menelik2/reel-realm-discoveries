@@ -72,7 +72,7 @@ Encoding=UTF-8
 Name=${siteName}
 Type=Link
 URL=${siteUrl}
-Icon=text-html
+Icon=${iconUrl}
 `;
         triggerDownload(`${siteName}.desktop`, content, 'application/x-desktop');
       } else {
