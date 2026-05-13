@@ -22,8 +22,7 @@ export const MobileBottomNav = () => {
     <>
       <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-t border-border/50 z-50 md:hidden">
         <nav className="flex justify-around items-center h-16 px-2">
-          {navItems.map(({ category, to, icon: Icon, label }) => {
-            const isActive = currentCategory === category || (category === 'box_office' && window.location.pathname === '/top-box-office');
+          {navItems.map(({ to, icon: Icon, label, isActive }) => {
             return (
               <Link
                 key={label}
