@@ -48,11 +48,13 @@ export const DesktopShortcutButton = () => {
 
   const siteUrl = window.location.origin;
   const siteName = 'YeniMovie';
+  const iconUrl =
+    'https://storage.googleapis.com/gpt-engineer-file-uploads/vIuPAmBzPaaU3cZJ99X10uzaJRh2/uploads/1758666660353-photo_2025-04-18_18-49-37.jpg';
 
   const handleDownload = () => {
     try {
       if (os === 'windows') {
-        const content = `[InternetShortcut]\r\nURL=${siteUrl}\r\nIconIndex=0\r\n`;
+        const content = `[InternetShortcut]\r\nURL=${siteUrl}\r\nIconFile=${iconUrl}\r\nIconIndex=0\r\n`;
         triggerDownload(`${siteName}.url`, content, 'application/internet-shortcut');
       } else if (os === 'mac') {
         const content = `<?xml version="1.0" encoding="UTF-8"?>
