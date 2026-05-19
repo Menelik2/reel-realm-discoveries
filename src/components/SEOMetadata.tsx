@@ -28,10 +28,12 @@ export const SEOMetadata = ({
   director,
   duration
 }: SEOMetadataProps) => {
-  const pageTitle = title ? `${title} - Watch ${contentType === 'tv' ? 'TV Series' : 'Movie'} Online | YENI MOVIE` : 'YENI MOVIE - Watch Movies and TV Series Online Free';
-  const pageDescription = description 
-    ? `${description.substring(0, 140)}... Watch ${title} online on YENI MOVIE.`
-    : 'YENI MOVIE - Your destination for discovering and watching the latest movies and TV series online. Find trailers, ratings, cast information, and streaming links.';
+  const pageTitle = title
+    ? `${title} — YENI MOVIE`
+    : 'YENI MOVIE — Stream Movies & TV Series';
+  const pageDescription = description
+    ? description.length > 160 ? `${description.substring(0, 157)}...` : description
+    : 'Discover and stream the latest movies and TV series with trailers, ratings, and cast info on YENI MOVIE.';
   
   const pageUrl = movieId && contentType ? `https://yeni-movies.lovable.app/${contentType}/${movieId}` : 'https://yeni-movies.lovable.app/';
   // Use w780 for poster images - optimal for social sharing

@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { AdBanner } from '@/components/AdBanner';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 
@@ -9,6 +10,11 @@ const Privacy = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <Helmet>
+        <title>Privacy Policy — YENI MOVIE</title>
+        <meta name="description" content="Read the YENI MOVIE Privacy Policy covering data collection, cookies, advertising, and your rights." />
+        <link rel="canonical" href="https://yeni-movies.lovable.app/privacy" />
+      </Helmet>
       <div className="bg-background text-foreground transition-colors">
         <Header 
           searchQuery=""
