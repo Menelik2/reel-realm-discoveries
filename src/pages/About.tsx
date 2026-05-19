@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Film, Users, Target, Heart } from 'lucide-react';
 import { AdBanner } from '@/components/AdBanner';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -10,6 +11,11 @@ const About = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <Helmet>
+        <title>About YENI MOVIE — Our Mission & Features</title>
+        <meta name="description" content="Learn about YENI MOVIE: our mission, features, and how we help you discover movies and TV series powered by TMDB." />
+        <link rel="canonical" href="https://yeni-movies.lovable.app/about" />
+      </Helmet>
       <div className="bg-background text-foreground transition-colors">
         <Header 
           searchQuery=""

@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Mail, MessageSquare, Send, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,11 @@ const Contact = () => {
     });
   };
   return <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <Helmet>
+        <title>Contact YENI MOVIE — Get in Touch</title>
+        <meta name="description" content="Contact the YENI MOVIE team via Telegram or email with questions, feedback, or feature requests." />
+        <link rel="canonical" href="https://yeni-movies.lovable.app/contact" />
+      </Helmet>
       <div className="bg-background text-foreground transition-colors">
         <Header searchQuery="" setSearchQuery={() => {}} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
         

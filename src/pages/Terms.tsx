@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { AdBanner } from '@/components/AdBanner';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 
@@ -9,6 +10,11 @@ const Terms = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <Helmet>
+        <title>Terms of Service — YENI MOVIE</title>
+        <meta name="description" content="Review the YENI MOVIE Terms of Service: acceptable use, intellectual property, advertising, and disclaimers." />
+        <link rel="canonical" href="https://yeni-movies.lovable.app/terms" />
+      </Helmet>
       <div className="bg-background text-foreground transition-colors">
         <Header 
           searchQuery=""
