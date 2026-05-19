@@ -28,11 +28,20 @@ export const SEOMetadata = ({
   director,
   duration
 }: SEOMetadataProps) => {
+  const year = releaseDate ? releaseDate.split('-')[0] : '';
+  const kind = contentType === 'tv' ? 'TV Series' : 'Movie';
+  const yearSuffix = year ? ` (${year})` : '';
+  const ratingPart = rating ? ` · ${rating.toFixed(1)}★` : '';
+
   const pageTitle = title
-    ? `${title} — YENI MOVIE`
+    ? `${title}${yearSuffix} — Watch ${kind} | YENI MOVIE`
     : 'YENI MOVIE — Stream Movies & TV Series';
-  const pageDescription = description
-    ? description.length > 160 ? `${description.substring(0, 157)}...` : description
+
+  const descBase = title
+    ? `Watch ${title}${yearSuffix}${ratingPart}.${description ? ' ' + description : ''}`
+    : '';
+  const pageDescription = title
+    ? (descBase.length > 160 ? `${descBase.substring(0, 157)}...` : descBase)
     : 'Discover and stream the latest movies and TV series with trailers, ratings, and cast info on YENI MOVIE.';
   
   const pageUrl = movieId && contentType ? `https://yeni-movies.lovable.app/${contentType}/${movieId}` : 'https://yeni-movies.lovable.app/';
