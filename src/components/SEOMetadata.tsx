@@ -13,6 +13,9 @@ interface SEOMetadataProps {
   cast?: string[];
   director?: string;
   duration?: number;
+  voteCount?: number;
+  numberOfSeasons?: number;
+  numberOfEpisodes?: number;
 }
 
 export const SEOMetadata = ({ 
@@ -26,7 +29,10 @@ export const SEOMetadata = ({
   genres = [], 
   cast = [], 
   director,
-  duration
+  duration,
+  voteCount,
+  numberOfSeasons,
+  numberOfEpisodes
 }: SEOMetadataProps) => {
   const year = releaseDate ? releaseDate.split('-')[0] : '';
   const kind = contentType === 'tv' ? 'TV Series' : 'Movie';
@@ -99,7 +105,7 @@ export const SEOMetadata = ({
     ...(rating && { "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": rating.toFixed(1),
-      "ratingCount": "1000",
+      "ratingCount": voteCount ? String(voteCount) : "1000",
       "bestRating": "10",
       "worstRating": "1"
     }}),
@@ -114,6 +120,8 @@ export const SEOMetadata = ({
       "name": director
     }}),
     ...(duration && { "duration": `PT${duration}M` }),
+    ...(contentType === 'tv' && numberOfSeasons && { "numberOfSeasons": numberOfSeasons }),
+    ...(contentType === 'tv' && numberOfEpisodes && { "numberOfEpisodes": numberOfEpisodes }),
     "potentialAction": {
       "@type": "WatchAction",
       "target": {
