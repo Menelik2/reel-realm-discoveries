@@ -132,6 +132,9 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
         cast={cast.slice(0, 5).map(c => c.name)}
         director={cast.find(c => c.character?.toLowerCase().includes('director'))?.name}
         duration={runtime}
+        voteCount={movie.vote_count}
+        numberOfSeasons={contentType === 'tv' ? (movie as any).number_of_seasons : undefined}
+        numberOfEpisodes={contentType === 'tv' ? (movie as any).number_of_episodes : undefined}
       />
       {/* Full-size container */}
       <div className="min-h-screen w-full">
