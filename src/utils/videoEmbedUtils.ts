@@ -23,12 +23,12 @@ export function getEmbedUrl({
   autoNext,
   source,
 }: EmbedUrlParams): string | null {
-  const baseUrl = source || "https://vidsrc.net";
-  const isVidsrcXyz = baseUrl.includes("vidsrc.xyz");
+  const baseUrl = source || "https://vidsrc.ru";
+  const isVidsrcRu = baseUrl.includes("vidsrc.ru");
 
   // MOVIE
   if (type === "movie") {
-    if (isVidsrcXyz) {
+    if (isVidsrcRu) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
@@ -82,7 +82,7 @@ export function getEmbedUrl({
 
   // TV SHOW
   if (type === "tv" && !season && !episode) {
-    if (isVidsrcXyz) {
+    if (isVidsrcRu) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (!dsLang) {
@@ -128,7 +128,7 @@ export function getEmbedUrl({
 
   // EPISODE
   if (type === "tv" && season && episode) {
-    if (isVidsrcXyz) {
+    if (isVidsrcRu) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (
