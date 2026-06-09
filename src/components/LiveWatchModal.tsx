@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { LiveWatchModalHeader } from '@/components/live-watch-modal/LiveWatchModalHeader';
 import type { Movie } from '@/types/tmdb';
 import { Button } from '@/components/ui/button';
