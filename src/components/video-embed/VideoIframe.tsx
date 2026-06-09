@@ -23,7 +23,6 @@ const VideoIframe = forwardRef<HTMLIFrameElement, VideoIframeProps>(
         loading="eager"
         onLoad={onLoad}
         onError={onError}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups"
       />
     );
   }
