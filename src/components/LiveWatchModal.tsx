@@ -118,9 +118,10 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const contentId = (content as any)?.imdb_id || id;
   const embedUrl = `${selectedSource}/embed/${type}/${contentId}`;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[9999] bg-black"
+      className="fixed inset-0 z-[9999] bg-black overscroll-contain"
+      style={{ height: '100dvh' }}
       onClick={(e) => {
         e.stopPropagation();
         onClose();
