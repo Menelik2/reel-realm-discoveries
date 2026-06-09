@@ -4,10 +4,7 @@ import type { Movie } from '@/types/tmdb';
 import { Button } from '@/components/ui/button';
 
 const SOURCES = [
-  { name: 'VidSrc NET', url: 'https://vidsrc.net' },
-  { name: 'VidSrc XYZ', url: 'https://vidsrc.xyz' },
-  { name: 'VidSrc ME', url: 'https://vidsrc.me' },
-  { name: 'VidSrc PRO', url: 'https://vidsrc.pro' },
+  { name: 'VidSrc RU', url: 'https://vidsrc.ru' },
 ];
 
 interface LiveWatchModalProps {
