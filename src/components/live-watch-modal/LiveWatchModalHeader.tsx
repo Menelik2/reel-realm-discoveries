@@ -64,11 +64,12 @@ export const LiveWatchModalHeader = ({
               ) : telegramUrl ? (
                 <button
                   onClick={handleTelegramClick}
-                  className="flex items-center px-3 py-1 rounded border text-sm text-blue-400 bg-transparent border-blue-500/20 hover:bg-blue-500/10"
+                  className="flex items-center px-2 sm:px-3 py-1 rounded border text-sm text-blue-400 bg-transparent border-blue-500/20 hover:bg-blue-500/10"
                   type="button"
+                  aria-label="Download Via Telegram"
                 >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Download Via Telegram
+                  <MessageCircle className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Download Via Telegram</span>
                 </button>
               ) : null}
             </div>

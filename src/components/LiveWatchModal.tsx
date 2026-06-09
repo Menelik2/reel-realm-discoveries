@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { LiveWatchModalHeader } from '@/components/live-watch-modal/LiveWatchModalHeader';
 import type { Movie } from '@/types/tmdb';
 import { Button } from '@/components/ui/button';
@@ -117,9 +118,10 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const contentId = (content as any)?.imdb_id || id;
   const embedUrl = `${selectedSource}/embed/${type}/${contentId}`;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[9999] bg-black"
+      className="fixed inset-0 z-[9999] bg-black overscroll-contain"
+      style={{ height: '100dvh' }}
       onClick={(e) => {
         e.stopPropagation();
         onClose();
@@ -201,7 +203,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
