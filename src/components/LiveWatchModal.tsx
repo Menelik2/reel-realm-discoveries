@@ -203,7 +203,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
