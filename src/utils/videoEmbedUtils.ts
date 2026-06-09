@@ -82,7 +82,7 @@ export function getEmbedUrl({
 
   // TV SHOW
   if (type === "tv" && !season && !episode) {
-    if (isVidsrcXyz) {
+    if (isVidsrcRu) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (!dsLang) {
@@ -128,7 +128,7 @@ export function getEmbedUrl({
 
   // EPISODE
   if (type === "tv" && season && episode) {
-    if (isVidsrcXyz) {
+    if (isVidsrcRu) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (
