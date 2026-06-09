@@ -28,7 +28,7 @@ export function getEmbedUrl({
 
   // MOVIE
   if (type === "movie") {
-    if (isVidsrcXyz) {
+    if (isVidsrcRu) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
