@@ -23,8 +23,8 @@ export function getEmbedUrl({
   autoNext,
   source,
 }: EmbedUrlParams): string | null {
-  const baseUrl = source || "https://vidsrc.ru";
-  const isVidsrcRu = baseUrl.includes("vidsrc.ru");
+  const baseUrl = source || "https://vidsrc.sbs";
+  const isVidsrcSbs = baseUrl.includes("vidsrc.sbs");
 
   // MOVIE
   if (type === "movie") {
