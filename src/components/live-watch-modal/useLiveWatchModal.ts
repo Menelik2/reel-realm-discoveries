@@ -45,7 +45,7 @@ export const useLiveWatchModal = ({
           setSelectedEpisodeNumber(1);
         }
       }
-      setSelectedSource('https://vidsrc.ru');
+      setSelectedSource('https://vidsrc.sbs');
     } else {
       document.documentElement.classList.remove('dark');
       document.body.style.overflow = 'unset';

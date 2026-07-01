@@ -5,7 +5,7 @@ import type { Movie } from '@/types/tmdb';
 import { Button } from '@/components/ui/button';
 
 const SOURCES = [
-  { name: 'VidSrc RU', url: 'https://vidsrc.ru' },
+  { name: 'VidSrc SBS', url: 'https://vidsrc.sbs' },
 ];
 
 interface LiveWatchModalProps {
