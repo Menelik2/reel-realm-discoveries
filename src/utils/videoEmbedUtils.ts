@@ -28,7 +28,7 @@ export function getEmbedUrl({
 
   // MOVIE
   if (type === "movie") {
-    if (isVidsrcRu) {
+    if (isVidsrcSbs) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
@@ -82,7 +82,7 @@ export function getEmbedUrl({
 
   // TV SHOW
   if (type === "tv" && !season && !episode) {
-    if (isVidsrcRu) {
+    if (isVidsrcSbs) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (!dsLang) {
@@ -128,7 +128,7 @@ export function getEmbedUrl({
 
   // EPISODE
   if (type === "tv" && season && episode) {
-    if (isVidsrcRu) {
+    if (isVidsrcSbs) {
       // vidsrc.xyz structure
       if (tmdbId) {
         if (
