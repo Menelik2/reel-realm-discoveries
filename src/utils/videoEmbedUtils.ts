@@ -137,7 +137,7 @@ export function getEmbedUrl({
           typeof autoPlay === "undefined" &&
           typeof autoNext === "undefined"
         ) {
-          return `${baseUrl}/embed/tv/${tmdbId}/${season}-${episode}`;
+          return `${baseUrl}/embed/tv/${tmdbId}/${season}/${episode}`;
         } else {
           const params = new URLSearchParams({
             tmdb: String(tmdbId),
@@ -158,7 +158,7 @@ export function getEmbedUrl({
           typeof autoPlay === "undefined" &&
           typeof autoNext === "undefined"
         ) {
-          return `${baseUrl}/embed/tv/${imdbId}/${season}-${episode}`;
+          return `${baseUrl}/embed/tv/${imdbId}/${season}/${episode}`;
         } else {
           const params = new URLSearchParams({
             imdb: imdbId,
@@ -181,7 +181,7 @@ export function getEmbedUrl({
           typeof autoPlay === "undefined" &&
           typeof autoNext === "undefined"
         ) {
-          return `${baseUrl}/embed/tv/${tmdbId}/${season}-${episode}`;
+          return `${baseUrl}/embed/tv/${tmdbId}/${season}/${episode}`;
         } else {
           const params = new URLSearchParams({
             tmdb: String(tmdbId),
@@ -202,7 +202,7 @@ export function getEmbedUrl({
           typeof autoPlay === "undefined" &&
           typeof autoNext === "undefined"
         ) {
-          return `${baseUrl}/embed/tv/${imdbId}/${season}-${episode}`;
+          return `${baseUrl}/embed/tv/${imdbId}/${season}/${episode}`;
         } else {
           const params = new URLSearchParams({
             imdb: imdbId,
