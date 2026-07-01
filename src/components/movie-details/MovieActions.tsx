@@ -184,7 +184,8 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
           title: title,
           media_type: contentType,
           name: title,
-          imdb_id: imdbId
+          imdb_id: imdbId,
+          seasons: seasons,
         } as any}
       />
 
