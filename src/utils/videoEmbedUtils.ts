@@ -80,24 +80,24 @@ export function getEmbedUrl({
     return null;
   }
 
-  // TV SHOW
+  // TV SHOW - default to season 1, episode 1
   if (type === "tv" && !season && !episode) {
     if (isVidsrcSbs) {
-      // vidsrc.xyz structure
+      // vidsrc.sbs structure: /embed/tv/{id}/1/1
       if (tmdbId) {
         if (!dsLang) {
-          return `${baseUrl}/embed/tv/${tmdbId}`;
+          return `${baseUrl}/embed/tv/${tmdbId}/1/1`;
         } else {
-          const params = new URLSearchParams({ tmdb: String(tmdbId) });
+          const params = new URLSearchParams({ tmdb: String(tmdbId), season: "1", episode: "1" });
           params.append("ds_lang", dsLang);
           return `${baseUrl}/embed/tv?${params.toString()}`;
         }
       }
       if (imdbId) {
         if (!dsLang) {
-          return `${baseUrl}/embed/tv/${imdbId}`;
+          return `${baseUrl}/embed/tv/${imdbId}/1/1`;
         } else {
-          const params = new URLSearchParams({ imdb: imdbId });
+          const params = new URLSearchParams({ imdb: imdbId, season: "1", episode: "1" });
           params.append("ds_lang", dsLang);
           return `${baseUrl}/embed/tv?${params.toString()}`;
         }
@@ -106,18 +106,18 @@ export function getEmbedUrl({
       // vidsrc.net structure
       if (tmdbId) {
         if (!dsLang) {
-          return `${baseUrl}/embed/tv/${tmdbId}`;
+          return `${baseUrl}/embed/tv/${tmdbId}/1/1`;
         } else {
-          const params = new URLSearchParams({ tmdb: String(tmdbId) });
+          const params = new URLSearchParams({ tmdb: String(tmdbId), season: "1", episode: "1" });
           params.append("ds_lang", dsLang);
           return `${baseUrl}/embed/tv?${params.toString()}`;
         }
       }
       if (imdbId) {
         if (!dsLang) {
-          return `${baseUrl}/embed/tv/${imdbId}`;
+          return `${baseUrl}/embed/tv/${imdbId}/1/1`;
         } else {
-          const params = new URLSearchParams({ imdb: imdbId });
+          const params = new URLSearchParams({ imdb: imdbId, season: "1", episode: "1" });
           params.append("ds_lang", dsLang);
           return `${baseUrl}/embed/tv?${params.toString()}`;
         }
@@ -129,7 +129,7 @@ export function getEmbedUrl({
   // EPISODE
   if (type === "tv" && season && episode) {
     if (isVidsrcSbs) {
-      // vidsrc.xyz structure
+      // vidsrc.sbs structure: /embed/tv/{id}/{season}/{episode}
       if (tmdbId) {
         if (
           !dsLang &&
