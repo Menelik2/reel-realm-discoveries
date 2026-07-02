@@ -68,7 +68,8 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
               variant="ghost"
               size="icon"
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="h-9 w-9 rounded-full"
+              className="hidden md:flex h-9 w-9 rounded-full"
+              aria-label="Toggle theme"
             >
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
@@ -112,6 +113,13 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
                   {link.label}
                 </Link>
               ))}
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="flex items-center justify-between px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-all"
+              >
+                <span>{isDarkMode ? 'Light mode' : 'Dark mode'}</span>
+                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
             </div>
           </nav>
         )}
