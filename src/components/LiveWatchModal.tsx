@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Maximize2 } from 'lucide-react';
+import { getEmbedUrl } from '@/utils/videoEmbedUtils';
 
 const SOURCES = [
   { name: 'VidSrc SBS', url: 'https://vidsrc.sbs' },
@@ -152,11 +153,17 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   if (!open) return null;
 
-  const contentId = (content as any)?.imdb_id || id;
-  const embedUrl =
-    type === 'tv'
-      ? `${selectedSource}/embed/tv/${contentId}/${selectedSeason}/${selectedEpisode}`
-      : `${selectedSource}/embed/movie/${contentId}`;
+  const numericId = Number(id);
+  const embedUrl = getEmbedUrl({
+    tmdbId: !isNaN(numericId) ? numericId : undefined,
+    imdbId: (content as any)?.imdb_id,
+    type,
+    season: type === 'tv' ? selectedSeason : undefined,
+    episode: type === 'tv' ? selectedEpisode : undefined,
+    source: selectedSource,
+  }) || (type === 'tv'
+    ? `${selectedSource}/embed/tv/${id}/1/1`
+    : `${selectedSource}/embed/movie/${id}`);
 
   return createPortal(
     <div
