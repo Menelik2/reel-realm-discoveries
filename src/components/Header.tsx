@@ -3,7 +3,6 @@ import { Search, Menu, X, Moon, Sun, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import { DesktopShortcutButton } from './DesktopShortcutButton';
 
 interface HeaderProps {
   searchQuery: string;
@@ -65,7 +64,6 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <DesktopShortcutButton />
             <Button
               variant="ghost"
               size="icon"
