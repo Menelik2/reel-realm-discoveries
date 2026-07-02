@@ -153,17 +153,24 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   if (!open) return null;
 
-  const numericId = Number(id);
+  // Resolve a strictly numeric TMDB id. Prefer the numeric `content.id` from
+  // TMDB, fall back to parsing the `id` prop only when it's an all-digit string
+  // (never an IMDb "tt..." id).
+  const contentTmdbId = typeof (content as any)?.id === 'number' ? (content as any).id : undefined;
+  const idFromProp = typeof id === 'string' && /^\d+$/.test(id) ? Number(id) : undefined;
+  const tmdbId = contentTmdbId ?? idFromProp;
+  const imdbId = (content as any)?.imdb_id as string | undefined;
+
   const embedUrl = getEmbedUrl({
-    tmdbId: !isNaN(numericId) ? numericId : undefined,
-    imdbId: (content as any)?.imdb_id,
+    tmdbId,
+    imdbId,
     type,
     season: type === 'tv' ? selectedSeason : undefined,
     episode: type === 'tv' ? selectedEpisode : undefined,
     source: selectedSource,
   }) || (type === 'tv'
-    ? `${selectedSource}/embed/tv/${id}/1/1`
-    : `${selectedSource}/embed/movie/${id}`);
+    ? `${selectedSource}/embed/tv/${tmdbId ?? imdbId ?? id}/1/1`
+    : `${selectedSource}/embed/movie/${tmdbId ?? imdbId ?? id}`);
 
   return createPortal(
     <div
