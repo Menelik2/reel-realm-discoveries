@@ -64,17 +64,6 @@ export function SplashScreen() {
           className="relative z-10 w-[280px] max-w-[80vw] h-auto rounded-full shadow-2xl shadow-primary/20"
         />
       </div>
-
-      <div
-        className={[
-          'mt-8 text-center transition-all duration-700 ease-out',
-          isIdleOrExiting ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4',
-        ].join(' ')}
-      >
-        <p className="text-sm font-medium tracking-[0.3em] text-white/60 uppercase">
-          A+ HD Movies
-        </p>
-      </div>
     </div>
   );
 }
