@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminRoute } from "@/components/AdminRoute";
 import { Toaster } from "@/components/ui/sonner";
 import { HelmetProvider } from 'react-helmet-async';
+import { SplashScreen } from "@/components/SplashScreen";
 
 // Eager load Index (critical path)
 import Index from "./pages/Index";
