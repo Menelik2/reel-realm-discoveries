@@ -12,9 +12,27 @@ export function SplashScreen() {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
+
+    // Support both modern addEventListener and legacy addListener APIs.
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      // Some browsers call the listener with a MediaQueryListEvent, others (legacy)
+      // call it with the MediaQueryList as the argument — handle both.
+      const matches = 'matches' in e ? e.matches : mq.matches;
+      setPrefersReducedMotion(matches);
+    };
+
+    if (typeof (mq as any).addEventListener === 'function') {
+      // modern browsers
+      (mq as any).addEventListener('change', onChange);
+      return () => (mq as any).removeEventListener('change', onChange);
+    } else if (typeof (mq as any).addListener === 'function') {
+      // legacy Safari / older browsers
+      (mq as any).addListener(onChange);
+      return () => (mq as any).removeListener(onChange);
+    }
+
+    // Fallback: no listener API
+    return;
   }, []);
 
   useEffect(() => {
@@ -34,11 +52,11 @@ export function SplashScreen() {
     const visibleDuration = prefersReducedMotion ? 1200 : 2600;
     const exitDuration = prefersReducedMotion ? 200 : 600;
 
-    const enterTimer = setTimeout(() => {
+    const enterTimer = window.setTimeout(() => {
       setPhase('idle');
       containerRef.current?.focus();
     }, idleDelay);
-    const exitTimer = setTimeout(() => {
+    const exitTimer = window.setTimeout(() => {
       setPhase('exiting');
       try {
         sessionStorage.setItem(STORAGE_KEY, '1');
@@ -46,7 +64,7 @@ export function SplashScreen() {
         // ignore
       }
     }, visibleDuration);
-    const doneTimer = setTimeout(() => {
+    const doneTimer = window.setTimeout(() => {
       setPhase('done');
       previouslyFocused.current?.focus?.();
     }, visibleDuration + exitDuration);
@@ -61,6 +79,7 @@ export function SplashScreen() {
   // Allow dismissing with Escape for keyboard users
   useEffect(() => {
     if (phase === 'done') return;
+    let escapeTimer: number | undefined;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setPhase('exiting');
@@ -69,14 +88,18 @@ export function SplashScreen() {
         } catch {
           // ignore
         }
-        setTimeout(() => {
+        // match previous behavior; make timer cancelable to avoid leaks
+        escapeTimer = window.setTimeout(() => {
           setPhase('done');
           previouslyFocused.current?.focus?.();
         }, 300);
       }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      if (escapeTimer) clearTimeout(escapeTimer);
+    };
   }, [phase]);
 
   if (phase === 'done') return null;
