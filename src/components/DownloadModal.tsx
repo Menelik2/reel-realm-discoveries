@@ -249,17 +249,17 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
         )}
         
         <div className="space-y-2">
-          {downloadData.downloadLinks.map((link, index) => (
+          {downloadData.downloadLinks.map((item, index) => (
             <div
               key={index}
               className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
             >
-              <div className="flex-1">
-                <p className="font-medium text-sm">Telegram Channel #{index + 1}</p>
-                <p className="text-xs text-muted-foreground">Access all seasons and episodes</p>
+              <div className="flex-1 min-w-0 pr-3">
+                <p className="font-medium text-sm truncate">{item.label}</p>
+                <p className="text-xs text-muted-foreground">Access via Telegram</p>
               </div>
               <Button
-                onClick={() => handleLinkClick(link)}
+                onClick={() => handleLinkClick(item.url)}
                 size="sm"
                 variant="outline"
               >
@@ -278,6 +278,7 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
             </div>
           ))}
         </div>
+
       </div>
     );
   };
