@@ -117,7 +117,7 @@ serve(async (req) => {
     const finalImdbId = imdbId || seriesData.external_ids?.imdb_id;
 
     // Try to fetch from Telegram API
-    let telegramLinks: string[] = [];
+    let telegramLinks: Array<{ label: string; url: string }> = [];
     if (finalImdbId) {
       try {
         const formattedImdbId = finalImdbId.startsWith('tt') ? finalImdbId : `tt${finalImdbId}`;
@@ -125,31 +125,31 @@ serve(async (req) => {
         
         if (telegramResponse.ok) {
           const telegramData = await telegramResponse.json();
+          const urlRegex = /(https?:\/\/(?:t\.me|telegram\.dog|telegram\.me)\/[^\s]+)/i;
           
           if (telegramData.invite_link && typeof telegramData.invite_link === 'string') {
-            // Check if invite_link contains multiple lines (new format)
-            if (telegramData.invite_link.includes('\n')) {
-              // Parse multi-line invite_link and extract only Telegram URLs
-              const lines = telegramData.invite_link.split('\n');
-              telegramLinks = lines
-                .map((line: string) => {
-                  const match = line.match(/(https:\/\/telegram\.dog\/[^\s]+)/);
-                  return match ? match[1] : null;
-                })
-                .filter((url: string | null) => url !== null);
-              
-              console.log(`Found ${telegramLinks.length} Telegram URLs from multi-line invite_link`);
-            } else {
-              // Old format: single URL
-              telegramLinks = [telegramData.invite_link];
-              console.log(`Using single invite_link URL`);
-            }
+            const lines = telegramData.invite_link.split('\n');
+            telegramLinks = lines
+              .map((line: string) => {
+                const match = line.match(urlRegex);
+                if (!match) return null;
+                const url = match[1];
+                // Extract label = text before the URL, stripping trailing separators
+                let label = line.substring(0, line.indexOf(url)).trim();
+                label = label.replace(/[-–—:|]+\s*$/, '').trim();
+                if (!label) label = 'Download';
+                return { label, url };
+              })
+              .filter((item: { label: string; url: string } | null) => item !== null);
+            
+            console.log(`Parsed ${telegramLinks.length} Telegram URLs`);
           }
         }
       } catch (error) {
         console.warn('Failed to fetch Telegram URL:', error);
       }
     }
+
 
     // Prepare response data
     const responseData: SeriesResponse = {
