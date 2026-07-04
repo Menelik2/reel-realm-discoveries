@@ -41,9 +41,10 @@ interface SeriesResponse {
     title: string;
     imdbId?: string;
     fetchedAt: string;
-    downloadLinks?: string[];
+    downloadLinks?: Array<{ label: string; url: string }>;
   };
 }
+
 
 serve(async (req) => {
   // Handle CORS preflight requests
