@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import splashLogo from '@/assets/yeni-splash-logo.jpg.asset.json';
 
 const STORAGE_KEY = 'yeni-splash-seen';
+// Bump this string whenever branding/updates change so returning users see the splash again.
+const SPLASH_VERSION = '1.0.0';
 
 export function SplashScreen() {
   const [phase, setPhase] = useState<'entering' | 'idle' | 'exiting' | 'done'>('entering');
@@ -37,7 +39,7 @@ export function SplashScreen() {
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+      if (sessionStorage.getItem(STORAGE_KEY) === SPLASH_VERSION) {
         setPhase('done');
         return;
       }
