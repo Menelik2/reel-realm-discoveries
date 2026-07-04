@@ -61,7 +61,7 @@ export function SplashScreen() {
     const exitTimer = window.setTimeout(() => {
       setPhase('exiting');
       try {
-        sessionStorage.setItem(STORAGE_KEY, '1');
+        sessionStorage.setItem(STORAGE_KEY, SPLASH_VERSION);
       } catch {
         // ignore
       }
@@ -86,7 +86,7 @@ export function SplashScreen() {
       if (e.key === 'Escape') {
         setPhase('exiting');
         try {
-          sessionStorage.setItem(STORAGE_KEY, '1');
+          sessionStorage.setItem(STORAGE_KEY, SPLASH_VERSION);
         } catch {
           // ignore
         }
