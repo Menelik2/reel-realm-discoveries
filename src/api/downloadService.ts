@@ -12,15 +12,21 @@ interface MovieDownloadResponse {
   "480p"?: MessageIdObject[];
 }
 
+export interface SeriesDownloadLink {
+  label: string;
+  url: string;
+}
+
 export interface DownloadResult {
   tmdbId: string;
   type: 'movie' | 'tv';
   categories?: {
     [key: string]: string[];
   };
-  downloadLinks?: string[];
+  downloadLinks?: SeriesDownloadLink[];
   error?: string;
 }
+
 
 const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
 
