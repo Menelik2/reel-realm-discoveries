@@ -75,23 +75,19 @@ export const SimilarMovies = memo(({ movieId, contentType, onMovieClick, current
         ];
 
         // Fetch keywords/tags for this movie to find thematically similar content
-        const keywordsEndpoint = contentType === 'movie' ? 'keywords' : 'keywords';
         requests.push(
-          fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/${keywordsEndpoint}`, { headers })
+          fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/keywords`, { headers })
         );
 
         // Genre-based discover with ALL genres (strict match)
         if (currentGenres.length > 0) {
           const allGenres = currentGenres.join(',');
-          // Strict: all genres must match
           requests.push(
             fetch(`${TMDB_BASE_URL}/discover/${contentType}?with_genres=${allGenres}&sort_by=vote_average.desc&vote_count.gte=100&page=1`, { headers })
           );
-          // Popular with same genres
           requests.push(
             fetch(`${TMDB_BASE_URL}/discover/${contentType}?with_genres=${allGenres}&sort_by=popularity.desc&vote_count.gte=50&page=1`, { headers })
           );
-          // If 3+ genres, also try top 2 for broader results
           if (currentGenres.length >= 3) {
             const topGenres = currentGenres.slice(0, 2).join(',');
             requests.push(
@@ -108,75 +104,120 @@ export const SimilarMovies = memo(({ movieId, contentType, onMovieClick, current
         // Extract keyword IDs from the keywords response (index 4)
         const keywordsData = allData[4];
         const movieKeywordIds: number[] = (keywordsData?.keywords || keywordsData?.results || []).map((k: any) => k.id);
+        const movieKeywordIdSet = new Set<number>(movieKeywordIds);
 
-        // If we got keyword IDs, fetch content with same keywords (most thematically similar)
+        // Fetch keyword-based results — heavily weighted, multiple angles for storyline match
+        const keywordResultIds = new Set<number>();
         if (movieKeywordIds.length > 0) {
-          const topKeywords = movieKeywordIds.slice(0, 5).join('|');
-          try {
-            const kwResponse = await fetch(
-              `${TMDB_BASE_URL}/discover/${contentType}?with_keywords=${topKeywords}&sort_by=popularity.desc&vote_count.gte=20&page=1`,
-              { headers }
+          const topKeywords = movieKeywordIds.slice(0, 8);
+          const kwRequests: Promise<Response>[] = [];
+
+          // AND match (all top 3 keywords) — strongest thematic match
+          if (topKeywords.length >= 2) {
+            const strictKw = topKeywords.slice(0, 3).join(',');
+            kwRequests.push(
+              fetch(`${TMDB_BASE_URL}/discover/${contentType}?with_keywords=${strictKw}&sort_by=popularity.desc&vote_count.gte=10&page=1`, { headers })
             );
-            if (kwResponse.ok) {
-              const kwData = await kwResponse.json();
+          }
+          // OR match with genre filter (thematic + tonal)
+          const orKw = topKeywords.join('|');
+          const genreFilter = currentGenres.length > 0 ? `&with_genres=${currentGenres.slice(0, 3).join(',')}` : '';
+          kwRequests.push(
+            fetch(`${TMDB_BASE_URL}/discover/${contentType}?with_keywords=${orKw}${genreFilter}&sort_by=popularity.desc&vote_count.gte=20&page=1`, { headers })
+          );
+          kwRequests.push(
+            fetch(`${TMDB_BASE_URL}/discover/${contentType}?with_keywords=${orKw}${genreFilter}&sort_by=vote_average.desc&vote_count.gte=50&page=1`, { headers })
+          );
+
+          try {
+            const kwResponses = await Promise.all(kwRequests);
+            const kwDataArr = await Promise.all(kwResponses.map(r => r.ok ? r.json() : { results: [] }));
+            for (const kwData of kwDataArr) {
+              for (const r of (kwData.results || [])) keywordResultIds.add(r.id);
               allData.push(kwData);
             }
           } catch {}
         }
 
-        // Combine all movie results (skip keywords response at index 4)
-        const allResults: TMDBMovie[] = allData
+        // Fetch keywords for top candidates to score shared TMDB keywords (parallel, capped)
+        const preAllResults: TMDBMovie[] = allData
           .filter((_, i) => i !== 4)
           .flatMap(data => data.results || []);
-
-        // Deduplicate
-        const uniqueResults = allResults.filter((item, index, self) =>
+        const preUnique = preAllResults.filter((item, index, self) =>
           item.id !== movieId &&
           item.poster_path &&
           index === self.findIndex(t => t.id === item.id)
         );
 
-        // Enhanced similarity scoring
+        // Fetch keywords for up to 40 candidates to compute shared-keyword overlap
+        const candidateKeywords = new Map<number, Set<number>>();
+        if (movieKeywordIdSet.size > 0) {
+          const toFetch = preUnique.slice(0, 40);
+          const kwFetches = toFetch.map(async (item) => {
+            try {
+              const r = await fetch(`${TMDB_BASE_URL}/${contentType}/${item.id}/keywords`, { headers });
+              if (!r.ok) return;
+              const j = await r.json();
+              const ids: number[] = (j?.keywords || j?.results || []).map((k: any) => k.id);
+              candidateKeywords.set(item.id, new Set(ids));
+            } catch {}
+          });
+          await Promise.all(kwFetches);
+        }
+
+        const uniqueResults = preUnique;
+
+        // Enhanced similarity scoring — storyline/topic weighted heavily
         const scoredResults = uniqueResults.map(item => {
           let score = 0;
 
-          // Genre overlap (60 points max - increased importance)
+          // Shared TMDB keywords (50 points max) — strongest storyline/topic signal
+          const itemKwIds = candidateKeywords.get(item.id);
+          if (movieKeywordIdSet.size > 0 && itemKwIds && itemKwIds.size > 0) {
+            let shared = 0;
+            for (const id of itemKwIds) if (movieKeywordIdSet.has(id)) shared++;
+            const denom = Math.max(1, Math.min(movieKeywordIdSet.size, itemKwIds.size));
+            score += Math.min(50, (shared / denom) * 60);
+          }
+
+          // Boost items surfaced by keyword-discover queries
+          if (keywordResultIds.has(item.id)) score += 15;
+
+          // Genre overlap (35 points max)
           if (currentGenres.length > 0 && item.genre_ids?.length > 0) {
             const overlap = item.genre_ids.filter(g => currentGenres.includes(g)).length;
             const maxGenres = Math.max(currentGenres.length, item.genre_ids.length);
-            // Bonus for exact genre match
             const exactMatch = overlap === currentGenres.length && overlap === item.genre_ids.length;
-            score += (overlap / maxGenres) * 50 + (exactMatch ? 10 : 0);
+            score += (overlap / maxGenres) * 28 + (exactMatch ? 7 : 0);
           }
 
-          // Overview keyword similarity (25 points max - story/theme matching)
+          // Overview keyword similarity (25 points max) — plot/story text match
           if (currentKeywords.size > 0 && item.overview) {
             const itemKeywords = extractKeywords(item.overview);
             let matchCount = 0;
-            for (const kw of itemKeywords) {
-              if (currentKeywords.has(kw)) matchCount++;
-            }
-            const kwScore = Math.min(25, (matchCount / Math.max(currentKeywords.size, 1)) * 40);
+            for (const kw of itemKeywords) if (currentKeywords.has(kw)) matchCount++;
+            const kwScore = Math.min(25, (matchCount / Math.max(currentKeywords.size, 1)) * 45);
             score += kwScore;
           }
 
-          // Rating similarity (10 points max)
+          // Rating similarity (8 points max)
           if (currentRating > 0 && item.vote_average > 0) {
             const ratingDiff = Math.abs(currentRating - item.vote_average);
-            score += Math.max(0, 10 - ratingDiff * 2);
+            score += Math.max(0, 8 - ratingDiff * 1.5);
           }
 
-          // Year proximity (5 points max)
+          // Year proximity (4 points max)
           if (currentYear) {
             const itemYear = (item.release_date || item.first_air_date || '').split('-')[0];
             if (itemYear) {
               const diff = Math.abs(parseInt(currentYear) - parseInt(itemYear));
-              if (!isNaN(diff)) score += Math.max(0, 5 - diff * 0.5);
+              if (!isNaN(diff)) score += Math.max(0, 4 - diff * 0.4);
             }
           }
 
           return { ...item, similarityScore: score };
         });
+
 
         scoredResults.sort((a, b) => b.similarityScore - a.similarityScore);
 
