@@ -65,6 +65,8 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            <ActorSearch />
+
             <Button
               variant="ghost"
               size="icon"
