@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 
 // Lazy load all other routes
 const Movie = lazy(() => import("./pages/Movie"));
+const Person = lazy(() => import("./pages/Person"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Privacy = lazy(() => import("./pages/Privacy"));
