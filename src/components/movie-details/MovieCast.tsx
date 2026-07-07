@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 
 interface Cast {
   id: number;
@@ -8,7 +9,7 @@ interface Cast {
 
 interface MovieCastProps {
   cast: Cast[];
-  onActorClick: (actorId: number) => void;
+  onActorClick?: (actorId: number) => void;
 }
 
 export const MovieCast = ({ cast, onActorClick }: MovieCastProps) => {
@@ -19,10 +20,11 @@ export const MovieCast = ({ cast, onActorClick }: MovieCastProps) => {
       <h3 className="text-xl font-semibold mb-4">Cast</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {cast.map(actor => (
-          <div 
-            key={actor.id} 
+          <Link
+            key={actor.id}
+            to={`/person/${actor.id}`}
+            onClick={() => onActorClick?.(actor.id)}
             className="text-center group cursor-pointer"
-            onClick={() => onActorClick(actor.id)}
           >
             <div className="overflow-hidden rounded-lg">
               <img
@@ -34,9 +36,9 @@ export const MovieCast = ({ cast, onActorClick }: MovieCastProps) => {
                 className="w-full aspect-[2/3] object-cover rounded-lg mb-2 transition-transform duration-300 group-hover:scale-105"
               />
             </div>
-            <p className="font-medium text-sm">{actor.name}</p>
+            <p className="font-medium text-sm group-hover:text-primary transition-colors">{actor.name}</p>
             <p className="text-xs text-muted-foreground">{actor.character}</p>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
