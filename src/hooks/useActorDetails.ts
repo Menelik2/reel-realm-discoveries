@@ -18,7 +18,10 @@ export interface ActorCredit {
   media_type: 'movie' | 'tv';
   character: string;
   vote_average: number;
+  vote_count?: number;
   popularity: number;
+  release_date?: string;
+  first_air_date?: string;
 }
 
 interface ActorCredits {
