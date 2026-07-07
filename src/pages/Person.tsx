@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Calendar, MapPin, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,7 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useActorDetails } from '@/hooks/useActorDetails';
 import { ActorMovieCredits } from '@/components/actor/ActorMovieCredits';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
-import { SEOMetadata } from '@/components/SEOMetadata';
+
+const SITE_URL = 'https://yeni-movies.lovable.app';
 
 const calcAge = (birthday: string) => {
   const b = new Date(birthday);
