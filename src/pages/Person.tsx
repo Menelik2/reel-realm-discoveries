@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useActorDetails } from '@/hooks/useActorDetails';
 import { ActorMovieCredits } from '@/components/actor/ActorMovieCredits';
+import { SimilarPeople } from '@/components/actor/SimilarPeople';
+import { useSimilarPeople } from '@/hooks/useSimilarPeople';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const SITE_URL = 'https://yeni-movies.lovable.app';
@@ -27,6 +29,10 @@ const PersonPage = () => {
   const actorId = id ? parseInt(id, 10) : null;
   const { actor, credits, loading, error } = useActorDetails(
     actorId && !isNaN(actorId) ? actorId : null
+  );
+  const { people: similarPeople, loading: similarLoading } = useSimilarPeople(
+    actorId && !isNaN(actorId) ? actorId : null,
+    credits,
   );
   const [expandedBio, setExpandedBio] = useState(false);
 
@@ -248,6 +254,11 @@ const PersonPage = () => {
                 credits={credits}
                 onMovieClick={handleMovieClick}
               />
+            </section>
+
+            {/* Similar People */}
+            <section className="mt-2">
+              <SimilarPeople people={similarPeople} loading={similarLoading} />
             </section>
           </>
         )}
