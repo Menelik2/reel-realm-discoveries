@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { ActorSearch } from '@/components/ActorSearch';
+import { InstallPrompt } from '@/components/InstallPrompt';
 
 interface HeaderProps {
   searchQuery: string;
@@ -65,7 +66,9 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            <InstallPrompt />
             <ActorSearch />
+
 
             <Button
               variant="ghost"
