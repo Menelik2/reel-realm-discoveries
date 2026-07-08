@@ -30,6 +30,10 @@ const PersonPage = () => {
   const { actor, credits, loading, error } = useActorDetails(
     actorId && !isNaN(actorId) ? actorId : null
   );
+  const { people: similarPeople, loading: similarLoading } = useSimilarPeople(
+    actorId && !isNaN(actorId) ? actorId : null,
+    credits,
+  );
   const [expandedBio, setExpandedBio] = useState(false);
 
   useEffect(() => {
