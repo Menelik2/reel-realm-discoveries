@@ -255,6 +255,11 @@ const PersonPage = () => {
                 onMovieClick={handleMovieClick}
               />
             </section>
+
+            {/* Similar People */}
+            <section className="mt-2">
+              <SimilarPeople people={similarPeople} loading={similarLoading} />
+            </section>
           </>
         )}
       </div>
