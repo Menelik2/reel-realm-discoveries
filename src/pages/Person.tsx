@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useActorDetails } from '@/hooks/useActorDetails';
 import { ActorMovieCredits } from '@/components/actor/ActorMovieCredits';
+import { SimilarPeople } from '@/components/actor/SimilarPeople';
+import { useSimilarPeople } from '@/hooks/useSimilarPeople';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const SITE_URL = 'https://yeni-movies.lovable.app';
