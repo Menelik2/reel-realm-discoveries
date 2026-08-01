@@ -215,15 +215,17 @@ export const searchContent = async ({ searchQuery, currentPage, contentType }: S
     params.append('query', searchQuery);
     params.append('page', currentPage.toString());
 
-    // Use specific search endpoint if contentType is provided, otherwise search all
-    const searchEndpoint = (contentType && contentType !== 'all') ? `search/${contentType}` : 'search/multi';
+    // Use specific search endpoint if a single media type is provided, otherwise search all
+    const singleType = contentType === 'movie' || contentType === 'tv' ? contentType : undefined;
+    const searchEndpoint = singleType ? `search/${singleType}` : 'search/multi';
     const url = `${TMDB_BASE_URL}/${searchEndpoint}?${params.toString()}`;
     const data = await fetchFromTMDB(url);
 
     return {
-        movies: processTMDbResults(data.results, contentType === 'all' ? undefined : contentType),
+        movies: processTMDbResults(data.results, singleType),
         totalPages: Math.min(data.total_pages || 1, 100),
     };
+
 };
 
 export const fetchMovieDetails = async (id: number, contentType: 'movie' | 'tv') => {
