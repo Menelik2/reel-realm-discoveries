@@ -7,7 +7,7 @@ interface MovieFiltersProps {
   setSelectedGenre: (genre: string) => void;
   selectedYear: string;
   setSelectedYear: (year: string) => void;
-  contentType?: 'movie' | 'tv' | 'all';
+  contentType?: ContentType;
 }
 
 const years = ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];

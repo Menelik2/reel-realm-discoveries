@@ -207,7 +207,7 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
 interface SearchContentParams {
   searchQuery: string;
   currentPage: number;
-  contentType?: 'movie' | 'tv' | 'all';
+  contentType?: ContentType;
 }
 
 export const searchContent = async ({ searchQuery, currentPage, contentType }: SearchContentParams) => {

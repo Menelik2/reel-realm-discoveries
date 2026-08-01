@@ -9,7 +9,7 @@ interface MovieGridContentProps {
   totalPages: number;
   onMovieClick: (movieId: number) => void;
   onPageChange: (page: number) => void;
-  contentType: 'movie' | 'tv' | 'all';
+  contentType: ContentType;
   searchQuery: string;
   currentCategory: string;
 }

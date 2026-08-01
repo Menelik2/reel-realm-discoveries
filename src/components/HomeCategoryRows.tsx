@@ -9,8 +9,8 @@ import { TrendingUp, Flame, Star, Clock, Play, Sparkles } from 'lucide-react';
 import { getGenresForContentType } from '@/constants/genres';
 
 interface HomeCategoryRowsProps {
-  contentType: 'movie' | 'tv' | 'all';
-  setContentType: (type: 'movie' | 'tv' | 'all') => void;
+  contentType: ContentType;
+  setContentType: (type: ContentType) => void;
   onMovieClick: (movieId: number) => void;
 }
 
@@ -80,7 +80,7 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 
 interface LazyCategorySectionProps {
   category: { key: string; label: string };
-  contentType: 'movie' | 'tv' | 'all';
+  contentType: ContentType;
   selectedGenre: string;
   onMovieClick: (movieId: number) => void;
   showAdAfter?: boolean;
