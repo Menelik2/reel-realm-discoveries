@@ -22,11 +22,32 @@ export interface ActorCredit {
   popularity: number;
   release_date?: string;
   first_air_date?: string;
+  genre_ids?: number[];
+  episode_count?: number;
 }
 
 interface ActorCredits {
   cast: ActorCredit[];
 }
+
+/** Talk shows, news and reality — not real acting credits. */
+const EXCLUDED_GENRES = new Set([10767, 10763, 10764]);
+const SELF_CHARACTER = /^(self|himself|herself|themselves)\b/i;
+
+const isRealCredit = (c: ActorCredit) => {
+  if (!c.poster_path) return false;
+  if ((c.genre_ids || []).some((g) => EXCLUDED_GENRES.has(g))) return false;
+  if (c.character && SELF_CHARACTER.test(c.character.trim())) return false;
+  return true;
+};
+
+/** Weighted relevance: popularity blended with audience volume and quality. */
+const creditScore = (c: ActorCredit) => {
+  const votes = c.vote_count || 0;
+  const rating = c.vote_average || 0;
+  return (c.popularity || 0) * 0.4 + Math.log10(votes + 1) * 40 + rating * 4;
+};
+
 
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
