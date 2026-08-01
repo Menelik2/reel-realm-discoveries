@@ -26,9 +26,9 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [contentType, setContentType] = useState<"movie" | "tv" | "all">(() => {
+  const [contentType, setContentType] = useState<ContentType>(() => {
     const typeParam = searchParams.get('type');
-    if (typeParam === 'movie' || typeParam === 'tv') return typeParam;
+    if (typeParam === 'movie' || typeParam === 'tv' || typeParam === 'anime' || typeParam === 'asian') return typeParam;
     return 'all';
   });
   const [currentPage, setCurrentPage] = useState(1);
