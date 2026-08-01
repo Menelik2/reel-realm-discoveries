@@ -48,12 +48,13 @@ const Index = () => {
   // Update content type from URL params
   useEffect(() => {
     const typeParam = searchParams.get('type');
-    if (typeParam === 'movie' || typeParam === 'tv') {
+    if (typeParam === 'movie' || typeParam === 'tv' || typeParam === 'anime' || typeParam === 'asian') {
       setContentType(typeParam);
     } else if (typeParam === null && contentType !== 'all') {
       setContentType('all');
     }
   }, [searchParams]);
+
 
   // Detect mobile
   useEffect(() => {
