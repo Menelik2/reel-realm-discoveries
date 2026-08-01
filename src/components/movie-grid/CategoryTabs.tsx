@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 
 import { Button } from '@/components/ui/button';
 

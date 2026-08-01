@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchMovies, searchContent } from '@/api/tmdbService';

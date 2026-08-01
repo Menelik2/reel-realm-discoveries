@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import type { Movie } from '@/types/tmdb';
