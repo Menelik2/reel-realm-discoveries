@@ -1,3 +1,5 @@
+import type { ContentType } from '@/types/tmdb';
+
 export interface Genre {
   id: number;
   name: string;
