@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 import { useState, memo } from 'react';
 import { useMovieData } from '@/hooks/useMovieData';
 import { useLazyVisible } from '@/hooks/useLazyVisible';

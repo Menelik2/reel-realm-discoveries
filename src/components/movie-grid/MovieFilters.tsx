@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getGenresForContentType } from '@/constants/genres';

@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 
 import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
