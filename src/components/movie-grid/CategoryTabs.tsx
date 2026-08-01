@@ -1,10 +1,11 @@
+import type { ContentType } from '@/types/tmdb';
 
 import { Button } from '@/components/ui/button';
 
 interface CategoryTabsProps {
   currentCategory: string;
   setCurrentCategory: (category: string) => void;
-  contentType: 'movie' | 'tv' | 'all';
+  contentType: ContentType;
 }
 
 export const CategoryTabs = ({ currentCategory, setCurrentCategory, contentType }: CategoryTabsProps) => {

@@ -1,4 +1,4 @@
-import type { Movie } from '@/types/tmdb';
+import type { ContentType, Movie } from '@/types/tmdb';
 
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
@@ -43,13 +43,81 @@ const fetchFromTMDB = async (url: string) => {
 
 interface FetchMoviesParams {
   currentCategory: string;
-  contentType: 'movie' | 'tv' | 'all';
+  contentType: ContentType;
   selectedGenre: string;
   selectedYear: string;
   currentPage: number;
 }
 
+/** Origin countries treated as "Asian" content (drama/cinema from East & Southeast Asia). */
+const ASIAN_ORIGIN_COUNTRIES = 'KR|JP|CN|TW|TH|HK';
+const ANIMATION_GENRE_ID = '16';
+
+/**
+ * Anime and Asian are cross-media collections (movies + series), so they are
+ * resolved with TMDB /discover using language and origin-country filters.
+ */
+const fetchCuratedCollection = async (
+  kind: 'anime' | 'asian',
+  { currentCategory, selectedGenre, selectedYear, currentPage }: Omit<FetchMoviesParams, 'contentType'>,
+) => {
+  const buildUrl = (media: 'movie' | 'tv') => {
+    const params = new URLSearchParams();
+    params.append('page', currentPage.toString());
+    params.append('sort_by', currentCategory === 'top_rated' ? 'vote_average.desc' : 'popularity.desc');
+    params.append('vote_count.gte', currentCategory === 'top_rated' ? '150' : '20');
+
+    const genres: string[] = [];
+    if (kind === 'anime') {
+      genres.push(ANIMATION_GENRE_ID);
+      params.append('with_original_language', 'ja');
+    } else {
+      params.append('with_origin_country', ASIAN_ORIGIN_COUNTRIES);
+    }
+    if (selectedGenre !== 'all') genres.push(selectedGenre);
+    if (genres.length) params.append('with_genres', genres.join(','));
+
+    if (selectedYear !== 'all') {
+      params.append(media === 'movie' ? 'primary_release_year' : 'first_air_date_year', selectedYear);
+    }
+
+    if (currentCategory === 'latest_releases' || currentCategory === 'now_playing' || currentCategory === 'upcoming') {
+      const now = new Date();
+      const dateField = media === 'movie' ? 'primary_release_date' : 'first_air_date';
+      if (currentCategory === 'upcoming') {
+        params.append(`${dateField}.gte`, now.toISOString().split('T')[0]);
+      } else {
+        const from = new Date(now.getFullYear(), now.getMonth() - (currentCategory === 'latest_releases' ? 1 : 2), now.getDate());
+        params.append(`${dateField}.gte`, from.toISOString().split('T')[0]);
+        params.append(`${dateField}.lte`, now.toISOString().split('T')[0]);
+      }
+    }
+
+    return `${TMDB_BASE_URL}/discover/${media}?${params.toString()}`;
+  };
+
+  const [movieData, tvData] = await Promise.all([
+    fetchFromTMDB(buildUrl('movie')),
+    fetchFromTMDB(buildUrl('tv')),
+  ]);
+
+  const combined = [
+    ...processTMDbResults(movieData.results, 'movie'),
+    ...processTMDbResults(tvData.results, 'tv'),
+  ].sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+
+  return {
+    movies: combined.slice(0, 20),
+    totalPages: Math.min(Math.max(movieData.total_pages || 1, tvData.total_pages || 1), 100),
+  };
+};
+
 export const fetchMovies = async ({ currentCategory, contentType, selectedGenre, selectedYear, currentPage }: FetchMoviesParams) => {
+    if (contentType === 'anime' || contentType === 'asian') {
+        return fetchCuratedCollection(contentType, { currentCategory, selectedGenre, selectedYear, currentPage });
+    }
+
+
     // If contentType is 'all', fetch both movies and TV shows and combine results
     if (contentType === 'all') {
         const [movieResults, tvResults] = await Promise.all([
@@ -139,7 +207,7 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
 interface SearchContentParams {
   searchQuery: string;
   currentPage: number;
-  contentType?: 'movie' | 'tv' | 'all';
+  contentType?: ContentType;
 }
 
 export const searchContent = async ({ searchQuery, currentPage, contentType }: SearchContentParams) => {
@@ -147,15 +215,17 @@ export const searchContent = async ({ searchQuery, currentPage, contentType }: S
     params.append('query', searchQuery);
     params.append('page', currentPage.toString());
 
-    // Use specific search endpoint if contentType is provided, otherwise search all
-    const searchEndpoint = (contentType && contentType !== 'all') ? `search/${contentType}` : 'search/multi';
+    // Use specific search endpoint if a single media type is provided, otherwise search all
+    const singleType = contentType === 'movie' || contentType === 'tv' ? contentType : undefined;
+    const searchEndpoint = singleType ? `search/${singleType}` : 'search/multi';
     const url = `${TMDB_BASE_URL}/${searchEndpoint}?${params.toString()}`;
     const data = await fetchFromTMDB(url);
 
     return {
-        movies: processTMDbResults(data.results, contentType === 'all' ? undefined : contentType),
+        movies: processTMDbResults(data.results, singleType),
         totalPages: Math.min(data.total_pages || 1, 100),
     };
+
 };
 
 export const fetchMovieDetails = async (id: number, contentType: 'movie' | 'tv') => {

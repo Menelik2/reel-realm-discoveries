@@ -1,3 +1,5 @@
+import type { ContentType } from '@/types/tmdb';
+
 export interface Genre {
   id: number;
   name: string;
@@ -44,9 +46,11 @@ export const tvGenres: Genre[] = [
   { id: 37, name: 'Western' },
 ];
 
-export const getGenresForContentType = (contentType: 'movie' | 'tv' | 'all'): Genre[] => {
+export const getGenresForContentType = (contentType: ContentType): Genre[] => {
   if (contentType === 'movie') return movieGenres;
   if (contentType === 'tv') return tvGenres;
+  
+
   
   // For 'all', merge and deduplicate by id
   const map = new Map<number, Genre>();

@@ -1,4 +1,6 @@
 
+export type ContentType = 'movie' | 'tv' | 'all' | 'anime' | 'asian';
+
 export interface Movie {
   id: number;
   title: string;

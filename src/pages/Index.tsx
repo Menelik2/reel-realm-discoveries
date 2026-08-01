@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -26,9 +27,9 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [contentType, setContentType] = useState<"movie" | "tv" | "all">(() => {
+  const [contentType, setContentType] = useState<ContentType>(() => {
     const typeParam = searchParams.get('type');
-    if (typeParam === 'movie' || typeParam === 'tv') return typeParam;
+    if (typeParam === 'movie' || typeParam === 'tv' || typeParam === 'anime' || typeParam === 'asian') return typeParam;
     return 'all';
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,12 +48,13 @@ const Index = () => {
   // Update content type from URL params
   useEffect(() => {
     const typeParam = searchParams.get('type');
-    if (typeParam === 'movie' || typeParam === 'tv') {
+    if (typeParam === 'movie' || typeParam === 'tv' || typeParam === 'anime' || typeParam === 'asian') {
       setContentType(typeParam);
     } else if (typeParam === null && contentType !== 'all') {
       setContentType('all');
     }
   }, [searchParams]);
+
 
   // Detect mobile
   useEffect(() => {
@@ -105,13 +107,15 @@ const Index = () => {
     let type: 'movie' | 'tv';
     if (typeOverride) {
       type = typeOverride;
-    } else if (contentType === 'all') {
-      type = 'movie';
-    } else {
+    } else if (contentType === 'movie' || contentType === 'tv') {
       type = contentType;
+    } else {
+      // Mixed collections (All / Anime / Asian) default to movie routing
+      type = 'movie';
     }
     navigate(`/${type}/${movieId}`);
   };
+
 
   const handleSetCurrentCategory = (category: string) => {
     setCurrentCategory(category);

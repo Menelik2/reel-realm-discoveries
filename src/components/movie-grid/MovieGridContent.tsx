@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import type { Movie } from '@/types/tmdb';
@@ -9,7 +10,7 @@ interface MovieGridContentProps {
   totalPages: number;
   onMovieClick: (movieId: number) => void;
   onPageChange: (page: number) => void;
-  contentType: 'movie' | 'tv' | 'all';
+  contentType: ContentType;
   searchQuery: string;
   currentCategory: string;
 }

@@ -1,3 +1,4 @@
+import type { ContentType } from '@/types/tmdb';
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchMovies, searchContent } from '@/api/tmdbService';
@@ -8,7 +9,7 @@ interface UseMovieDataProps {
   searchQuery: string;
   selectedGenre: string;
   selectedYear: string;
-  contentType: 'movie' | 'tv' | 'all';
+  contentType: ContentType;
   currentCategory: string;
   currentPage: number;
   refreshKey?: number;
