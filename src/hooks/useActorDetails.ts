@@ -87,10 +87,19 @@ export const useActorDetails = (actorId: number | null) => {
 
         setActor(actorData);
         
-        const sortedCredits = creditsData.cast
-          .filter(c => c.poster_path)
-          .sort((a, b) => b.popularity - a.popularity)
+        // Dedupe by title id (TMDB returns one row per character/season)
+        const byId = new Map<number, ActorCredit>();
+        for (const c of (creditsData.cast || []).filter(isRealCredit)) {
+          const existing = byId.get(c.id);
+          if (!existing || (c.episode_count || 0) > (existing.episode_count || 0)) {
+            byId.set(c.id, c);
+          }
+        }
+
+        const sortedCredits = Array.from(byId.values())
+          .sort((a, b) => creditScore(b) - creditScore(a))
           .slice(0, 12);
+
 
         setCredits(sortedCredits);
 
