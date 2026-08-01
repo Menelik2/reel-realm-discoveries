@@ -107,13 +107,15 @@ const Index = () => {
     let type: 'movie' | 'tv';
     if (typeOverride) {
       type = typeOverride;
-    } else if (contentType === 'all') {
-      type = 'movie';
-    } else {
+    } else if (contentType === 'movie' || contentType === 'tv') {
       type = contentType;
+    } else {
+      // Mixed collections (All / Anime / Asian) default to movie routing
+      type = 'movie';
     }
     navigate(`/${type}/${movieId}`);
   };
+
 
   const handleSetCurrentCategory = (category: string) => {
     setCurrentCategory(category);
