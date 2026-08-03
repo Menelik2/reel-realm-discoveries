@@ -305,6 +305,7 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                   </>
                 )}
               </Button>
+              </div>
             </div>
           ))}
         </div>
