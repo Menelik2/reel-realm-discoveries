@@ -26,6 +26,31 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('');
   const isMobile = useIsMobile();
+  const { data: isPremium } = useAdFreeStatus();
+  const { start: startFastDownload, isPending: isFastPending } = useFastDownload();
+
+  const renderFastDownloadButton = (telegramUrl: string, fileName: string) => {
+    if (!isPremium) return null;
+    const messageId = extractMessageId(telegramUrl);
+    if (!messageId) return null;
+    return (
+      <Button
+        onClick={() => startFastDownload({ messageId, fileName })}
+        size="sm"
+        variant="secondary"
+        className="shrink-0"
+        disabled={isFastPending(messageId)}
+        title="Fast Download — streams straight to your browser, no Telegram app needed"
+      >
+        {isFastPending(messageId) ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Zap className="h-4 w-4" />
+        )}
+        <span className="hidden sm:inline ml-1">Fast</span>
+      </Button>
+    );
+  };
 
   useEffect(() => {
     if (open && tmdbId) {
