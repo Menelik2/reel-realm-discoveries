@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Download, ExternalLink, AlertCircle, Search } from 'lucide-react';
+import { Loader2, Download, ExternalLink, AlertCircle, Search, Zap } from 'lucide-react';
 import { getDownloadLinks, type DownloadResult } from '@/api/downloadService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAdFreeStatus } from '@/hooks/useAdFreeStatus';
+import { useFastDownload, extractMessageId } from '@/hooks/useFastDownload';
 
 interface DownloadModalProps {
   open: boolean;
