@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Download, ExternalLink, AlertCircle, Search } from 'lucide-react';
+import { Loader2, Download, ExternalLink, AlertCircle, Search, Zap } from 'lucide-react';
 import { getDownloadLinks, type DownloadResult } from '@/api/downloadService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAdFreeStatus } from '@/hooks/useAdFreeStatus';
+import { useFastDownload, extractMessageId } from '@/hooks/useFastDownload';
 
 interface DownloadModalProps {
   open: boolean;
@@ -24,6 +26,31 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('');
   const isMobile = useIsMobile();
+  const { data: isPremium } = useAdFreeStatus();
+  const { start: startFastDownload, isPending: isFastPending } = useFastDownload();
+
+  const renderFastDownloadButton = (telegramUrl: string, fileName: string) => {
+    if (!isPremium) return null;
+    const messageId = extractMessageId(telegramUrl);
+    if (!messageId) return null;
+    return (
+      <Button
+        onClick={() => startFastDownload({ messageId, fileName })}
+        size="sm"
+        variant="secondary"
+        className="shrink-0"
+        disabled={isFastPending(messageId)}
+        title="Fast Download — streams straight to your browser, no Telegram app needed"
+      >
+        {isFastPending(messageId) ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Zap className="h-4 w-4" />
+        )}
+        <span className="hidden sm:inline ml-1">Fast</span>
+      </Button>
+    );
+  };
 
   useEffect(() => {
     if (open && tmdbId) {
@@ -193,6 +220,7 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                         </div>
                         <div className="flex items-center gap-3 ml-4">
                           <span className="text-sm text-muted-foreground font-mono">{size}</span>
+                          {renderFastDownloadButton(link, name)}
                           <Button
                             onClick={() => handleLinkClick(link)}
                             size="sm"
@@ -258,6 +286,8 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                 <p className="font-medium text-sm truncate">{item.label}</p>
                 <p className="text-xs text-muted-foreground">Access via Telegram</p>
               </div>
+              <div className="flex items-center gap-2">
+              {renderFastDownloadButton(item.url, `${title} ${item.label}`)}
               <Button
                 onClick={() => handleLinkClick(item.url)}
                 size="sm"
@@ -275,6 +305,7 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                   </>
                 )}
               </Button>
+              </div>
             </div>
           ))}
         </div>
