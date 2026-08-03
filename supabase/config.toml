@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.setup-cron]
 verify_jwt = false
+
+[functions.bridge-download]
+verify_jwt = true
