@@ -220,6 +220,7 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                         </div>
                         <div className="flex items-center gap-3 ml-4">
                           <span className="text-sm text-muted-foreground font-mono">{size}</span>
+                          {renderFastDownloadButton(link, name)}
                           <Button
                             onClick={() => handleLinkClick(link)}
                             size="sm"
