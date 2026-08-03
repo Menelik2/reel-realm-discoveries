@@ -286,6 +286,8 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                 <p className="font-medium text-sm truncate">{item.label}</p>
                 <p className="text-xs text-muted-foreground">Access via Telegram</p>
               </div>
+              <div className="flex items-center gap-2">
+              {renderFastDownloadButton(item.url, `${title} ${item.label}`)}
               <Button
                 onClick={() => handleLinkClick(item.url)}
                 size="sm"
