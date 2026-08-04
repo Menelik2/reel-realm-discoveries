@@ -156,6 +156,9 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           </nav>
         )}
       </div>
+
+      <SearchOverlay open={isSearchOverlayOpen} onOpenChange={setIsSearchOverlayOpen} />
     </header>
+
   );
 };
