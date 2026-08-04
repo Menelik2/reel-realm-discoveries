@@ -68,15 +68,14 @@ export const usePhonoSearch = (query: string) => {
     enabled: trimmed.length >= 2,
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<PhonoSearchResult[]> => {
-      const { data, error } = await supabase.functions.invoke('phono-search', {
-        method: 'GET' as const,
-        body: undefined,
-        // query params are appended to the function URL
-        ...({ } as Record<string, never>),
+      const res = await fetch(`${FUNCTIONS_URL}?q=${encodeURIComponent(trimmed)}`, {
+        headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
       });
-      if (error) throw error;
-      return (data as { results?: PhonoSearchResult[] })?.results || [];
+      if (!res.ok) throw new Error(`search failed: ${res.status}`);
+      const json = (await res.json()) as { results?: PhonoSearchResult[] };
+      return json.results || [];
     },
+
   });
 
   return {
