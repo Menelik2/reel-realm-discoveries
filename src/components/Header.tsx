@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Menu, X, Moon, Sun, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { ActorSearch } from '@/components/ActorSearch';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { SearchOverlay } from '@/components/SearchOverlay';
+
 
 interface HeaderProps {
   searchQuery: string;
