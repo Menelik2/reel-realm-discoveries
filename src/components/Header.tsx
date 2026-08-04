@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Menu, X, Moon, Sun, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { ActorSearch } from '@/components/ActorSearch';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { SearchOverlay } from '@/components/SearchOverlay';
+
 
 interface HeaderProps {
   searchQuery: string;
@@ -15,6 +17,18 @@ interface HeaderProps {
 
 export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOverlayOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const navLinks = [
     { to: '/', label: 'Home' },
@@ -24,6 +38,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
   ];
 
   return (
+
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
@@ -66,8 +81,19 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full"
+              aria-label="Open search"
+              onClick={() => setIsSearchOverlayOpen(true)}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
             <InstallPrompt />
             <ActorSearch />
+
+
 
 
             <Button
@@ -130,6 +156,9 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           </nav>
         )}
       </div>
+
+      <SearchOverlay open={isSearchOverlayOpen} onOpenChange={setIsSearchOverlayOpen} />
     </header>
+
   );
 };
