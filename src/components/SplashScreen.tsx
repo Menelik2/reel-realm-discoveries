@@ -148,7 +148,7 @@ export function SplashScreen() {
 
         {/* Logo image */}
         <img
-          src={splashLogo.url}
+          src={SPLASH_LOGO_SRC}
           alt="YENI MOVIES"
           width={320}
           height={320}
