@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <link rel="preconnect" href="https://api.themoviedb.org" />
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />  
+    
+    <meta name="theme-color" content="#121212">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Yeni Movie">
+    
+    <title>YENI MOVIE — Stream Movies &amp; TV Series</title>
+    <meta name="description" content="Discover and stream the latest movies and TV series with trailers, ratings, and cast info on YENI MOVIE.">
+    <meta name="keywords" content="movies, tv series, films, cinema, trailers, ratings, reviews, new releases, popular movies, top rated tv shows">
+    <meta name="author" content="YENI MOVIE" />
+    <meta name="robots" content="index, follow" />
+    <meta name="google-adsense-account" content="ca-pub-8938310552882401">
+    <meta name="google-site-verification" content="5ccqbcY5T7wOKQg8WkrG0N96w4HkUYgeyYNFPZCtKi0" />
+    <meta name="referrer" content="origin" />
+
+
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://yeni-movies.lovable.app/" />
+    <meta property="og:site_name" content="YENI MOVIE" />
+    
+    
+    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/8666ad6b-34d8-42dc-a9f6-f17256b7c9f1">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@yeni_movie" />
+    <meta name="twitter:creator" content="@yeni_movie" />
+    
+    
+    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/8666ad6b-34d8-42dc-a9f6-f17256b7c9f1">
+
+    <!-- Preconnect to critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.themoviedb.org" crossorigin>
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+    <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
+    <link rel="dns-prefetch" href="https://googleads.g.doubleclick.net">
+    <link rel="dns-prefetch" href="https://www.google.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+    <!-- Deferred Google AdSense for better TTI -->
+    <script>
+      // Initialize adsbygoogle array immediately
+      window.adsbygoogle = window.adsbygoogle || [];
+      
+      // Defer AdSense loading until after page interactive
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var adsScript = document.createElement('script');
+          adsScript.async = true;
+          adsScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8938310552882401';
+          adsScript.crossOrigin = 'anonymous';
+          adsScript.onerror = function() { console.warn('AdSense script failed to load'); };
+          document.head.appendChild(adsScript);
+        }, 1000);
+      });
+    </script>
+  <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/vIuPAmBzPaaU3cZJ99X10uzaJRh2/uploads/1758666660353-photo_2025-04-18_18-49-37.jpg">
+  <meta property="og:title" content="YENI MOVIE — Stream Movies &amp; TV Series">
+  <meta name="twitter:title" content="YENI MOVIE — Stream Movies &amp; TV Series">
+  <meta property="og:description" content="Discover and stream the latest movies and TV series with trailers, ratings, and cast info on YENI MOVIE.">
+  <meta name="twitter:description" content="Discover and stream the latest movies and TV series with trailers, ratings, and cast info on YENI MOVIE.">
+</head>
+
+  <body>
+    <div id="root"></div>
+    
+    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
