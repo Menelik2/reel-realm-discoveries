@@ -16,7 +16,7 @@ const TABS: { key: ContentType; label: string }[] = [
 
 export const ContentTypeToggle = ({ contentType, setContentType }: ContentTypeToggleProps) => {
   return (
-    <div className="mb-4 md:mb-6 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+    <div className="mb-4 md:mb-6 w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain scrollbar-hide">
       <div className="flex gap-1.5 md:gap-2 w-max">
         {TABS.map((tab) => (
           <Button
