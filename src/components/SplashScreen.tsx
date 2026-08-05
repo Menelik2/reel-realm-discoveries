@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import splashLogo from '@/assets/yeni-splash-logo.jpg.asset.json';
+const SPLASH_LOGO_SRC = '/splash-logo.jpg';
 
 const STORAGE_KEY = 'yeni-splash-seen';
 // Bump this string whenever branding/updates change so returning users see the splash again.
@@ -148,7 +148,7 @@ export function SplashScreen() {
 
         {/* Logo image */}
         <img
-          src={splashLogo.url}
+          src={SPLASH_LOGO_SRC}
           alt="YENI MOVIES"
           width={320}
           height={320}
