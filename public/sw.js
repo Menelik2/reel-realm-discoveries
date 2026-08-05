@@ -1,5 +1,7 @@
 // Yeni Movie service worker — minimal app-shell cache with NetworkFirst for HTML.
-const CACHE_VERSION = 'yeni-movie-v1';
+const CACHE_VERSION = 'yeni-movie-v2';
+const IMAGE_CACHE = 'yeni-movie-img-v2';
+const MAX_IMAGE_ENTRIES = 300;
 const PRECACHE = [
   '/',
   '/manifest.json',
@@ -19,7 +21,9 @@ self.addEventListener('activate', (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))
+        keys
+          .filter((k) => k !== CACHE_VERSION && k !== IMAGE_CACHE)
+          .map((k) => caches.delete(k))
       );
       await self.clients.claim();
     })()
@@ -31,6 +35,27 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
+
+  // Stale-while-revalidate for TMDB poster/backdrop images (biggest repeat-visit win)
+  if (url.hostname === 'image.tmdb.org') {
+    event.respondWith(
+      caches.open(IMAGE_CACHE).then(async (cache) => {
+        const cached = await cache.match(req);
+        const network = fetch(req)
+          .then((res) => {
+            if (res && res.status === 200) {
+              cache.put(req, res.clone());
+              trimCache(cache, MAX_IMAGE_ENTRIES);
+            }
+            return res;
+          })
+          .catch(() => cached);
+        return cached || network;
+      })
+    );
+    return;
+  }
+
   if (url.origin !== self.location.origin) return;
   // Never cache OAuth flow
   if (url.pathname.startsWith('/~oauth')) return;
@@ -63,3 +88,11 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+async function trimCache(cache, maxEntries) {
+  try {
+    const keys = await cache.keys();
+    if (keys.length <= maxEntries) return;
+    await Promise.all(keys.slice(0, keys.length - maxEntries).map((k) => cache.delete(k)));
+  } catch (_) {}
+}
