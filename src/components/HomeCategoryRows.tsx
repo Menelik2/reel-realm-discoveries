@@ -40,9 +40,10 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
     <div className="space-y-10 pb-24 md:pb-8">
       {/* Filters bar */}
       <div className="container mx-auto px-4 pt-8">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full min-w-0">
           <ContentTypeToggle contentType={contentType} setContentType={setContentType} />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0 max-w-full">
+
             <span className="text-sm font-medium text-muted-foreground">Genre:</span>
             <Select value={selectedGenre} onValueChange={setSelectedGenre}>
               <SelectTrigger className="w-[160px] h-9 rounded-full bg-secondary/50 border-border/50 text-sm">
