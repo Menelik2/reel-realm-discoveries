@@ -20,6 +20,12 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '/placeholder.svg';
 
+  // Serve a smaller poster to phones, larger only where needed
+  const posterSrcSet = !fullPosterUrl && movie.poster_path
+    ? `https://image.tmdb.org/t/p/w185${movie.poster_path} 185w, https://image.tmdb.org/t/p/w342${movie.poster_path} 342w, https://image.tmdb.org/t/p/w500${movie.poster_path} 500w`
+    : undefined;
+
+
   const handleCardClick = () => {
     if (onMovieClick) {
       onMovieClick(movie.id, movie.media_type || 'movie');
