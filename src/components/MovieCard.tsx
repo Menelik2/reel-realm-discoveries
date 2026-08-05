@@ -20,6 +20,12 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
     ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
     : '/placeholder.svg';
 
+  // Serve a smaller poster to phones, larger only where needed
+  const posterSrcSet = !fullPosterUrl && movie.poster_path
+    ? `https://image.tmdb.org/t/p/w185${movie.poster_path} 185w, https://image.tmdb.org/t/p/w342${movie.poster_path} 342w, https://image.tmdb.org/t/p/w500${movie.poster_path} 500w`
+    : undefined;
+
+
   const handleCardClick = () => {
     if (onMovieClick) {
       onMovieClick(movie.id, movie.media_type || 'movie');
@@ -38,12 +44,15 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
       <div className="relative aspect-[2/3] overflow-hidden">
         <img
           src={posterUrl}
+          srcSet={posterSrcSet}
+          sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 200px"
           alt={movie.title}
           loading="lazy"
           decoding="async"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
         />
+
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
