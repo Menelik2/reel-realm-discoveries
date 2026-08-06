@@ -171,34 +171,38 @@ export const SimilarMovies = memo(({ movieId, contentType, onMovieClick, current
         const scoredResults = uniqueResults.map(item => {
           let score = 0;
 
-          // Shared TMDB keywords (50 points max) — strongest storyline/topic signal
+          // Shared TMDB keywords (70 points max) — strongest storyline/topic signal
+          let sharedKw = 0;
           const itemKwIds = candidateKeywords.get(item.id);
           if (movieKeywordIdSet.size > 0 && itemKwIds && itemKwIds.size > 0) {
-            let shared = 0;
-            for (const id of itemKwIds) if (movieKeywordIdSet.has(id)) shared++;
+            for (const id of itemKwIds) if (movieKeywordIdSet.has(id)) sharedKw++;
             const denom = Math.max(1, Math.min(movieKeywordIdSet.size, itemKwIds.size));
-            score += Math.min(50, (shared / denom) * 60);
+            score += Math.min(70, (sharedKw / denom) * 90);
+            if (sharedKw >= 2) score += 10; // multiple shared topics = same subject matter
           }
 
           // Boost items surfaced by keyword-discover queries
-          if (keywordResultIds.has(item.id)) score += 15;
+          if (keywordResultIds.has(item.id)) score += 20;
 
-          // Genre overlap (35 points max)
+          // Genre overlap (30 points max)
           if (currentGenres.length > 0 && item.genre_ids?.length > 0) {
             const overlap = item.genre_ids.filter(g => currentGenres.includes(g)).length;
             const maxGenres = Math.max(currentGenres.length, item.genre_ids.length);
             const exactMatch = overlap === currentGenres.length && overlap === item.genre_ids.length;
-            score += (overlap / maxGenres) * 28 + (exactMatch ? 7 : 0);
+            score += (overlap / maxGenres) * 24 + (exactMatch ? 6 : 0);
           }
 
-          // Overview keyword similarity (25 points max) — plot/story text match
+          // Overview keyword similarity (35 points max) — plot/story text match
+          let overviewMatches = 0;
           if (currentKeywords.size > 0 && item.overview) {
             const itemKeywords = extractKeywords(item.overview);
-            let matchCount = 0;
-            for (const kw of itemKeywords) if (currentKeywords.has(kw)) matchCount++;
-            const kwScore = Math.min(25, (matchCount / Math.max(currentKeywords.size, 1)) * 45);
-            score += kwScore;
+            for (const kw of itemKeywords) if (currentKeywords.has(kw)) overviewMatches++;
+            score += Math.min(35, (overviewMatches / Math.max(currentKeywords.size, 1)) * 60);
           }
+
+          // Require a real story/topic signal, not just genre
+          const hasStorySignal = sharedKw > 0 || overviewMatches >= 2 || keywordResultIds.has(item.id);
+          if (!hasStorySignal) score -= 25;
 
           // Rating similarity (8 points max)
           if (currentRating > 0 && item.vote_average > 0) {
@@ -221,8 +225,11 @@ export const SimilarMovies = memo(({ movieId, contentType, onMovieClick, current
 
         scoredResults.sort((a, b) => b.similarityScore - a.similarityScore);
 
-        const normalizedResults: Movie[] = scoredResults
-          .slice(0, 30)
+        const storyMatches = scoredResults.filter(i => i.similarityScore > 0);
+        const ranked = storyMatches.length >= 20 ? storyMatches : scoredResults;
+
+        const normalizedResults: Movie[] = ranked
+          .slice(0, 20)
           .map(item => ({
             id: item.id,
             title: item.title || item.name || 'Unknown Title',
