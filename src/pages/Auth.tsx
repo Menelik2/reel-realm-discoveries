@@ -52,7 +52,7 @@ const Auth = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success('Password reset link sent. Check your inbox.');
+        navigate('/reset-confirmation');
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'An unexpected error occurred.');
