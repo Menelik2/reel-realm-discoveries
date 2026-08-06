@@ -94,7 +94,17 @@ const Auth = () => {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Processing...' : 'Login'}
               </Button>
+              <Button
+                type="button"
+                variant="link"
+                className="w-full text-muted-foreground"
+                onClick={handleForgotPassword}
+                disabled={loading || resetting}
+              >
+                {resetting ? 'Sending reset link...' : 'Forgot password?'}
+              </Button>
             </form>
+
           </CardContent>
         </Card>
       </main>
