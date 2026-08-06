@@ -21,6 +21,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const TopBoxOffice = lazy(() => import("./pages/TopBoxOffice"));
 const Auth = lazy(() => import("./pages/Auth"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const ResetConfirmation = lazy(() => import("./pages/ResetConfirmation"));
 const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/top-box-office" element={<TopBoxOffice />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/reset-confirmation" element={<ResetConfirmation />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-cancelled" element={<PaymentCancelled />} />
               <Route path="/admin" element={
