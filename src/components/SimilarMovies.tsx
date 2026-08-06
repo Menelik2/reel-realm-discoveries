@@ -152,7 +152,7 @@ export const SimilarMovies = memo(({ movieId, contentType, onMovieClick, current
         // Fetch keywords for up to 40 candidates to compute shared-keyword overlap
         const candidateKeywords = new Map<number, Set<number>>();
         if (movieKeywordIdSet.size > 0) {
-          const toFetch = preUnique.slice(0, 40);
+          const toFetch = preUnique.slice(0, 60);
           const kwFetches = toFetch.map(async (item) => {
             try {
               const r = await fetch(`${TMDB_BASE_URL}/${contentType}/${item.id}/keywords`, { headers });
