@@ -13,6 +13,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -37,6 +38,29 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error('Enter your email address first.');
+      return;
+    }
+    setResetting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Password reset link sent. Check your inbox.');
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'An unexpected error occurred.');
+    } finally {
+      setResetting(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background">

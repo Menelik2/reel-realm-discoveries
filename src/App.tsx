@@ -62,6 +62,7 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/top-box-office" element={<TopBoxOffice />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-cancelled" element={<PaymentCancelled />} />
               <Route path="/admin" element={
