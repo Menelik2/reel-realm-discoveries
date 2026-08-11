@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Maximize2 } from 'lucide-react';
+import { Maximize2, Minimize2, ArrowLeft } from 'lucide-react';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
 
 const SOURCES = [
@@ -116,10 +116,21 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         e.preventDefault();
         toggleFullscreen();
       }
+      if (e.key === "Escape" && !document.fullscreenElement) {
+        onClose();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, toggleFullscreen]);
+  }, [open, toggleFullscreen, onClose]);
+
+  const handleBack = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {}).then(() => onClose());
+    } else {
+      onClose();
+    }
+  }, [onClose]);
 
   const numericId = Number(id);
   const isNumeric = !Number.isNaN(numericId) && String(numericId) === String(id);
@@ -141,11 +152,21 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         ref={containerRef}
         className="relative flex flex-col w-full h-full max-w-[100vw] max-h-[100vh] bg-background"
       >
-        <LiveWatchModalHeader title={title} onClose={onClose} />
+        {/* Header – sticky so it stays visible */}
+        <div className="flex-shrink-0 sticky top-0 z-30">
+          <LiveWatchModalHeader
+            title={title}
+            onClose={handleBack}
+            hasSeasons={type === "tv" && seasons.length > 0}
+            selectedSeasonNumber={selectedSeason}
+            selectedEpisodeNumber={selectedEpisode}
+            content={content}
+          />
+        </div>
 
         {/* Controls bar */}
         {(type === "tv" && seasons.length > 0) || SOURCES.length > 1 ? (
-          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-white/10 bg-card/50">
+          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-white/10 bg-card/50 flex-shrink-0">
             {SOURCES.length > 1 && (
               <div className="flex gap-1">
                 {SOURCES.map(source => (
@@ -239,18 +260,38 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             </div>
           )}
 
-          {/* Fullscreen toggle */}
-          {!isFullscreen && (
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-              className="absolute right-3 z-20 bg-black/60 hover:bg-black/80 text-white rounded-lg p-2 backdrop-blur-sm transition-colors border border-white/10"
-              style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
-              title="Toggle Fullscreen (F)"
-              aria-label="Toggle fullscreen"
-            >
+          {/* Floating back button – always visible, especially in fullscreen */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBack();
+            }}
+            className="absolute top-3 left-3 z-40 flex items-center gap-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full px-3 py-2 backdrop-blur-sm transition-colors border border-white/20 shadow-lg"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+            title="Back"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-sm font-medium hidden sm:inline">Back</span>
+          </button>
+
+          {/* Fullscreen toggle – always available */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFullscreen();
+            }}
+            className="absolute right-3 z-40 bg-black/70 hover:bg-black/90 text-white rounded-lg p-2 backdrop-blur-sm transition-colors border border-white/10 shadow-lg"
+            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+            title={isFullscreen ? "Exit Fullscreen (F)" : "Fullscreen (F)"}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Toggle fullscreen"}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-5 w-5" />
+            ) : (
               <Maximize2 className="h-5 w-5" />
-            </button>
-          )}
+            )}
+          </button>
         </div>
       </div>
     </div>,
