@@ -7,7 +7,7 @@ interface SourceSelectorProps {
 }
 
 const sources = [
-  { name: 'VidSrc SBS', url: 'https://vidsrc.sbs' },
+  { name: 'VidSrc TW', url: 'https://vidsrc.tw' },
 ];
 
 export const SourceSelector = ({ selectedSource, onSourceChange }: SourceSelectorProps) => {

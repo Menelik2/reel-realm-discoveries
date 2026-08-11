@@ -14,7 +14,7 @@ import { Maximize2 } from 'lucide-react';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
 
 const SOURCES = [
-  { name: 'VidSrc SBS', url: 'https://vidsrc.sbs' },
+  { name: 'VidSrc TW', url: 'https://vidsrc.tw' },
 ];
 
 interface SeasonLite {
@@ -48,257 +48,151 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   // Season/episode state (TV only)
   const seasons: SeasonLite[] = useMemo(() => {
-    const raw = (content as any)?.seasons as SeasonLite[] | undefined;
-    return Array.isArray(raw) ? raw.filter(s => s.season_number > 0 && s.episode_count > 0) : [];
-  }, [content]);
+    if (!content?.seasons) return [];
+    return content.seasons.filter((s) => s.season_number > 0);
+  }, [content?.seasons]);
 
   const [selectedSeason, setSelectedSeason] = useState<number>(1);
   const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
 
-  const currentSeason = useMemo(
-    () => seasons.find(s => s.season_number === selectedSeason),
-    [seasons, selectedSeason]
-  );
-  const episodeCount = currentSeason?.episode_count ?? 1;
-
   useEffect(() => {
-    if (!open) return;
-    const originalOpen = window.open;
-    window.open = function (...args: any[]) {
-      console.log('Blocked popup:', args[0]);
-      return null;
-    };
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.open = originalOpen;
-      document.body.style.overflow = '';
-    };
-  }, [open]);
-
-  const handleShieldClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowClickShield(false);
-  }, []);
-
-  // Reset on open
-  useEffect(() => {
-    if (open) {
-      setShowClickShield(true);
-      setSelectedSource(SOURCES[0].url);
-      if (type === 'tv') {
-        const first = seasons[0];
-        setSelectedSeason(first?.season_number ?? 1);
-        setSelectedEpisode(1);
-      }
+    if (open && seasons.length > 0) {
+      setSelectedSeason(seasons[0].season_number);
+      setSelectedEpisode(1);
     }
-  }, [open, type, seasons]);
+  }, [open, seasons]);
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-    };
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    if (!containerRef.current) return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else {
-      containerRef.current.requestFullscreen?.().catch(() => {});
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        e.stopPropagation();
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        } else {
-          onClose();
-        }
-      }
-      if (e.key === 'f' || e.key === 'F') {
-        e.preventDefault();
-        toggleFullscreen();
-      }
-    };
-    window.addEventListener('keydown', handleKeyPress, true);
-    return () => window.removeEventListener('keydown', handleKeyPress, true);
-  }, [open, onClose, toggleFullscreen]);
+  const currentSeason = seasons.find((s) => s.season_number === selectedSeason);
+  const maxEpisodes = currentSeason?.episode_count || 1;
 
   const handleSourceChange = useCallback((url: string) => {
     setSelectedSource(url);
-    setShowClickShield(true);
   }, []);
 
-  const handleSeasonChange = useCallback((val: string) => {
-    setSelectedSeason(Number(val));
-    setSelectedEpisode(1);
-    setShowClickShield(true);
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen?.();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.();
+      setIsFullscreen(false);
+    }
   }, []);
 
-  const handleEpisodeChange = useCallback((val: string) => {
-    setSelectedEpisode(Number(val));
-    setShowClickShield(true);
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
+
+  // Build embed URL
+  const numericId = Number(id);
+  const isNumeric = !isNaN(numericId) && String(numericId) === id;
+
+  const embedUrl = getEmbedUrl({
+    tmdbId: isNumeric ? numericId : undefined,
+    imdbId: !isNumeric ? id : undefined,
+    type,
+    season: type === "tv" ? selectedSeason : undefined,
+    episode: type === "tv" ? selectedEpisode : undefined,
+    source: selectedSource,
+  });
 
   if (!open) return null;
 
-  // Resolve a strictly numeric TMDB id. Prefer the numeric `content.id` from
-  // TMDB, fall back to parsing the `id` prop only when it's an all-digit string
-  // (never an IMDb "tt..." id).
-  const contentTmdbId = typeof (content as any)?.id === 'number' ? (content as any).id : undefined;
-  const idFromProp = typeof id === 'string' && /^\d+$/.test(id) ? Number(id) : undefined;
-  const tmdbId = contentTmdbId ?? idFromProp;
-  const imdbId = (content as any)?.imdb_id as string | undefined;
-
-  const embedUrl = getEmbedUrl({
-    tmdbId,
-    imdbId,
-    type,
-    season: type === 'tv' ? selectedSeason : undefined,
-    episode: type === 'tv' ? selectedEpisode : undefined,
-    source: selectedSource,
-  }) || (type === 'tv'
-    ? `${selectedSource}/embed/tv/${tmdbId ?? imdbId ?? id}/1/1`
-    : `${selectedSource}/embed/movie/${tmdbId ?? imdbId ?? id}`);
-
   return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] bg-black overscroll-contain"
-      style={{ height: '100dvh' }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClose();
-      }}
-      onMouseDown={(e) => e.stopPropagation()}
-    >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
       <div
         ref={containerRef}
-        className="relative w-full h-full flex flex-col bg-black overflow-hidden"
-        onClick={e => e.stopPropagation()}
-        onMouseDown={e => e.stopPropagation()}
+        className="relative w-full max-w-6xl mx-4 bg-background rounded-xl overflow-hidden shadow-2xl border border-white/10"
       >
-        {!isFullscreen && (
-          <LiveWatchModalHeader
-            onClose={onClose}
-            title={title}
-            hasSeasons={type === 'tv'}
-            selectedSeasonNumber={type === 'tv' ? selectedSeason : undefined}
-            selectedEpisodeNumber={type === 'tv' ? selectedEpisode : undefined}
-            content={content}
-          />
-        )}
+        <LiveWatchModalHeader title={title} onClose={onClose} />
 
-        {/* Source + Season/Episode selectors */}
-        {!isFullscreen && (
-          <div className="flex-shrink-0 flex flex-wrap items-center gap-2 px-3 py-2 bg-background/95 border-b border-border">
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">Source:</span>
-              {SOURCES.map(source => (
-                <Button
-                  key={source.url}
-                  variant={selectedSource === source.url ? 'default' : 'outline'}
-                  size="sm"
-                  className="text-xs h-7 px-3 whitespace-nowrap flex-shrink-0"
-                  onClick={(e) => { e.stopPropagation(); handleSourceChange(source.url); }}
+        <div className="p-4 space-y-4">
+          {/* Source selector */}
+          <div className="flex flex-wrap items-center gap-2">
+            {SOURCES.map(source => (
+              <Button
+                key={source.url}
+                variant={selectedSource === source.url ? 'default' : 'outline'}
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); handleSourceChange(source.url); }}
+              >
+                {source.name}
+              </Button>
+            ))}
+
+            {type === "tv" && seasons.length > 0 && (
+              <>
+                <Select
+                  value={String(selectedSeason)}
+                  onValueChange={(v) => {
+                    setSelectedSeason(Number(v));
+                    setSelectedEpisode(1);
+                  }}
                 >
-                  {source.name}
-                </Button>
-              ))}
-            </div>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Season" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasons.map((s) => (
+                      <SelectItem key={s.season_number} value={String(s.season_number)}>
+                        {s.name || `Season ${s.season_number}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            {type === 'tv' && seasons.length > 0 && (
-              <div className="flex items-center gap-2 ml-auto flex-wrap">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">Season</span>
-                  <Select value={String(selectedSeason)} onValueChange={handleSeasonChange}>
-                    <SelectTrigger
-                      className="h-7 min-w-[6rem] text-xs"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-[10000] max-h-64">
-                      {seasons.map(s => (
-                        <SelectItem key={s.season_number} value={String(s.season_number)}>
-                          {s.name || `Season ${s.season_number}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">Episode</span>
-                  <Select value={String(selectedEpisode)} onValueChange={handleEpisodeChange}>
-                    <SelectTrigger
-                      className="h-7 min-w-[5rem] text-xs"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-[10000] max-h-64">
-                      {Array.from({ length: episodeCount }, (_, i) => i + 1).map(ep => (
-                        <SelectItem key={ep} value={String(ep)}>
-                          Ep {ep}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select
+                  value={String(selectedEpisode)}
+                  onValueChange={(v) => setSelectedEpisode(Number(v))}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Episode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: maxEpisodes }, (_, i) => i + 1).map((ep) => (
+                      <SelectItem key={ep} value={String(ep)}>
+                        Episode {ep}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+
+            <Button variant="outline" size="sm" onClick={toggleFullscreen} className="ml-auto">
+              <Maximize2 className="h-4 w-4 mr-1" />
+              Fullscreen
+            </Button>
+          </div>
+
+          {/* Player */}
+          <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
+            {showClickShield && (
+              <div
+                className="absolute inset-0 z-20 cursor-pointer"
+                onClick={() => setShowClickShield(false)}
+                title="Click to interact with player"
+              />
+            )}
+            {embedUrl ? (
+              <iframe
+                src={embedUrl}
+                className="w-full h-full"
+                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                referrerPolicy="no-referrer"
+                title={`Watch ${title}`}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Unable to load player
               </div>
             )}
           </div>
-        )}
-
-        <div className="flex-1 w-full relative min-h-0">
-          <iframe
-            key={embedUrl}
-            src={embedUrl}
-            className="w-full h-full border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            allowFullScreen
-            referrerPolicy="no-referrer"
-            title="Watch Now"
-            style={{ border: 'none' }}
-          />
-
-          {showClickShield && (
-            <div
-              className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/60 backdrop-blur-sm transition-opacity"
-              onClick={handleShieldClick}
-              onMouseDown={e => e.stopPropagation()}
-            >
-              <div className="flex flex-col items-center gap-3 text-white animate-pulse">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="text-primary">
-                  <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-                <p className="text-lg font-semibold">Tap to Play</p>
-              </div>
-            </div>
-          )}
-
-          {/* Fullscreen toggle — inside iframe area, above safe area, never clipped by bottom nav */}
-          {!isFullscreen && (
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-              className="absolute right-3 z-20 bg-black/60 hover:bg-black/80 text-white rounded-lg p-2 backdrop-blur-sm transition-colors border border-white/10"
-              style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
-              title="Toggle Fullscreen (F)"
-              aria-label="Toggle fullscreen"
-            >
-              <Maximize2 className="h-5 w-5" />
-            </button>
-          )}
         </div>
       </div>
     </div>,

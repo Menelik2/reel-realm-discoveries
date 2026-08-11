@@ -23,13 +23,13 @@ export function getEmbedUrl({
   autoNext,
   source,
 }: EmbedUrlParams): string | null {
-  const baseUrl = source || "https://vidsrc.sbs";
-  const isVidsrcSbs = baseUrl.includes("vidsrc.sbs");
+  const baseUrl = source || "https://vidsrc.tw";
+  const isPathStyle = baseUrl.includes("vidsrc.sbs") || baseUrl.includes("vidsrc.tw") || baseUrl.includes("vidsrc.xyz");
 
   // MOVIE
   if (type === "movie") {
-    if (isVidsrcSbs) {
-      // vidsrc.xyz structure
+    if (isPathStyle) {
+      // path-style structure (vidsrc.tw / vidsrc.sbs / vidsrc.xyz)
       if (tmdbId) {
         if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
           return `${baseUrl}/embed/movie/${tmdbId}`;
@@ -82,8 +82,8 @@ export function getEmbedUrl({
 
   // TV SHOW - default to season 1, episode 1
   if (type === "tv" && !season && !episode) {
-    if (isVidsrcSbs) {
-      // vidsrc.sbs structure: /embed/tv/{id}/1/1
+    if (isPathStyle) {
+      // path-style structure: /embed/tv/{id}/1/1
       if (tmdbId) {
         if (!dsLang) {
           return `${baseUrl}/embed/tv/${tmdbId}/1/1`;
@@ -126,10 +126,10 @@ export function getEmbedUrl({
     return null;
   }
 
-  // EPISODE
+  // TV SHOW with specific season/episode
   if (type === "tv" && season && episode) {
-    if (isVidsrcSbs) {
-      // vidsrc.sbs structure: /embed/tv/{id}/{season}/{episode}
+    if (isPathStyle) {
+      // path-style structure: /embed/tv/{id}/{season}/{episode}
       if (tmdbId) {
         if (
           !dsLang &&
