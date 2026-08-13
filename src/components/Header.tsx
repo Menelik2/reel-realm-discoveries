@@ -37,7 +37,8 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
   ];
 
   return (
-    <header className="bg-background/80 backdrop-blur-xl border-b border-border/50">
+    /* Normal document flow — scrolls with page (no fixed / sticky) */
+    <header className="relative w-full bg-background border-b border-border/50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
