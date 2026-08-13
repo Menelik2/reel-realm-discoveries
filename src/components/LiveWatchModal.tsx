@@ -359,6 +359,31 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                   )}
                 </span>
               </button>
+
+              <p className="absolute bottom-6 left-4 right-4 text-center text-[11px] sm:text-xs text-white/55 leading-relaxed px-2">
+                Fewer ads? Use{' '}
+                <a
+                  href="https://www.mozilla.org/firefox/new/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-player-allow-click="true"
+                  className="text-white/80 underline underline-offset-2 hover:text-white"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Firefox
+                </a>
+                {' '}+{' '}
+                <a
+                  href="https://addons.mozilla.org/firefox/addon/ublock-origin/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-player-allow-click="true"
+                  className="text-white/80 underline underline-offset-2 hover:text-white"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  uBlock Origin
+                </a>
+              </p>
             </div>
           )}
 
