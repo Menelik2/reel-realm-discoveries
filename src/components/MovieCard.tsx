@@ -37,7 +37,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
   return (
     <button
       onClick={handleCardClick}
-      className="group relative rounded-xl overflow-hidden bg-card text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all duration-300 hover:scale-[1.03] hover:shadow-[var(--card-shadow-hover)]"
+      className="group relative rounded-lg overflow-hidden bg-card text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all duration-300 hover:scale-[1.03] hover:shadow-[var(--card-shadow-hover)]"
       style={{ boxShadow: 'var(--card-shadow)' }}
     >
       {/* Poster */}
@@ -45,7 +45,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
         <img
           src={posterUrl}
           srcSet={posterSrcSet}
-          sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 200px"
+          sizes="(max-width: 640px) 30vw, (max-width: 1024px) 18vw, 150px"
           alt={movie.title}
           loading="lazy"
           decoding="async"
@@ -58,20 +58,20 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
 
         {/* Rating badge */}
         {movie.vote_average > 0 && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
-            <Star className="h-3 w-3 text-primary fill-primary" />
-            <span className="text-xs font-semibold text-foreground">{movie.vote_average.toFixed(1)}</span>
+          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
+            <Star className="h-2.5 w-2.5 text-primary fill-primary" />
+            <span className="text-[10px] font-semibold text-foreground">{movie.vote_average.toFixed(1)}</span>
           </div>
         )}
       </div>
 
       {/* Info */}
-      <div className="p-2.5 md:p-3 space-y-0.5">
-        <h3 className="font-semibold text-xs md:text-sm text-card-foreground line-clamp-1">
+      <div className="p-1.5 md:p-2 space-y-0.5">
+        <h3 className="font-semibold text-[11px] md:text-xs text-card-foreground line-clamp-1">
           {movie.title}
         </h3>
         {year && (
-          <p className="text-[11px] text-muted-foreground">{year}</p>
+          <p className="text-[10px] text-muted-foreground">{year}</p>
         )}
       </div>
     </button>
