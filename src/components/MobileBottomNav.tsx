@@ -3,6 +3,7 @@ import { Home, Play, Star, Search, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { MobileSearchDialog } from './MobileSearchDialog';
+import { useScrollHide } from '@/hooks/useScrollHide';
 
 export const MobileBottomNav = () => {
   const [searchParams] = useSearchParams();
@@ -10,6 +11,12 @@ export const MobileBottomNav = () => {
   const isHomePath = typeof window !== 'undefined' && window.location.pathname === '/';
   const isBoxOfficePath = typeof window !== 'undefined' && window.location.pathname === '/top-box-office';
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const isHidden = useScrollHide({
+    forceVisible: searchOpen,
+    threshold: 6,
+    topOffset: 48,
+  });
 
   const navItems = [
     { id: 'home', to: '/?category=popular', icon: Home, label: 'Home', isActive: isHomePath && !currentType },
@@ -20,8 +27,14 @@ export const MobileBottomNav = () => {
 
   return (
     <>
-      <div className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-t border-border/50 z-50 md:hidden">
-        <nav className="flex justify-around items-center h-16 px-2">
+      <div
+        className={cn(
+          'mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-t border-border/50 z-50 md:hidden',
+          'transition-transform duration-300 ease-out will-change-transform',
+          isHidden ? 'translate-y-full' : 'translate-y-0'
+        )}
+      >
+        <nav className="flex justify-around items-center h-16 px-2 pb-[env(safe-area-inset-bottom,0px)]">
           {navItems.map(({ to, icon: Icon, label, isActive }) => {
             return (
               <Link
