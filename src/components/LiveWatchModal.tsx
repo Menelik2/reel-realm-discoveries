@@ -63,7 +63,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   );
   const episodeCount = currentSeason?.episode_count ?? 1;
 
-  // Activate ad injection guard for the whole time the player is open
   useEffect(() => {
     if (!open) return;
     activateAdInjectionGuard();
@@ -239,7 +238,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
             referrerPolicy="no-referrer"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-fullscreen"
             title={title}
             style={{ border: 'none' }}
           />
