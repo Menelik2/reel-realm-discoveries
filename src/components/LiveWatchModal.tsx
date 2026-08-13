@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Maximize2, Minimize2, ArrowLeft } from 'lucide-react';
+import { Maximize2, Minimize2, ArrowLeft, Play } from 'lucide-react';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
 import {
   activateAdInjectionGuard,
@@ -36,7 +36,7 @@ interface LiveWatchModalProps {
   content?: Movie & { seasons?: SeasonLite[] };
 }
 
-/** 0 = locked, 1 = first tap done, 2 = unlocked */
+/** 0 = locked, 1 = first tap on Play, 2 = unlocked / iframe active */
 type ShieldStep = 0 | 1 | 2;
 
 const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
@@ -80,7 +80,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   const resetShield = useCallback(() => setShieldStep(0), []);
 
-  const handleShieldTap = useCallback((e: React.SyntheticEvent) => {
+  /** Only the center Play control advances the two-tap unlock */
+  const handlePlayButtonPress = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setShieldStep((prev) => {
@@ -161,7 +162,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   const showControlsBar = (type === "tv" && seasons.length > 0) || SOURCES.length > 1;
   const isUnlocked = shieldStep >= 2;
-  const showClickShield = !isUnlocked;
 
   return createPortal(
     <div
@@ -242,61 +242,65 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         )}
 
         <div className="flex-1 w-full relative min-h-0 bg-black isolate">
-          {/* iframe cannot receive taps until unlocked */}
-          <iframe
-            key={embedUrl}
-            src={embedUrl}
-            className="absolute inset-0 w-full h-full border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            allowFullScreen
-            referrerPolicy="no-referrer"
-            title={title}
-            tabIndex={isUnlocked ? 0 : -1}
-            style={{
-              border: 'none',
-              zIndex: 1,
-              pointerEvents: isUnlocked ? 'auto' : 'none',
-            }}
-          />
+          {/*
+            Load iframe ONLY after Play is pressed twice.
+            Until then the in-player play button does not exist / cannot be pressed.
+          */}
+          {isUnlocked && embedUrl ? (
+            <iframe
+              key={embedUrl}
+              src={embedUrl}
+              className="absolute inset-0 w-full h-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              referrerPolicy="no-referrer"
+              title={title}
+              style={{ border: 'none', zIndex: 1 }}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-black" style={{ zIndex: 1 }} aria-hidden />
+          )}
 
-          {showClickShield && (
+          {/* Full-area blocker + center Play button (replaces embed play button until unlocked) */}
+          {!isUnlocked && (
             <div
-              className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/80 backdrop-blur-sm select-none touch-manipulation"
+              className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black via-black/90 to-black/70 select-none"
               style={{ zIndex: 30 }}
-              onClick={handleShieldTap}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleShieldTap(e);
-              }}
               onContextMenu={(e) => e.preventDefault()}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") handleShieldTap(e);
-              }}
-              aria-label={shieldStep === 0 ? "Tap once to continue" : "Tap again to play"}
             >
-              <div className="flex flex-col items-center gap-3 text-white pointer-events-none px-6 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="text-primary">
-                  <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-                {shieldStep === 0 ? (
-                  <>
-                    <p className="text-lg font-semibold">Tap to unlock</p>
-                    <p className="text-xs text-white/70">Step 1 of 2 — video locked</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-lg font-semibold animate-pulse">Tap again to play</p>
-                    <p className="text-xs text-white/70">Step 2 of 2 — unlocks play button</p>
-                  </>
-                )}
-              </div>
+              <button
+                type="button"
+                className="flex flex-col items-center gap-3 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+                onClick={handlePlayButtonPress}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handlePlayButtonPress(e);
+                }}
+                aria-label={shieldStep === 0 ? "Press play once" : "Press play again to start video"}
+              >
+                <span
+                  className={
+                    'flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40 ' +
+                    'h-20 w-20 sm:h-24 sm:w-24 transition-transform active:scale-95 ' +
+                    (shieldStep === 1 ? 'ring-4 ring-white/40 animate-pulse' : '')
+                  }
+                >
+                  <Play className="h-10 w-10 sm:h-12 sm:w-12 fill-current ml-1" />
+                </span>
+                <span className="text-white text-center px-4">
+                  {shieldStep === 0 ? (
+                    <>
+                      <span className="block text-base sm:text-lg font-semibold">Play</span>
+                      <span className="block text-xs text-white/70 mt-1">Tap 1 of 2 — protects against redirects</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="block text-base sm:text-lg font-semibold">Press Play again</span>
+                      <span className="block text-xs text-white/70 mt-1">Tap 2 of 2 — starts the video</span>
+                    </>
+                  )}
+                </span>
+              </button>
             </div>
           )}
 
