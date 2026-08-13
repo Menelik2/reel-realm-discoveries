@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Search, Menu, X, Moon, Sun, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,11 +17,6 @@ interface HeaderProps {
 export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -42,21 +36,11 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
     { to: '/top-box-office', label: 'Box Office' },
   ];
 
-  const headerNode = (
-    <header
-      id="app-site-header"
-      className="site-header"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        width: '100%',
-        zIndex: 9990,
-      }}
-    >
+  return (
+    <header className="bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Film className="h-4 w-4 text-primary-foreground" />
@@ -66,6 +50,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
             </span>
           </Link>
 
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map(link => (
               <Link
@@ -78,6 +63,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
             ))}
           </nav>
 
+          {/* Search Bar */}
           <div className="hidden md:flex items-center flex-1 max-w-sm mx-6">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -91,6 +77,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
             </div>
           </div>
 
+          {/* Actions */}
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -125,6 +112,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           </div>
         </div>
 
+        {/* Mobile Search */}
         <div className="md:hidden pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -138,6 +126,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           </div>
         </div>
 
+        {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <nav className="md:hidden pb-4 border-t border-border/50 pt-3 animate-in slide-in-from-top-2 duration-200">
             <div className="flex flex-col gap-1">
@@ -165,15 +154,5 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
       <SearchOverlay open={isSearchOverlayOpen} onOpenChange={setIsSearchOverlayOpen} />
     </header>
-  );
-
-  return (
-    <>
-      {/* Portal header to body so no parent CSS can stop position:fixed */}
-      {mounted ? createPortal(headerNode, document.body) : null}
-
-      {/* Spacer reserves space in page flow under the fixed header */}
-      <div className="site-header-spacer w-full shrink-0 md:h-16 h-[7.25rem]" aria-hidden="true" />
-    </>
   );
 };
