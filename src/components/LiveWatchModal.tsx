@@ -60,26 +60,64 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   );
   const episodeCount = currentSeason?.episode_count ?? 1;
 
+  // Hard-block popups, new tabs, and parent redirects while player is open
   useEffect(() => {
     if (!open) return;
+
     const originalOpen = window.open;
-    window.open = function (...args: any[]) {
-      console.log('Blocked popup:', args[0]);
+    window.open = function (..._args: any[]) {
+      // Block all popups / new tabs from ads
       return null;
     };
+
+    // Block middle-click / ctrl-click style new-tab opens on links
+    const blockAuxClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.('a[target="_blank"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    const blockClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest?.('a') as HTMLAnchorElement | null;
+      if (anchor && (anchor.target === '_blank' || anchor.getAttribute('rel')?.includes('noopener') === false)) {
+        // Only block if it looks like leaving the site for an ad
+        const href = anchor.href || '';
+        if (href && !href.includes(window.location.hostname) && !href.startsWith('#')) {
+          // Allow only if user is interacting with our own UI buttons (not applicable to anchors in portal usually)
+        }
+      }
+    };
+
+    // Stop the top page from being navigated away by scripts
+    const blockUnload = (e: BeforeUnloadEvent) => {
+      // Don't force a dialog every time; just a soft guard
+      e.preventDefault();
+    };
+
+    document.addEventListener('auxclick', blockAuxClick, true);
+    document.addEventListener('click', blockClick, true);
+    window.addEventListener('beforeunload', blockUnload);
     document.body.style.overflow = 'hidden';
+
     return () => {
       window.open = originalOpen;
+      document.removeEventListener('auxclick', blockAuxClick, true);
+      document.removeEventListener('click', blockClick, true);
+      window.removeEventListener('beforeunload', blockUnload);
       document.body.style.overflow = '';
     };
   }, [open]);
 
   const handleShieldClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setShowClickShield(false);
   }, []);
 
-  // Reset on open
+  // Reset on open / source / episode change — shield stops first accidental ad click
   useEffect(() => {
     if (open) {
       setShowClickShield(true);
@@ -90,6 +128,12 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
       }
     }
   }, [open, type, seasons]);
+
+  // Re-enable a brief shield when switching episode/season so ad overlays don't catch the first tap
+  useEffect(() => {
+    if (!open) return;
+    setShowClickShield(true);
+  }, [selectedSeason, selectedEpisode, selectedSource, open]);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -107,7 +151,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
-  // Keyboard shortcut for fullscreen + Escape to close
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -153,7 +196,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         ref={containerRef}
         className="relative flex flex-col w-full h-full max-w-[100vw] max-h-[100vh] bg-black"
       >
-        {/* Season / episode controls (TV only) – compact dark bar */}
         {showControlsBar && (
           <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-black/80 border-b border-white/10 flex-shrink-0 z-20">
             {SOURCES.length > 1 && (
@@ -222,7 +264,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           </div>
         )}
 
-        {/* Video fills remaining space */}
         <div className="flex-1 w-full relative min-h-0 bg-black">
           <iframe
             key={embedUrl}
@@ -231,26 +272,35 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
             referrerPolicy="no-referrer"
+            // Critical: no allow-popups, no allow-top-navigation → blocks ad redirects & new tabs
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-fullscreen"
             title={title}
             style={{ border: 'none' }}
           />
 
+          {/* Tap-to-play shield: blocks the first accidental click on overlay ads */}
           {showClickShield && (
             <div
               className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/60 backdrop-blur-sm transition-opacity"
               onClick={handleShieldClick}
-              onMouseDown={e => e.stopPropagation()}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+              }}
             >
-              <div className="flex flex-col items-center gap-3 text-white animate-pulse">
+              <div className="flex flex-col items-center gap-3 text-white animate-pulse pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="text-primary">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
                 <p className="text-lg font-semibold">Tap to Play</p>
+                <p className="text-xs text-white/70">Blocks popup ads</p>
               </div>
             </div>
           )}
 
-          {/* Floating back button – top left */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -265,7 +315,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             <span className="text-sm font-medium max-w-[140px] truncate hidden sm:inline">{title}</span>
           </button>
 
-          {/* Fullscreen toggle – bottom right */}
           <button
             onClick={(e) => {
               e.stopPropagation();
