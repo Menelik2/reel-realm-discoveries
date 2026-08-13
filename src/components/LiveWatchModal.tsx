@@ -36,6 +36,9 @@ interface LiveWatchModalProps {
   content?: Movie & { seasons?: SeasonLite[] };
 }
 
+/** 0 = locked, 1 = first tap done, 2 = unlocked */
+type ShieldStep = 0 | 1 | 2;
+
 const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   open,
   onClose,
@@ -45,7 +48,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   content,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showClickShield, setShowClickShield] = useState(true);
+  const [shieldStep, setShieldStep] = useState<ShieldStep>(0);
   const [selectedSource, setSelectedSource] = useState(SOURCES[0].url);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -75,27 +78,33 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     };
   }, [open]);
 
-  const handleShieldClick = useCallback((e: React.MouseEvent) => {
+  const resetShield = useCallback(() => setShieldStep(0), []);
+
+  const handleShieldTap = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShowClickShield(false);
+    setShieldStep((prev) => {
+      if (prev === 0) return 1; // first tap
+      if (prev === 1) return 2; // second tap → unlock
+      return 2;
+    });
   }, []);
 
   useEffect(() => {
     if (open) {
-      setShowClickShield(true);
+      resetShield();
       setSelectedSource(SOURCES[0].url);
       if (type === "tv" && seasons.length > 0) {
         setSelectedSeason(seasons[0].season_number);
         setSelectedEpisode(1);
       }
     }
-  }, [open, type, seasons]);
+  }, [open, type, seasons, resetShield]);
 
   useEffect(() => {
     if (!open) return;
-    setShowClickShield(true);
-  }, [selectedSeason, selectedEpisode, selectedSource, open]);
+    resetShield();
+  }, [selectedSeason, selectedEpisode, selectedSource, open, resetShield]);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -151,6 +160,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   if (!open) return null;
 
   const showControlsBar = (type === "tv" && seasons.length > 0) || SOURCES.length > 1;
+  const showClickShield = shieldStep < 2;
 
   return createPortal(
     <div
@@ -188,7 +198,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                     onValueChange={(v) => {
                       setSelectedSeason(Number(v));
                       setSelectedEpisode(1);
-                      setShowClickShield(true);
+                      resetShield();
                     }}
                   >
                     <SelectTrigger className="w-[100px] h-8 text-xs bg-black/50 border-white/20 text-white">
@@ -210,7 +220,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                     value={String(selectedEpisode)}
                     onValueChange={(v) => {
                       setSelectedEpisode(Number(v));
-                      setShowClickShield(true);
+                      resetShield();
                     }}
                   >
                     <SelectTrigger className="w-[90px] h-8 text-xs bg-black/50 border-white/20 text-white">
@@ -244,8 +254,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
           {showClickShield && (
             <div
-              className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/60 backdrop-blur-sm transition-opacity"
-              onClick={handleShieldClick}
+              className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/70 backdrop-blur-sm transition-opacity select-none"
+              onClick={handleShieldTap}
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -253,13 +263,29 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
               onTouchStart={(e) => {
                 e.stopPropagation();
               }}
+              onContextMenu={(e) => e.preventDefault()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") handleShieldTap(e);
+              }}
+              aria-label={shieldStep === 0 ? "Tap once to continue" : "Tap again to play"}
             >
-              <div className="flex flex-col items-center gap-3 text-white animate-pulse pointer-events-none">
+              <div className="flex flex-col items-center gap-3 text-white pointer-events-none px-6 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" className="text-primary">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
-                <p className="text-lg font-semibold">Tap to Play</p>
-                <p className="text-xs text-white/70">Blocks popup ads</p>
+                {shieldStep === 0 ? (
+                  <>
+                    <p className="text-lg font-semibold">Tap to unlock</p>
+                    <p className="text-xs text-white/70">Step 1 of 2 — blocks popup redirects</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-semibold animate-pulse">Tap again to play</p>
+                    <p className="text-xs text-white/70">Step 2 of 2 — then video starts</p>
+                  </>
+                )}
               </div>
             </div>
           )}

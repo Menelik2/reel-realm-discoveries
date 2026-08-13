@@ -1,7 +1,7 @@
 /**
- * Ad injection prevention for the parent page while video embeds are open.
- * Note: cross-origin iframe interiors cannot be fully controlled; this guards
- * the host page against popups, redirects, and injected ad nodes/scripts.
+ * Ad / redirect protection while Watch Now is open.
+ * Blocks popups, new tabs, and injected ad nodes on the HOST page.
+ * Cross-origin iframe interiors cannot be fully controlled.
  */
 
 const AD_HOST_PATTERNS: RegExp[] = [
@@ -51,13 +51,6 @@ const AD_HOST_PATTERNS: RegExp[] = [
   /sharethrough\.com/i,
   /zedo\.com/i,
   /adblade\.com/i,
-  /adcolony\.com/i,
-  /unityads\.unity3d\.com/i,
-  /applovin\.com/i,
-  /inmobi\.com/i,
-  /ironsrc\.com/i,
-  /vungle\.com/i,
-  /chartboost\.com/i,
 ];
 
 const SUSPICIOUS_ATTR = /ads?|banner|popup|popunder|sponsor|tracker|clickunder/i;
@@ -68,6 +61,8 @@ let observer: MutationObserver | null = null;
 
 let originalOpen: typeof window.open | null = null;
 let originalCreateElement: typeof document.createElement | null = null;
+let originalAssign: typeof location.assign | null = null;
+let originalReplace: typeof location.replace | null = null;
 
 function isAdUrl(url: string | null | undefined): boolean {
   if (!url) return false;
@@ -80,6 +75,15 @@ function isAdUrl(url: string | null | undefined): boolean {
   }
 }
 
+function isSameOriginNav(url: string): boolean {
+  try {
+    const next = new URL(url, window.location.href);
+    return next.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 function isInsidePlayer(node: Node): boolean {
   const el = node instanceof Element ? node : node.parentElement;
   if (!el) return false;
@@ -88,9 +92,7 @@ function isInsidePlayer(node: Node): boolean {
 
 function shouldRemoveElement(el: Element): boolean {
   if (isInsidePlayer(el)) return false;
-
-  // Never strip our own app root / known UI
-  if (el.id === "root" || el.closest?.("#root") === el) return false;
+  if (el.id === "root") return false;
 
   const tag = el.tagName;
 
@@ -105,10 +107,8 @@ function shouldRemoveElement(el: Element): boolean {
 
   if (tag === "IFRAME") {
     const src = el.getAttribute("src") || "";
-    // Allow known embed hosts used by the player
     if (/vidsrc\.|embeds?\.|player\./i.test(src)) return false;
     if (isAdUrl(src)) return true;
-    // Floating full-screen ad iframes injected into body
     const style = (el as HTMLElement).style;
     if (
       style &&
@@ -120,12 +120,10 @@ function shouldRemoveElement(el: Element): boolean {
   }
 
   if (tag === "INS" && el.classList.contains("adsbygoogle")) {
-    // Leave intentional site ads alone if marked
     if (el.getAttribute("data-app-ad") === "true") return false;
     return true;
   }
 
-  // Generic fixed overlay pop layers outside player
   if (tag === "DIV" || tag === "SECTION" || tag === "ASIDE") {
     const idClass = `${el.id} ${el.className}`;
     if (SUSPICIOUS_ATTR.test(idClass)) {
@@ -146,23 +144,57 @@ function scrubNode(node: Node) {
     el.remove();
     return;
   }
-  // Check children of added subtrees
   el.querySelectorAll?.("script, iframe, ins.adsbygoogle").forEach((child) => {
     if (shouldRemoveElement(child)) child.remove();
   });
+}
+
+function blockNewTabEvent(e: Event) {
+  if (activeCount <= 0) return;
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation?.();
 }
 
 function installHooks() {
   if (installed) return;
   installed = true;
 
+  // Hard-block all new windows/tabs while player is open
   originalOpen = window.open.bind(window);
-  window.open = function blockedOpen(..._args: any[]) {
+  window.open = function blockedOpen(url?: string | URL, target?: string, features?: string) {
     if (activeCount > 0) {
+      console.debug("[adInjectionGuard] blocked window.open", url, target);
       return null;
     }
-    return originalOpen ? originalOpen(...(_args as Parameters<typeof window.open>)) : null;
+    return originalOpen!(url as any, target, features);
   } as typeof window.open;
+
+  // Block host-page navigations to external ad URLs while player open
+  try {
+    originalAssign = window.location.assign.bind(window.location);
+    originalReplace = window.location.replace.bind(window.location);
+
+    window.location.assign = function guardedAssign(url: string | URL) {
+      const href = String(url);
+      if (activeCount > 0 && !isSameOriginNav(href)) {
+        console.debug("[adInjectionGuard] blocked location.assign", href);
+        return;
+      }
+      return originalAssign!(url as any);
+    };
+
+    window.location.replace = function guardedReplace(url: string | URL) {
+      const href = String(url);
+      if (activeCount > 0 && !isSameOriginNav(href)) {
+        console.debug("[adInjectionGuard] blocked location.replace", href);
+        return;
+      }
+      return originalReplace!(url as any);
+    };
+  } catch {
+    // Some browsers make location methods non-configurable
+  }
 
   originalCreateElement = document.createElement.bind(document);
   document.createElement = function guardedCreateElement(
@@ -184,10 +216,7 @@ function installHooks() {
               return desc.get?.call(this) ?? "";
             },
             set(value: string) {
-              if (isAdUrl(value)) {
-                console.debug("[adInjectionGuard] blocked script:", value);
-                return;
-              }
+              if (isAdUrl(value)) return;
               desc.set!.call(this, value);
             },
           });
@@ -204,13 +233,31 @@ function installHooks() {
               return desc.get?.call(this) ?? "";
             },
             set(value: string) {
-              if (isAdUrl(value)) {
-                console.debug("[adInjectionGuard] blocked iframe:", value);
-                return;
-              }
+              if (isAdUrl(value)) return;
               desc.set!.call(this, value);
             },
           });
+        }
+      }
+
+      if (tag === "a") {
+        try {
+          Object.defineProperty(el, "target", {
+            configurable: true,
+            enumerable: true,
+            get() {
+              return (this as any).getAttribute?.("target") ?? "";
+            },
+            set(value: string) {
+              if (activeCount > 0 && (value === "_blank" || value === "_new")) {
+                console.debug("[adInjectionGuard] blocked target=_blank");
+                return;
+              }
+              (this as HTMLElement).setAttribute("target", value);
+            },
+          });
+        } catch {
+          /* ignore */
         }
       }
     }
@@ -230,24 +277,29 @@ function installHooks() {
     subtree: true,
   });
 
-  // Capture-phase blockers for common ad open patterns
+  // Block _blank / ad link clicks on the host page (capture phase)
   document.addEventListener(
     "click",
     (e) => {
       if (activeCount <= 0) return;
       const t = e.target as HTMLElement | null;
+      if (t && isInsidePlayer(t) && !t.closest("a")) return;
+
       const a = t?.closest?.("a") as HTMLAnchorElement | null;
       if (!a) return;
-      if (isInsidePlayer(a)) return;
-      const href = a.href || "";
-      if (a.target === "_blank" || isAdUrl(href)) {
-        // Only block if not our app UI
-        if (!a.closest("#root") || isAdUrl(href)) {
-          if (isAdUrl(href) || a.getAttribute("data-ad-link") === "true") {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }
+
+      // Allow in-app same-origin links in our UI outside player chrome
+      const href = a.getAttribute("href") || a.href || "";
+      const target = a.getAttribute("target") || "";
+
+      if (target === "_blank" || target === "_new" || isAdUrl(href)) {
+        blockNewTabEvent(e);
+        return;
+      }
+
+      // Block external navigations triggered while player is open
+      if (href && !href.startsWith("#") && !isSameOriginNav(href) && !isInsidePlayer(a)) {
+        blockNewTabEvent(e);
       }
     },
     true
@@ -257,12 +309,24 @@ function installHooks() {
     "auxclick",
     (e) => {
       if (activeCount <= 0) return;
-      if (e.button === 1) {
-        // middle click often used for popunders
+      // Middle-click / open-in-new-tab
+      if ((e as MouseEvent).button === 1) {
+        blockNewTabEvent(e);
+      }
+    },
+    true
+  );
+
+  // Ctrl/Cmd+click often opens new tab
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (activeCount <= 0) return;
+      const me = e as MouseEvent;
+      if (me.ctrlKey || me.metaKey || me.shiftKey) {
         const t = e.target as HTMLElement | null;
-        if (t?.closest?.("a[target=\"_blank\"]")) {
-          e.preventDefault();
-          e.stopPropagation();
+        if (t?.closest?.("a")) {
+          blockNewTabEvent(e);
         }
       }
     },
@@ -281,7 +345,7 @@ export function deactivateAdInjectionGuard() {
   activeCount = Math.max(0, activeCount - 1);
 }
 
-/** Lightweight always-on init (safe in production) */
+/** Lightweight always-on init */
 export function initAdInjectionGuard() {
   installHooks();
 }
