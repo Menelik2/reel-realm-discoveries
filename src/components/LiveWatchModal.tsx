@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { Movie } from '@/types/tmdb';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,10 @@ import {
   activateAdInjectionGuard,
   deactivateAdInjectionGuard,
 } from '@/utils/adInjectionGuard';
+import {
+  attachPlayerClickListeners,
+  attachDocumentClickListeners,
+} from '@/utils/playerClickGuard';
 
 const SOURCES = [
   { name: 'VidSrc TW', url: 'https://vidsrc.tw' },
@@ -50,7 +54,9 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [shieldStep, setShieldStep] = useState<ShieldStep>(0);
   const [selectedSource, setSelectedSource] = useState(SOURCES[0].url);
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const shieldStepRef = useRef<ShieldStep>(0);
 
   const seasons: SeasonLite[] = useMemo(() => {
     const raw = (content as any)?.seasons as SeasonLite[] | undefined;
@@ -66,21 +72,42 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   );
   const episodeCount = currentSeason?.episode_count ?? 1;
 
+  // Keep ref in sync for native listeners
+  useEffect(() => {
+    shieldStepRef.current = shieldStep;
+  }, [shieldStep]);
+
   useEffect(() => {
     if (!open) return;
     activateAdInjectionGuard();
     document.body.style.overflow = 'hidden';
     document.body.setAttribute('data-video-modal-open', 'true');
+
+    const detachDoc = attachDocumentClickListeners();
+
     return () => {
+      detachDoc();
       deactivateAdInjectionGuard();
       document.body.style.overflow = '';
       document.body.removeAttribute('data-video-modal-open');
     };
   }, [open]);
 
+  // Capture-phase listeners on player root
+  useEffect(() => {
+    if (!open) return;
+    const root = rootRef.current;
+    if (!root) return;
+
+    const detach = attachPlayerClickListeners(root, {
+      isUnlocked: () => shieldStepRef.current >= 2,
+    });
+
+    return detach;
+  }, [open]);
+
   const resetShield = useCallback(() => setShieldStep(0), []);
 
-  /** Only the center Play control advances the two-tap unlock */
   const handlePlayButtonPress = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -165,6 +192,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   return createPortal(
     <div
+      ref={rootRef}
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black"
       data-video-player-root="true"
     >
@@ -183,6 +211,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                     variant={selectedSource === source.url ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedSource(source.url)}
+                    data-player-allow-click="true"
                   >
                     {source.name}
                   </Button>
@@ -202,7 +231,10 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                       resetShield();
                     }}
                   >
-                    <SelectTrigger className="w-[100px] h-8 text-xs bg-black/50 border-white/20 text-white">
+                    <SelectTrigger
+                      className="w-[100px] h-8 text-xs bg-black/50 border-white/20 text-white"
+                      data-player-allow-click="true"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-[10000] max-h-64">
@@ -224,7 +256,10 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                       resetShield();
                     }}
                   >
-                    <SelectTrigger className="w-[90px] h-8 text-xs bg-black/50 border-white/20 text-white">
+                    <SelectTrigger
+                      className="w-[90px] h-8 text-xs bg-black/50 border-white/20 text-white"
+                      data-player-allow-click="true"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-[10000] max-h-64">
@@ -242,10 +277,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         )}
 
         <div className="flex-1 w-full relative min-h-0 bg-black isolate">
-          {/*
-            Load iframe ONLY after Play is pressed twice.
-            Until then the in-player play button does not exist / cannot be pressed.
-          */}
           {isUnlocked && embedUrl ? (
             <iframe
               key={embedUrl}
@@ -261,7 +292,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             <div className="absolute inset-0 bg-black" style={{ zIndex: 1 }} aria-hidden />
           )}
 
-          {/* Full-area blocker + center Play button (replaces embed play button until unlocked) */}
           {!isUnlocked && (
             <div
               className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black via-black/90 to-black/70 select-none"
@@ -270,6 +300,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             >
               <button
                 type="button"
+                data-player-allow-click="true"
                 className="flex flex-col items-center gap-3 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
                 onClick={handlePlayButtonPress}
                 onTouchEnd={(e) => {
@@ -306,6 +337,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
           <button
             type="button"
+            data-player-allow-click="true"
             onClick={(e) => {
               e.stopPropagation();
               handleBack();
@@ -321,6 +353,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
           <button
             type="button"
+            data-player-allow-click="true"
             onClick={(e) => {
               e.stopPropagation();
               toggleFullscreen();
