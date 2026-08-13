@@ -40,7 +40,7 @@ interface LiveWatchModalProps {
   content?: Movie & { seasons?: SeasonLite[] };
 }
 
-/** 0 = locked, 1 = first tap on Play, 2 = unlocked / iframe active */
+/** 0 = locked, 1 = first press, 2 = unlocked (iframe tappable) */
 type ShieldStep = 0 | 1 | 2;
 
 const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
@@ -57,6 +57,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const shieldStepRef = useRef<ShieldStep>(0);
+  const lastPressAt = useRef(0);
 
   const seasons: SeasonLite[] = useMemo(() => {
     const raw = (content as any)?.seasons as SeasonLite[] | undefined;
@@ -72,7 +73,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   );
   const episodeCount = currentSeason?.episode_count ?? 1;
 
-  // Keep ref in sync for native listeners
+  const isUnlocked = shieldStep >= 2;
+
   useEffect(() => {
     shieldStepRef.current = shieldStep;
   }, [shieldStep]);
@@ -93,24 +95,31 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     };
   }, [open]);
 
-  // Capture-phase listeners on player root
+  // Lock listeners only while NOT unlocked — removed after 2 presses so iframe is fully tappable
   useEffect(() => {
-    if (!open) return;
+    if (!open || isUnlocked) return;
     const root = rootRef.current;
     if (!root) return;
 
-    const detach = attachPlayerClickListeners(root, {
+    return attachPlayerClickListeners(root, {
       isUnlocked: () => shieldStepRef.current >= 2,
     });
+  }, [open, isUnlocked]);
 
-    return detach;
-  }, [open]);
+  const resetShield = useCallback(() => {
+    lastPressAt.current = 0;
+    setShieldStep(0);
+  }, []);
 
-  const resetShield = useCallback(() => setShieldStep(0), []);
-
+  /** One step per real press (debounce touch+click double fire) */
   const handlePlayButtonPress = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const now = Date.now();
+    if (now - lastPressAt.current < 450) return;
+    lastPressAt.current = now;
+
     setShieldStep((prev) => {
       if (prev <= 0) return 1;
       if (prev === 1) return 2;
@@ -188,7 +197,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   if (!open) return null;
 
   const showControlsBar = (type === "tv" && seasons.length > 0) || SOURCES.length > 1;
-  const isUnlocked = shieldStep >= 2;
 
   return createPortal(
     <div
@@ -277,6 +285,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         )}
 
         <div className="flex-1 w-full relative min-h-0 bg-black isolate">
+          {/* After 2 presses: iframe loads and is fully tappable */}
           {isUnlocked && embedUrl ? (
             <iframe
               key={embedUrl}
@@ -286,12 +295,13 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
               allowFullScreen
               referrerPolicy="no-referrer"
               title={title}
-              style={{ border: 'none', zIndex: 1 }}
+              style={{ border: 'none', zIndex: 1, pointerEvents: 'auto' }}
             />
           ) : (
-            <div className="absolute inset-0 bg-black" style={{ zIndex: 1 }} aria-hidden />
+            <div className="absolute inset-0 bg-black" style={{ zIndex: 1, pointerEvents: 'none' }} aria-hidden />
           )}
 
+          {/* Before 2 presses: only our Play control works */}
           {!isUnlocked && (
             <div
               className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black via-black/90 to-black/70 select-none"
@@ -303,10 +313,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                 data-player-allow-click="true"
                 className="flex flex-col items-center gap-3 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
                 onClick={handlePlayButtonPress}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  handlePlayButtonPress(e);
-                }}
                 aria-label={shieldStep === 0 ? "Press play once" : "Press play again to start video"}
               >
                 <span
@@ -322,12 +328,12 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                   {shieldStep === 0 ? (
                     <>
                       <span className="block text-base sm:text-lg font-semibold">Play</span>
-                      <span className="block text-xs text-white/70 mt-1">Tap 1 of 2 — protects against redirects</span>
+                      <span className="block text-xs text-white/70 mt-1">Press 1 of 2</span>
                     </>
                   ) : (
                     <>
                       <span className="block text-base sm:text-lg font-semibold">Press Play again</span>
-                      <span className="block text-xs text-white/70 mt-1">Tap 2 of 2 — starts the video</span>
+                      <span className="block text-xs text-white/70 mt-1">Press 2 of 2 — then video is tappable</span>
                     </>
                   )}
                 </span>
