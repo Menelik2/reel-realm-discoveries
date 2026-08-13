@@ -84,8 +84,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setShieldStep((prev) => {
-      if (prev === 0) return 1; // first tap
-      if (prev === 1) return 2; // second tap → unlock
+      if (prev <= 0) return 1;
+      if (prev === 1) return 2;
       return 2;
     });
   }, []);
@@ -160,7 +160,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   if (!open) return null;
 
   const showControlsBar = (type === "tv" && seasons.length > 0) || SOURCES.length > 1;
-  const showClickShield = shieldStep < 2;
+  const isUnlocked = shieldStep >= 2;
+  const showClickShield = !isUnlocked;
 
   return createPortal(
     <div
@@ -240,28 +241,37 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           </div>
         )}
 
-        <div className="flex-1 w-full relative min-h-0 bg-black">
+        <div className="flex-1 w-full relative min-h-0 bg-black isolate">
+          {/* iframe cannot receive taps until unlocked */}
           <iframe
             key={embedUrl}
             src={embedUrl}
-            className="w-full h-full border-0"
+            className="absolute inset-0 w-full h-full border-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
             referrerPolicy="no-referrer"
             title={title}
-            style={{ border: 'none' }}
+            tabIndex={isUnlocked ? 0 : -1}
+            style={{
+              border: 'none',
+              zIndex: 1,
+              pointerEvents: isUnlocked ? 'auto' : 'none',
+            }}
           />
 
           {showClickShield && (
             <div
-              className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/70 backdrop-blur-sm transition-opacity select-none"
+              className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/80 backdrop-blur-sm select-none touch-manipulation"
+              style={{ zIndex: 30 }}
               onClick={handleShieldTap}
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
               }}
-              onTouchStart={(e) => {
+              onTouchEnd={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
+                handleShieldTap(e);
               }}
               onContextMenu={(e) => e.preventDefault()}
               role="button"
@@ -278,12 +288,12 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                 {shieldStep === 0 ? (
                   <>
                     <p className="text-lg font-semibold">Tap to unlock</p>
-                    <p className="text-xs text-white/70">Step 1 of 2 — blocks popup redirects</p>
+                    <p className="text-xs text-white/70">Step 1 of 2 — video locked</p>
                   </>
                 ) : (
                   <>
                     <p className="text-lg font-semibold animate-pulse">Tap again to play</p>
-                    <p className="text-xs text-white/70">Step 2 of 2 — then video starts</p>
+                    <p className="text-xs text-white/70">Step 2 of 2 — unlocks play button</p>
                   </>
                 )}
               </div>
@@ -291,12 +301,13 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           )}
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               handleBack();
             }}
-            className="absolute z-40 flex items-center gap-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full px-3 py-2 backdrop-blur-sm transition-colors border border-white/20 shadow-lg"
-            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: '12px' }}
+            className="absolute flex items-center gap-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full px-3 py-2 backdrop-blur-sm transition-colors border border-white/20 shadow-lg"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: '12px', zIndex: 40 }}
             title="Back"
             aria-label="Back"
           >
@@ -305,12 +316,13 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               toggleFullscreen();
             }}
-            className="absolute z-40 bg-black/70 hover:bg-black/90 text-white rounded-lg p-2 backdrop-blur-sm transition-colors border border-white/10 shadow-lg"
-            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)', right: '12px' }}
+            className="absolute bg-black/70 hover:bg-black/90 text-white rounded-lg p-2 backdrop-blur-sm transition-colors border border-white/10 shadow-lg"
+            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)', right: '12px', zIndex: 40 }}
             title={isFullscreen ? "Exit Fullscreen (F)" : "Fullscreen (F)"}
             aria-label={isFullscreen ? "Exit fullscreen" : "Toggle fullscreen"}
           >
