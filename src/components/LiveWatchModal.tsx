@@ -11,6 +11,10 @@ import {
 } from '@/components/ui/select';
 import { Maximize2, Minimize2, ArrowLeft } from 'lucide-react';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
+import {
+  activateAdInjectionGuard,
+  deactivateAdInjectionGuard,
+} from '@/utils/adInjectionGuard';
 
 const SOURCES = [
   { name: 'VidSrc TW', url: 'https://vidsrc.tw' },
@@ -45,7 +49,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const [selectedSource, setSelectedSource] = useState(SOURCES[0].url);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // Season/episode state (TV only)
   const seasons: SeasonLite[] = useMemo(() => {
     const raw = (content as any)?.seasons as SeasonLite[] | undefined;
     return Array.isArray(raw) ? raw.filter(s => s.season_number > 0 && s.episode_count > 0) : [];
@@ -60,54 +63,16 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   );
   const episodeCount = currentSeason?.episode_count ?? 1;
 
-  // Hard-block popups, new tabs, and parent redirects while player is open
+  // Activate ad injection guard for the whole time the player is open
   useEffect(() => {
     if (!open) return;
-
-    const originalOpen = window.open;
-    window.open = function (..._args: any[]) {
-      // Block all popups / new tabs from ads
-      return null;
-    };
-
-    // Block middle-click / ctrl-click style new-tab opens on links
-    const blockAuxClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest?.('a[target="_blank"]')) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    const blockClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      const anchor = target?.closest?.('a') as HTMLAnchorElement | null;
-      if (anchor && (anchor.target === '_blank' || anchor.getAttribute('rel')?.includes('noopener') === false)) {
-        // Only block if it looks like leaving the site for an ad
-        const href = anchor.href || '';
-        if (href && !href.includes(window.location.hostname) && !href.startsWith('#')) {
-          // Allow only if user is interacting with our own UI buttons (not applicable to anchors in portal usually)
-        }
-      }
-    };
-
-    // Stop the top page from being navigated away by scripts
-    const blockUnload = (e: BeforeUnloadEvent) => {
-      // Don't force a dialog every time; just a soft guard
-      e.preventDefault();
-    };
-
-    document.addEventListener('auxclick', blockAuxClick, true);
-    document.addEventListener('click', blockClick, true);
-    window.addEventListener('beforeunload', blockUnload);
+    activateAdInjectionGuard();
     document.body.style.overflow = 'hidden';
-
+    document.body.setAttribute('data-video-modal-open', 'true');
     return () => {
-      window.open = originalOpen;
-      document.removeEventListener('auxclick', blockAuxClick, true);
-      document.removeEventListener('click', blockClick, true);
-      window.removeEventListener('beforeunload', blockUnload);
+      deactivateAdInjectionGuard();
       document.body.style.overflow = '';
+      document.body.removeAttribute('data-video-modal-open');
     };
   }, [open]);
 
@@ -117,7 +82,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     setShowClickShield(false);
   }, []);
 
-  // Reset on open / source / episode change — shield stops first accidental ad click
   useEffect(() => {
     if (open) {
       setShowClickShield(true);
@@ -129,7 +93,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     }
   }, [open, type, seasons]);
 
-  // Re-enable a brief shield when switching episode/season so ad overlays don't catch the first tap
   useEffect(() => {
     if (!open) return;
     setShowClickShield(true);
@@ -191,10 +154,14 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const showControlsBar = (type === "tv" && seasons.length > 0) || SOURCES.length > 1;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black"
+      data-video-player-root="true"
+    >
       <div
         ref={containerRef}
         className="relative flex flex-col w-full h-full max-w-[100vw] max-h-[100vh] bg-black"
+        data-video-player-root="true"
       >
         {showControlsBar && (
           <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-black/80 border-b border-white/10 flex-shrink-0 z-20">
@@ -272,13 +239,11 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
             referrerPolicy="no-referrer"
-            // Critical: no allow-popups, no allow-top-navigation → blocks ad redirects & new tabs
             sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-fullscreen"
             title={title}
             style={{ border: 'none' }}
           />
 
-          {/* Tap-to-play shield: blocks the first accidental click on overlay ads */}
           {showClickShield && (
             <div
               className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer bg-black/60 backdrop-blur-sm transition-opacity"
