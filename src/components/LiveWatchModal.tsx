@@ -9,24 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Maximize2, Minimize2, ArrowLeft, Play } from 'lucide-react';
+import { Maximize2, Minimize2, ArrowLeft } from 'lucide-react';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
 import {
   activateAdInjectionGuard,
   deactivateAdInjectionGuard,
 } from '@/utils/adInjectionGuard';
-import {
-  attachPlayerClickListeners,
-  attachDocumentClickListeners,
-} from '@/utils/playerClickGuard';
 
 const SOURCES = [
   { name: 'VidSrc TW', url: 'https://vidsrc.tw' },
 ];
-
-/** Blocks popups/new tabs from inside the embed (no allow-popups / top-nav) */
-const POPUP_BLOCK_SANDBOX =
-  'allow-scripts allow-same-origin allow-forms allow-presentation allow-fullscreen';
 
 interface SeasonLite {
   id?: number;
@@ -44,9 +36,6 @@ interface LiveWatchModalProps {
   content?: Movie & { seasons?: SeasonLite[] };
 }
 
-/** 0 = locked, 1 = first press, 2 = unlocked (iframe may load) */
-type ShieldStep = 0 | 1 | 2;
-
 const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   open,
   onClose,
@@ -56,14 +45,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   content,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [shieldStep, setShieldStep] = useState<ShieldStep>(0);
   const [selectedSource, setSelectedSource] = useState(SOURCES[0].url);
-  /** When true, load without sandbox if player refuses sandboxed frame */
-  const [allowUnsafeEmbed, setAllowUnsafeEmbed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const shieldStepRef = useRef<ShieldStep>(0);
-  const lastPressAt = useRef(0);
 
   const seasons: SeasonLite[] = useMemo(() => {
     const raw = (content as any)?.seasons as SeasonLite[] | undefined;
@@ -79,22 +62,12 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   );
   const episodeCount = currentSeason?.episode_count ?? 1;
 
-  const isUnlocked = shieldStep >= 2;
-
-  useEffect(() => {
-    shieldStepRef.current = shieldStep;
-  }, [shieldStep]);
-
   useEffect(() => {
     if (!open) return;
     activateAdInjectionGuard();
     document.body.style.overflow = 'hidden';
     document.body.setAttribute('data-video-modal-open', 'true');
-
-    const detachDoc = attachDocumentClickListeners();
-
     return () => {
-      detachDoc();
       deactivateAdInjectionGuard();
       document.body.style.overflow = '';
       document.body.removeAttribute('data-video-modal-open');
@@ -102,50 +75,14 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   }, [open]);
 
   useEffect(() => {
-    if (!open || isUnlocked) return;
-    const root = rootRef.current;
-    if (!root) return;
-    return attachPlayerClickListeners(root, {
-      isUnlocked: () => shieldStepRef.current >= 2,
-    });
-  }, [open, isUnlocked]);
-
-  const resetShield = useCallback(() => {
-    lastPressAt.current = 0;
-    setAllowUnsafeEmbed(false);
-    setShieldStep(0);
-  }, []);
-
-  const handlePlayButtonPress = useCallback((e: React.SyntheticEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const now = Date.now();
-    if (now - lastPressAt.current < 450) return;
-    lastPressAt.current = now;
-
-    setShieldStep((prev) => {
-      if (prev <= 0) return 1;
-      if (prev === 1) return 2;
-      return 2;
-    });
-  }, []);
-
-  useEffect(() => {
     if (open) {
-      resetShield();
       setSelectedSource(SOURCES[0].url);
       if (type === "tv" && seasons.length > 0) {
         setSelectedSeason(seasons[0].season_number);
         setSelectedEpisode(1);
       }
     }
-  }, [open, type, seasons, resetShield]);
-
-  useEffect(() => {
-    if (!open) return;
-    resetShield();
-  }, [selectedSeason, selectedEpisode, selectedSource, open, resetShield]);
+  }, [open, type, seasons]);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -204,7 +141,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   return createPortal(
     <div
-      ref={rootRef}
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black"
       data-video-player-root="true"
     >
@@ -223,7 +159,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                     variant={selectedSource === source.url ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedSource(source.url)}
-                    data-player-allow-click="true"
                   >
                     {source.name}
                   </Button>
@@ -240,13 +175,9 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                     onValueChange={(v) => {
                       setSelectedSeason(Number(v));
                       setSelectedEpisode(1);
-                      resetShield();
                     }}
                   >
-                    <SelectTrigger
-                      className="w-[100px] h-8 text-xs bg-black/50 border-white/20 text-white"
-                      data-player-allow-click="true"
-                    >
+                    <SelectTrigger className="w-[100px] h-8 text-xs bg-black/50 border-white/20 text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-[10000] max-h-64">
@@ -263,15 +194,9 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                   <span className="text-xs text-muted-foreground hidden sm:inline">Episode</span>
                   <Select
                     value={String(selectedEpisode)}
-                    onValueChange={(v) => {
-                      setSelectedEpisode(Number(v));
-                      resetShield();
-                    }}
+                    onValueChange={(v) => setSelectedEpisode(Number(v))}
                   >
-                    <SelectTrigger
-                      className="w-[90px] h-8 text-xs bg-black/50 border-white/20 text-white"
-                      data-player-allow-click="true"
-                    >
+                    <SelectTrigger className="w-[90px] h-8 text-xs bg-black/50 border-white/20 text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-[10000] max-h-64">
@@ -288,114 +213,26 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           </div>
         )}
 
-        <div className="flex-1 w-full relative min-h-0 bg-black isolate">
-          {isUnlocked && embedUrl ? (
-            <>
-              <iframe
-                key={`${embedUrl}-${allowUnsafeEmbed ? 'unsafe' : 'safe'}`}
-                src={embedUrl}
-                className="absolute inset-0 w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                allowFullScreen
-                referrerPolicy="no-referrer"
-                title={title}
-                // No allow-popups / allow-top-navigation → blocks ad new-tabs & redirects from embed
-                {...(!allowUnsafeEmbed ? { sandbox: POPUP_BLOCK_SANDBOX } : {})}
-                style={{ border: 'none', zIndex: 1, pointerEvents: 'auto' }}
-              />
-              {!allowUnsafeEmbed && (
-                <div
-                  className="absolute left-0 right-0 flex justify-center px-3"
-                  style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 56px)', zIndex: 35 }}
-                >
-                  <button
-                    type="button"
-                    data-player-allow-click="true"
-                    onClick={() => setAllowUnsafeEmbed(true)}
-                    className="text-[11px] text-white/50 hover:text-white/80 underline underline-offset-2"
-                  >
-                    Video blocked? Load without popup shield
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-black" style={{ zIndex: 1, pointerEvents: 'none' }} aria-hidden />
-          )}
-
-          {!isUnlocked && (
-            <div
-              className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black via-black/90 to-black/70 select-none"
-              style={{ zIndex: 30 }}
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              <button
-                type="button"
-                data-player-allow-click="true"
-                className="flex flex-col items-center gap-3 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
-                onClick={handlePlayButtonPress}
-                aria-label={shieldStep === 0 ? "Press play once" : "Press play again to start video"}
-              >
-                <span
-                  className={
-                    'flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/40 ' +
-                    'h-20 w-20 sm:h-24 sm:w-24 transition-transform active:scale-95 ' +
-                    (shieldStep === 1 ? 'ring-4 ring-white/40 animate-pulse' : '')
-                  }
-                >
-                  <Play className="h-10 w-10 sm:h-12 sm:w-12 fill-current ml-1" />
-                </span>
-                <span className="text-white text-center px-4">
-                  {shieldStep === 0 ? (
-                    <>
-                      <span className="block text-base sm:text-lg font-semibold">Play</span>
-                      <span className="block text-xs text-white/70 mt-1">Press 1 of 2 — blocks ad redirects</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="block text-base sm:text-lg font-semibold">Press Play again</span>
-                      <span className="block text-xs text-white/70 mt-1">Press 2 of 2 — start video (new tabs blocked)</span>
-                    </>
-                  )}
-                </span>
-              </button>
-
-              <p className="absolute bottom-6 left-4 right-4 text-center text-[11px] sm:text-xs text-white/55 leading-relaxed px-2">
-                Fewer ads? Use{' '}
-                <a
-                  href="https://www.mozilla.org/firefox/new/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-player-allow-click="true"
-                  className="text-white/80 underline underline-offset-2 hover:text-white"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Firefox
-                </a>
-                {' '}+{' '}
-                <a
-                  href="https://addons.mozilla.org/firefox/addon/ublock-origin/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-player-allow-click="true"
-                  className="text-white/80 underline underline-offset-2 hover:text-white"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  uBlock Origin
-                </a>
-              </p>
-            </div>
-          )}
+        <div className="flex-1 w-full relative min-h-0 bg-black">
+          <iframe
+            key={embedUrl}
+            src={embedUrl}
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowFullScreen
+            referrerPolicy="no-referrer"
+            title={title}
+            style={{ border: 'none' }}
+          />
 
           <button
             type="button"
-            data-player-allow-click="true"
             onClick={(e) => {
               e.stopPropagation();
               handleBack();
             }}
-            className="absolute flex items-center gap-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full px-3 py-2 backdrop-blur-sm transition-colors border border-white/20 shadow-lg"
-            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: '12px', zIndex: 40 }}
+            className="absolute z-40 flex items-center gap-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full px-3 py-2 backdrop-blur-sm transition-colors border border-white/20 shadow-lg"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: '12px' }}
             title="Back"
             aria-label="Back"
           >
@@ -405,13 +242,12 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
           <button
             type="button"
-            data-player-allow-click="true"
             onClick={(e) => {
               e.stopPropagation();
               toggleFullscreen();
             }}
-            className="absolute bg-black/70 hover:bg-black/90 text-white rounded-lg p-2 backdrop-blur-sm transition-colors border border-white/10 shadow-lg"
-            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)', right: '12px', zIndex: 40 }}
+            className="absolute z-40 bg-black/70 hover:bg-black/90 text-white rounded-lg p-2 backdrop-blur-sm transition-colors border border-white/10 shadow-lg"
+            style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)', right: '12px' }}
             title={isFullscreen ? "Exit Fullscreen (F)" : "Fullscreen (F)"}
             aria-label={isFullscreen ? "Exit fullscreen" : "Toggle fullscreen"}
           >
