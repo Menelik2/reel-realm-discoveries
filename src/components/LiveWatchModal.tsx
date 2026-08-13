@@ -24,6 +24,10 @@ const SOURCES = [
   { name: 'VidSrc TW', url: 'https://vidsrc.tw' },
 ];
 
+/** Blocks popups/new tabs from inside the embed (no allow-popups / top-nav) */
+const POPUP_BLOCK_SANDBOX =
+  'allow-scripts allow-same-origin allow-forms allow-presentation allow-fullscreen';
+
 interface SeasonLite {
   id?: number;
   name?: string;
@@ -40,7 +44,7 @@ interface LiveWatchModalProps {
   content?: Movie & { seasons?: SeasonLite[] };
 }
 
-/** 0 = locked, 1 = first press, 2 = unlocked (iframe tappable) */
+/** 0 = locked, 1 = first press, 2 = unlocked (iframe may load) */
 type ShieldStep = 0 | 1 | 2;
 
 const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
@@ -54,6 +58,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [shieldStep, setShieldStep] = useState<ShieldStep>(0);
   const [selectedSource, setSelectedSource] = useState(SOURCES[0].url);
+  /** When true, load without sandbox if player refuses sandboxed frame */
+  const [allowUnsafeEmbed, setAllowUnsafeEmbed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const shieldStepRef = useRef<ShieldStep>(0);
@@ -95,12 +101,10 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     };
   }, [open]);
 
-  // Lock listeners only while NOT unlocked — removed after 2 presses so iframe is fully tappable
   useEffect(() => {
     if (!open || isUnlocked) return;
     const root = rootRef.current;
     if (!root) return;
-
     return attachPlayerClickListeners(root, {
       isUnlocked: () => shieldStepRef.current >= 2,
     });
@@ -108,10 +112,10 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   const resetShield = useCallback(() => {
     lastPressAt.current = 0;
+    setAllowUnsafeEmbed(false);
     setShieldStep(0);
   }, []);
 
-  /** One step per real press (debounce touch+click double fire) */
   const handlePlayButtonPress = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -285,23 +289,40 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         )}
 
         <div className="flex-1 w-full relative min-h-0 bg-black isolate">
-          {/* After 2 presses: iframe loads and is fully tappable */}
           {isUnlocked && embedUrl ? (
-            <iframe
-              key={embedUrl}
-              src={embedUrl}
-              className="absolute inset-0 w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              allowFullScreen
-              referrerPolicy="no-referrer"
-              title={title}
-              style={{ border: 'none', zIndex: 1, pointerEvents: 'auto' }}
-            />
+            <>
+              <iframe
+                key={`${embedUrl}-${allowUnsafeEmbed ? 'unsafe' : 'safe'}`}
+                src={embedUrl}
+                className="absolute inset-0 w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                referrerPolicy="no-referrer"
+                title={title}
+                // No allow-popups / allow-top-navigation → blocks ad new-tabs & redirects from embed
+                {...(!allowUnsafeEmbed ? { sandbox: POPUP_BLOCK_SANDBOX } : {})}
+                style={{ border: 'none', zIndex: 1, pointerEvents: 'auto' }}
+              />
+              {!allowUnsafeEmbed && (
+                <div
+                  className="absolute left-0 right-0 flex justify-center px-3"
+                  style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 56px)', zIndex: 35 }}
+                >
+                  <button
+                    type="button"
+                    data-player-allow-click="true"
+                    onClick={() => setAllowUnsafeEmbed(true)}
+                    className="text-[11px] text-white/50 hover:text-white/80 underline underline-offset-2"
+                  >
+                    Video blocked? Load without popup shield
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="absolute inset-0 bg-black" style={{ zIndex: 1, pointerEvents: 'none' }} aria-hidden />
           )}
 
-          {/* Before 2 presses: only our Play control works */}
           {!isUnlocked && (
             <div
               className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black via-black/90 to-black/70 select-none"
@@ -328,12 +349,12 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                   {shieldStep === 0 ? (
                     <>
                       <span className="block text-base sm:text-lg font-semibold">Play</span>
-                      <span className="block text-xs text-white/70 mt-1">Press 1 of 2</span>
+                      <span className="block text-xs text-white/70 mt-1">Press 1 of 2 — blocks ad redirects</span>
                     </>
                   ) : (
                     <>
                       <span className="block text-base sm:text-lg font-semibold">Press Play again</span>
-                      <span className="block text-xs text-white/70 mt-1">Press 2 of 2 — then video is tappable</span>
+                      <span className="block text-xs text-white/70 mt-1">Press 2 of 2 — start video (new tabs blocked)</span>
                     </>
                   )}
                 </span>
