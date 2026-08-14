@@ -112,9 +112,8 @@ const MIN_CONCURRENCY = 2;
 const MAX_CONCURRENCY = 8;
 
 /**
- * Background-load full franchise details (all movies + series) to power
- * poster group images on the list. Adaptive concurrency, pauses when tab hidden.
- * Prioritizes franchises with the most titles. Seeds detail cache for navigation.
+ * Background-fetch full franchise details (all movies + series) for poster groups.
+ * Adaptive concurrency, pauses when the tab is hidden, skips cached details.
  */
 export const useFranchiseGroupPosters = (franchises: FranchiseSummary[]) => {
   const qc = useQueryClient();
@@ -126,18 +125,19 @@ export const useFranchiseGroupPosters = (franchises: FranchiseSummary[]) => {
 
     let cancelled = false;
     let concurrency = initialConcurrency();
-    let inFlight = 0;
-    let cursor = 0;
+    let active = 0;
+    let nextIndex = 0;
     let consecutiveErrors = 0;
     let consecutiveOk = 0;
 
-    // Prefer largest franchises first so the default "Most titles" view fills in posters quickly
     const ordered = [...franchises].sort(
       (a, b) => (b.content_order?.length || 0) - (a.content_order?.length || 0)
     );
 
-    // Skip slugs already fully cached
-    const queue = ordered.filter((f) => {
+    // Apply posters from cache immediately; only queue uncached slugs
+    const fromCache: Record<string, string[]> = {};
+    const queue: FranchiseSummary[] = [];
+    for (const f of ordered) {
       const slug = f.slug.toLowerCase();
       const cached = qc.getQueryData<FranchiseDetail>(detailKey(slug));
       if (cached?.content?.length) {
@@ -145,13 +145,15 @@ export const useFranchiseGroupPosters = (franchises: FranchiseSummary[]) => {
           .map((c) => c.poster)
           .filter((p): p is string => !!p)
           .slice(0, 4);
-        if (posters.length) {
-          setPostersBySlug((prev) => (prev[slug] ? prev : { ...prev, [slug]: posters }));
-        }
-        return false;
+        if (posters.length) fromCache[slug] = posters;
+      } else {
+        queue.push(f);
       }
-      return true;
-    });
+    }
+
+    if (Object.keys(fromCache).length) {
+      setPostersBySlug((prev) => ({ ...fromCache, ...prev }));
+    }
 
     if (!queue.length) {
       setEnriching(false);
@@ -160,110 +162,93 @@ export const useFranchiseGroupPosters = (franchises: FranchiseSummary[]) => {
 
     setEnriching(true);
 
-    const waitIfHidden = async () => {
-      while (!cancelled && typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    const waitUntilVisible = async () => {
+      if (typeof document === 'undefined') return;
+      while (!cancelled && document.visibilityState === 'hidden') {
         await new Promise<void>((resolve) => {
-          const onVis = () => {
+          const handler = () => {
             if (document.visibilityState === 'visible') {
-              document.removeEventListener('visibilitychange', onVis);
+              document.removeEventListener('visibilitychange', handler);
               resolve();
             }
           };
-          document.addEventListener('visibilitychange', onVis);
+          document.addEventListener('visibilitychange', handler);
         });
       }
     };
 
-    const adjustConcurrency = (ok: boolean) => {
-      if (ok) {
+    const applyPosters = (slug: string, detail: FranchiseDetail) => {
+      const posters = detail.content
+        .map((c) => c.poster)
+        .filter((p): p is string => !!p)
+        .slice(0, 4);
+      if (!posters.length) return;
+      setPostersBySlug((prev) => (prev[slug] ? prev : { ...prev, [slug]: posters }));
+    };
+
+    const fetchOne = async (item: FranchiseSummary) => {
+      const slug = item.slug.toLowerCase();
+      try {
+        await waitUntilVisible();
+        if (cancelled) return;
+
+        const detail = await qc.fetchQuery({
+          queryKey: detailKey(slug),
+          queryFn: () => fetchFranchise(slug),
+          staleTime: 30 * 60 * 1000,
+        });
+
+        if (cancelled || !detail) return;
+        applyPosters(slug, detail);
+
         consecutiveOk += 1;
         consecutiveErrors = 0;
-        // Ramp up after a streak of successes
         if (consecutiveOk >= 4 && concurrency < MAX_CONCURRENCY) {
           concurrency += 1;
           consecutiveOk = 0;
         }
-      } else {
+      } catch {
         consecutiveErrors += 1;
         consecutiveOk = 0;
         if (consecutiveErrors >= 2 && concurrency > MIN_CONCURRENCY) {
           concurrency = Math.max(MIN_CONCURRENCY, concurrency - 1);
           consecutiveErrors = 0;
         }
+        await sleep(250);
       }
     };
 
-    const processOne = async (item: FranchiseSummary) => {
-      const slug = item.slug.toLowerCase();
-      try {
-        await waitIfHidden();
-        if (cancelled) return;
-
-        let detail = qc.getQueryData<FranchiseDetail>(detailKey(slug));
-        if (!detail?.content?.length) {
-          detail = await qc.fetchQuery({
-            queryKey: detailKey(slug),
-            queryFn: () => fetchFranchise(slug),
-            staleTime: 30 * 60 * 1000,
-          });
-        }
-
-        if (cancelled || !detail) return;
-
-        const posters = detail.content
-          .map((c) => c.poster)
-          .filter((p): p is string => !!p)
-          .slice(0, 4);
-
-        if (posters.length) {
-          setPostersBySlug((prev) => (prev[slug] ? prev : { ...prev, [slug]: posters }));
-        }
-        adjustConcurrency(true);
-      } catch {
-        adjustConcurrency(false);
-        // Brief backoff on error / rate limit pressure
-        await new Promise((r) => setTimeout(r, 200 + consecutiveErrors * 150));
+    const pump = () => {
+      while (!cancelled && active < concurrency && nextIndex < queue.length) {
+        const item = queue[nextIndex++];
+        active += 1;
+        void fetchOne(item).finally(() => {
+          active -= 1;
+          if (cancelled) return;
+          if (nextIndex < queue.length) {
+            pump();
+          } else if (active === 0) {
+            setEnriching(false);
+          }
+        });
       }
-    };
-
-    const pump = async () => {
-      while (!cancelled && cursor < queue.length) {
-        await waitIfHidden();
-        if (cancelled) break;
-
-        while (!cancelled && inFlight < concurrency && cursor < queue.length) {
-          const item = queue[cursor++];
-          inFlight += 1;
-          void processOne(item).finally(() => {
-            inFlight -= 1;
-            // Continue draining when a slot frees
-            if (!cancelled && cursor < queue.length) {
-              void pump();
-            } else if (!cancelled && inFlight === 0 && cursor >= queue.length) {
-              setEnriching(false);
-            }
-          });
-        }
-        // Avoid tight loop when workers are saturated
-        if (inFlight >= concurrency) break;
-      }
-      if (!cancelled && inFlight === 0 && cursor >= queue.length) {
+      if (!cancelled && nextIndex >= queue.length && active === 0) {
         setEnriching(false);
       }
     };
 
-    void pump();
+    pump();
 
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible' && !cancelled) {
-        void pump();
-      }
+    const onVis = () => {
+      if (document.visibilityState === 'visible' && !cancelled) pump();
     };
-    document.addEventListener('visibilitychange', onVisibility);
+    document.addEventListener('visibilitychange', onVis);
 
     return () => {
       cancelled = true;
-      document.removeEventListener('visibilitychange', onVisibility);
+      document.removeEventListener('visibilitychange', onVis);
     };
   }, [franchises, qc]);
 

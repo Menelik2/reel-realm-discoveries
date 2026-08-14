@@ -276,7 +276,7 @@ const FranchisesPage = () => {
                   {filtered.length}
                   {query.trim() ? ` of ${franchises.length}` : ''} franchise
                   {filtered.length !== 1 ? 's' : ''}
-                  {enriching ? ' · loading art…' : ''}
+                  {enriching ? ' · fetching…' : ''}
                 </span>
               )}
             </div>
