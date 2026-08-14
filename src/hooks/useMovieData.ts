@@ -30,21 +30,20 @@ export const useMovieData = ({
 
   const queryKey = [
     'movies',
-    { 
-      searchQuery, 
-      currentCategory, 
-      contentType, 
-      selectedGenre, 
-      selectedYear, 
+    {
+      searchQuery,
+      currentCategory,
+      contentType,
+      selectedGenre,
+      selectedYear,
       currentPage,
       refreshKey,
-      userId: user?.id
-    }
+      userId: user?.id,
+    },
   ];
 
   const queryFn = () => {
     if (searchQuery) {
-      // Remove contentType to search both movies and TV shows together
       return searchContent({ searchQuery, currentPage });
     }
     if (currentCategory === 'custom') {
@@ -54,10 +53,13 @@ export const useMovieData = ({
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKey,
-    queryFn: queryFn,
-    enabled: enabled,
+    queryKey,
+    queryFn,
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
   });
 
   return {
