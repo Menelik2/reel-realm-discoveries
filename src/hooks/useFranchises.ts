@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   fetchFranchises,
   fetchFranchise,
@@ -83,6 +83,79 @@ export const useFranchise = (slug: string | undefined) => {
     refetch: query.refetch,
     isFetching: query.isFetching,
   };
+};
+
+/**
+ * Background-load full franchise details (all movies + series) to power
+ * poster group images on the list. Prioritizes franchises with the most titles.
+ * Also seeds the react-query detail cache for instant navigation.
+ */
+export const useFranchiseGroupPosters = (franchises: FranchiseSummary[]) => {
+  const qc = useQueryClient();
+  const [postersBySlug, setPostersBySlug] = useState<Record<string, string[]>>({});
+  const [enriching, setEnriching] = useState(false);
+
+  useEffect(() => {
+    if (!franchises.length) return;
+
+    let cancelled = false;
+    const CONCURRENCY = 5;
+
+    // Prefer largest franchises first so the default "Most titles" view fills in posters quickly
+    const ordered = [...franchises].sort(
+      (a, b) => (b.content_order?.length || 0) - (a.content_order?.length || 0)
+    );
+
+    setEnriching(true);
+
+    const run = async () => {
+      let index = 0;
+
+      const worker = async () => {
+        while (!cancelled && index < ordered.length) {
+          const current = ordered[index++];
+          const slug = current.slug.toLowerCase();
+
+          try {
+            // Reuse cache if we already have full detail
+            let detail = qc.getQueryData<FranchiseDetail>(detailKey(slug));
+            if (!detail?.content?.length) {
+              detail = await qc.fetchQuery({
+                queryKey: detailKey(slug),
+                queryFn: () => fetchFranchise(slug),
+                staleTime: 30 * 60 * 1000,
+              });
+            }
+
+            if (cancelled || !detail) continue;
+
+            const posters = detail.content
+              .map((c) => c.poster)
+              .filter((p): p is string => !!p)
+              .slice(0, 4);
+
+            if (posters.length) {
+              setPostersBySlug((prev) =>
+                prev[slug] ? prev : { ...prev, [slug]: posters }
+              );
+            }
+          } catch {
+            // Ignore individual failures; list still works without posters
+          }
+        }
+      };
+
+      await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
+      if (!cancelled) setEnriching(false);
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [franchises, qc]);
+
+  return { postersBySlug, enriching };
 };
 
 /**

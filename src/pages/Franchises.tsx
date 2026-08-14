@@ -17,29 +17,96 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   useFranchises,
+  useFranchiseGroupPosters,
   usePrefetchFranchise,
   franchiseErrorMessage,
   type FranchiseSummary,
 } from '@/hooks/useFranchises';
 import { cn } from '@/lib/utils';
 
-type SortKey = 'featured' | 'name' | 'titles';
+type SortKey = 'titles' | 'name' | 'featured';
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'featured', label: 'Featured' },
-  { key: 'name', label: 'A–Z' },
   { key: 'titles', label: 'Most titles' },
+  { key: 'name', label: 'A–Z' },
+  { key: 'featured', label: 'Featured' },
 ];
+
+/** Stacked poster group (movies + series) for a franchise */
+const PosterGroup = memo(function PosterGroup({
+  posters,
+  fallbackUrl,
+}: {
+  posters: string[];
+  fallbackUrl?: string | null;
+}) {
+  const shots = posters.length
+    ? posters.slice(0, 3)
+    : fallbackUrl
+      ? [fallbackUrl]
+      : [];
+
+  if (!shots.length) {
+    return (
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-secondary to-muted flex items-center justify-center">
+        <Layers className="h-8 w-8 text-muted-foreground/35" />
+      </div>
+    );
+  }
+
+  if (shots.length === 1) {
+    return (
+      <img
+        src={shots[0]}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = 'none';
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      {shots.map((src, i) => {
+        const offset = (i - (shots.length - 1) / 2) * 14;
+        const rot = (i - (shots.length - 1) / 2) * 6;
+        const z = 10 + i;
+        return (
+          <img
+            key={`${src}-${i}`}
+            src={src}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="absolute h-[88%] w-[42%] object-cover rounded-md shadow-md ring-1 ring-black/20 transition-transform duration-300 group-hover:scale-105"
+            style={{
+              transform: `translateX(${offset}px) rotate(${rot}deg)`,
+              zIndex: z,
+            }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.opacity = '0';
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+});
 
 const FranchiseCard = memo(function FranchiseCard({
   franchise,
+  posters,
   onPrefetch,
 }: {
   franchise: FranchiseSummary;
+  posters: string[];
   onPrefetch: (slug: string, summary: FranchiseSummary) => void;
 }) {
   const titleCount = franchise.content_order?.length || 0;
-  const img = franchise.titleImageUrl;
 
   return (
     <Link
@@ -56,7 +123,6 @@ const FranchiseCard = memo(function FranchiseCard({
         'active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
       )}
     >
-      {/* Text + meta */}
       <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5 pr-1">
         <h3 className="font-semibold text-sm sm:text-base text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
           {franchise.name}
@@ -70,27 +136,16 @@ const FranchiseCard = memo(function FranchiseCard({
           <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-foreground/80">
             {titleCount} {titleCount === 1 ? 'title' : 'titles'}
           </span>
+          {posters.length > 0 && (
+            <span className="text-[10px] text-muted-foreground">
+              {posters.length}+ posters
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Visual */}
-      <div className="relative w-[5.5rem] sm:w-28 shrink-0 aspect-[4/3] rounded-xl overflow-hidden bg-secondary">
-        {img ? (
-          <img
-            src={img}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-secondary to-muted flex items-center justify-center">
-            <Layers className="h-8 w-8 text-muted-foreground/35" />
-          </div>
-        )}
+      <div className="relative w-[5.75rem] sm:w-[7.25rem] shrink-0 aspect-[4/3] rounded-xl overflow-hidden bg-secondary">
+        <PosterGroup posters={posters} fallbackUrl={franchise.titleImageUrl} />
         <div className="absolute inset-0 ring-1 ring-inset ring-black/10 dark:ring-white/5 rounded-xl pointer-events-none" />
       </div>
     </Link>
@@ -118,9 +173,11 @@ const GridSkeleton = () => (
 
 const FranchisesPage = () => {
   const { franchises, loading, isError, error, refetch, isFetching } = useFranchises();
+  const { postersBySlug, enriching } = useFranchiseGroupPosters(franchises);
   const { prefetch } = usePrefetchFranchise();
+  // Default: Most titles
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<SortKey>('featured');
+  const [sort, setSort] = useState<SortKey>('titles');
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const filtered = useMemo(() => {
@@ -141,6 +198,7 @@ const FranchisesPage = () => {
         (a, b) => (b.content_order?.length || 0) - (a.content_order?.length || 0)
       );
     }
+    // featured = API order
     return list;
   }, [franchises, query, sort]);
 
@@ -158,7 +216,6 @@ const FranchisesPage = () => {
       />
 
       <main className="container mx-auto px-4 pt-24 pb-28 md:pb-12">
-        {/* Hero header */}
         <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-2.5 mb-1.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
@@ -167,11 +224,10 @@ const FranchisesPage = () => {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Franchises</h1>
           </div>
           <p className="text-sm text-muted-foreground max-w-xl ml-0 md:ml-11">
-            Explore complete universes — every title in order, ready to watch.
+            Every franchise with all movies and series — sorted by most titles.
           </p>
         </div>
 
-        {/* Toolbar */}
         <div className="sticky top-16 z-20 -mx-4 px-4 py-3 mb-5 bg-background/90 backdrop-blur-md border-b border-border/40">
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-md">
@@ -220,6 +276,7 @@ const FranchisesPage = () => {
                   {filtered.length}
                   {query.trim() ? ` of ${franchises.length}` : ''} franchise
                   {filtered.length !== 1 ? 's' : ''}
+                  {enriching ? ' · loading art…' : ''}
                 </span>
               )}
             </div>
@@ -254,7 +311,12 @@ const FranchisesPage = () => {
           !isError && (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {filtered.map((f) => (
-                <FranchiseCard key={f.id} franchise={f} onPrefetch={prefetch} />
+                <FranchiseCard
+                  key={f.id}
+                  franchise={f}
+                  posters={postersBySlug[f.slug.toLowerCase()] || []}
+                  onPrefetch={prefetch}
+                />
               ))}
             </div>
           )

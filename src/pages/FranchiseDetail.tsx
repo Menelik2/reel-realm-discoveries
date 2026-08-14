@@ -149,6 +149,15 @@ const FranchiseDetailPage = () => {
     return sum / rated.length;
   }, [titles]);
 
+  const movieCount = useMemo(
+    () => titles.filter((t) => t.content_type !== 'SERIES').length,
+    [titles]
+  );
+  const seriesCount = useMemo(
+    () => titles.filter((t) => t.content_type === 'SERIES').length,
+    [titles]
+  );
+
   const heroBackdrop = titles.find((t) => t.backdrop)?.backdrop || titles[0]?.poster || null;
 
   const handleOpen = async (item: FranchiseContentItem) => {
@@ -266,6 +275,18 @@ const FranchiseDetailPage = () => {
                   <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
                     {titles.length} title{titles.length !== 1 ? 's' : ''}
                   </span>
+                  {movieCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      <Clapperboard className="h-3 w-3" />
+                      {movieCount} movie{movieCount !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  {seriesCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      <Tv className="h-3 w-3" />
+                      {seriesCount} series
+                    </span>
+                  )}
                   {yearRange && (
                     <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
                       {yearRange}
