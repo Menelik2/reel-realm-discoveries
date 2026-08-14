@@ -36,12 +36,12 @@ const fetchTrailerKey = async (movieId: number): Promise<string | null> => {
   }
 };
 
-/** Balanced hero: readable on mobile, comfortable on desktop */
+/** Larger hero: readable on mobile, prominent on desktop */
 const HERO_SHELL =
   'relative w-full overflow-hidden ' +
-  'aspect-[16/9] sm:aspect-[21/9] md:aspect-[2.4/1] ' +
-  'min-h-[200px] sm:min-h-[240px] md:min-h-[300px] lg:min-h-[340px] ' +
-  'max-h-[260px] sm:max-h-[300px] md:max-h-[380px] lg:max-h-[420px]';
+  'aspect-[16/10] sm:aspect-[21/9] md:aspect-[2.35/1] ' +
+  'min-h-[260px] sm:min-h-[320px] md:min-h-[400px] lg:min-h-[460px] ' +
+  'max-h-[340px] sm:max-h-[400px] md:max-h-[500px] lg:max-h-[560px]';
 
 export const HeroCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
