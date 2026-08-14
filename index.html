@@ -40,33 +40,40 @@
     
     <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/8666ad6b-34d8-42dc-a9f6-f17256b7c9f1">
 
-    <!-- Preconnect to critical resources -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Preconnect to critical resources (TMDB only on critical path) -->
     <link rel="preconnect" href="https://api.themoviedb.org" crossorigin>
     <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+    <link rel="dns-prefetch" href="https://vidsrc.tw">
     <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
     <link rel="dns-prefetch" href="https://googleads.g.doubleclick.net">
     <link rel="dns-prefetch" href="https://www.google.com">
     <link rel="dns-prefetch" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
 
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- Non-blocking display font (optional decorative titles only) -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap"></noscript>
 
     <!-- Deferred Google AdSense for better TTI -->
     <script>
       // Initialize adsbygoogle array immediately
       window.adsbygoogle = window.adsbygoogle || [];
       
-      // Defer AdSense loading until after page interactive
+      // Defer AdSense until after first paint + idle (better LCP / TTI)
       window.addEventListener('load', function() {
-        setTimeout(function() {
+        var loadAds = function() {
           var adsScript = document.createElement('script');
           adsScript.async = true;
           adsScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8938310552882401';
           adsScript.crossOrigin = 'anonymous';
-          adsScript.onerror = function() { console.warn('AdSense script failed to load'); };
           document.head.appendChild(adsScript);
-        }, 1000);
+        };
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(loadAds, { timeout: 2500 });
+        } else {
+          setTimeout(loadAds, 2000);
+        }
       });
     </script>
   <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/vIuPAmBzPaaU3cZJ99X10uzaJRh2/uploads/1758666660353-photo_2025-04-18_18-49-37.jpg">

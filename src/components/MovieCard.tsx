@@ -40,8 +40,8 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
       className="group relative rounded-lg overflow-hidden bg-card text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all duration-300 hover:scale-[1.03] hover:shadow-[var(--card-shadow-hover)]"
       style={{ boxShadow: 'var(--card-shadow)' }}
     >
-      {/* Poster */}
-      <div className="relative aspect-[2/3] overflow-hidden">
+      {/* Poster — content-visibility skips layout/paint for off-screen cards */}
+      <div className="card-poster-host relative aspect-[2/3] overflow-hidden">
         <img
           src={posterUrl}
           srcSet={posterSrcSet}
@@ -49,6 +49,8 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
           alt={movie.title}
           loading="lazy"
           decoding="async"
+          width={342}
+          height={513}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
         />

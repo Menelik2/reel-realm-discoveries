@@ -122,7 +122,10 @@ export const HeroCarousel = () => {
               alt=""
               className="absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700"
               decoding="async"
+              loading="eager"
               fetchPriority="high"
+              width={1280}
+              height={720}
             />
           </>
         )}
