@@ -94,7 +94,7 @@ interface LazyCategorySectionProps {
 }
 
 const LazyCategorySection = memo(({ eager, ...props }: LazyCategorySectionProps) => {
-  const { ref, isVisible } = useLazyVisible('400px');
+  const { ref, isVisible } = useLazyVisible('80px');
 
   if (eager) return <CategorySection {...props} />;
 
@@ -172,11 +172,11 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
           {icon || <div className="w-1 h-6 rounded-full bg-primary" />}
           <h2 className="text-xl md:text-2xl font-bold text-foreground">{category.label}</h2>
           <span className="text-xs font-medium text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
-            {movies.length}
+            {Math.min(movies.length, 14)}
           </span>
         </div>
         <div className={CARD_GRID}>
-          {movies.map(movie => (
+          {movies.slice(0, 14).map(movie => (
             <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
           ))}
         </div>
