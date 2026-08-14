@@ -85,10 +85,36 @@ export const useFranchise = (slug: string | undefined) => {
   };
 };
 
+/** Initial worker count from network hints when available */
+const initialConcurrency = (): number => {
+  try {
+    const conn = (navigator as Navigator & {
+      connection?: { effectiveType?: string; saveData?: boolean };
+    }).connection;
+    if (conn?.saveData) return 2;
+    switch (conn?.effectiveType) {
+      case 'slow-2g':
+      case '2g':
+        return 2;
+      case '3g':
+        return 3;
+      case '4g':
+        return 6;
+      default:
+        return 4;
+    }
+  } catch {
+    return 4;
+  }
+};
+
+const MIN_CONCURRENCY = 2;
+const MAX_CONCURRENCY = 8;
+
 /**
  * Background-load full franchise details (all movies + series) to power
- * poster group images on the list. Prioritizes franchises with the most titles.
- * Also seeds the react-query detail cache for instant navigation.
+ * poster group images on the list. Adaptive concurrency, pauses when tab hidden.
+ * Prioritizes franchises with the most titles. Seeds detail cache for navigation.
  */
 export const useFranchiseGroupPosters = (franchises: FranchiseSummary[]) => {
   const qc = useQueryClient();
@@ -99,59 +125,145 @@ export const useFranchiseGroupPosters = (franchises: FranchiseSummary[]) => {
     if (!franchises.length) return;
 
     let cancelled = false;
-    const CONCURRENCY = 5;
+    let concurrency = initialConcurrency();
+    let inFlight = 0;
+    let cursor = 0;
+    let consecutiveErrors = 0;
+    let consecutiveOk = 0;
 
     // Prefer largest franchises first so the default "Most titles" view fills in posters quickly
     const ordered = [...franchises].sort(
       (a, b) => (b.content_order?.length || 0) - (a.content_order?.length || 0)
     );
 
+    // Skip slugs already fully cached
+    const queue = ordered.filter((f) => {
+      const slug = f.slug.toLowerCase();
+      const cached = qc.getQueryData<FranchiseDetail>(detailKey(slug));
+      if (cached?.content?.length) {
+        const posters = cached.content
+          .map((c) => c.poster)
+          .filter((p): p is string => !!p)
+          .slice(0, 4);
+        if (posters.length) {
+          setPostersBySlug((prev) => (prev[slug] ? prev : { ...prev, [slug]: posters }));
+        }
+        return false;
+      }
+      return true;
+    });
+
+    if (!queue.length) {
+      setEnriching(false);
+      return;
+    }
+
     setEnriching(true);
 
-    const run = async () => {
-      let index = 0;
-
-      const worker = async () => {
-        while (!cancelled && index < ordered.length) {
-          const current = ordered[index++];
-          const slug = current.slug.toLowerCase();
-
-          try {
-            // Reuse cache if we already have full detail
-            let detail = qc.getQueryData<FranchiseDetail>(detailKey(slug));
-            if (!detail?.content?.length) {
-              detail = await qc.fetchQuery({
-                queryKey: detailKey(slug),
-                queryFn: () => fetchFranchise(slug),
-                staleTime: 30 * 60 * 1000,
-              });
+    const waitIfHidden = async () => {
+      while (!cancelled && typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        await new Promise<void>((resolve) => {
+          const onVis = () => {
+            if (document.visibilityState === 'visible') {
+              document.removeEventListener('visibilitychange', onVis);
+              resolve();
             }
-
-            if (cancelled || !detail) continue;
-
-            const posters = detail.content
-              .map((c) => c.poster)
-              .filter((p): p is string => !!p)
-              .slice(0, 4);
-
-            if (posters.length) {
-              setPostersBySlug((prev) =>
-                prev[slug] ? prev : { ...prev, [slug]: posters }
-              );
-            }
-          } catch {
-            // Ignore individual failures; list still works without posters
-          }
-        }
-      };
-
-      await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
-      if (!cancelled) setEnriching(false);
+          };
+          document.addEventListener('visibilitychange', onVis);
+        });
+      }
     };
 
-    void run();
+    const adjustConcurrency = (ok: boolean) => {
+      if (ok) {
+        consecutiveOk += 1;
+        consecutiveErrors = 0;
+        // Ramp up after a streak of successes
+        if (consecutiveOk >= 4 && concurrency < MAX_CONCURRENCY) {
+          concurrency += 1;
+          consecutiveOk = 0;
+        }
+      } else {
+        consecutiveErrors += 1;
+        consecutiveOk = 0;
+        if (consecutiveErrors >= 2 && concurrency > MIN_CONCURRENCY) {
+          concurrency = Math.max(MIN_CONCURRENCY, concurrency - 1);
+          consecutiveErrors = 0;
+        }
+      }
+    };
+
+    const processOne = async (item: FranchiseSummary) => {
+      const slug = item.slug.toLowerCase();
+      try {
+        await waitIfHidden();
+        if (cancelled) return;
+
+        let detail = qc.getQueryData<FranchiseDetail>(detailKey(slug));
+        if (!detail?.content?.length) {
+          detail = await qc.fetchQuery({
+            queryKey: detailKey(slug),
+            queryFn: () => fetchFranchise(slug),
+            staleTime: 30 * 60 * 1000,
+          });
+        }
+
+        if (cancelled || !detail) return;
+
+        const posters = detail.content
+          .map((c) => c.poster)
+          .filter((p): p is string => !!p)
+          .slice(0, 4);
+
+        if (posters.length) {
+          setPostersBySlug((prev) => (prev[slug] ? prev : { ...prev, [slug]: posters }));
+        }
+        adjustConcurrency(true);
+      } catch {
+        adjustConcurrency(false);
+        // Brief backoff on error / rate limit pressure
+        await new Promise((r) => setTimeout(r, 200 + consecutiveErrors * 150));
+      }
+    };
+
+    const pump = async () => {
+      while (!cancelled && cursor < queue.length) {
+        await waitIfHidden();
+        if (cancelled) break;
+
+        while (!cancelled && inFlight < concurrency && cursor < queue.length) {
+          const item = queue[cursor++];
+          inFlight += 1;
+          void processOne(item).finally(() => {
+            inFlight -= 1;
+            // Continue draining when a slot frees
+            if (!cancelled && cursor < queue.length) {
+              void pump();
+            } else if (!cancelled && inFlight === 0 && cursor >= queue.length) {
+              setEnriching(false);
+            }
+          });
+        }
+        // Avoid tight loop when workers are saturated
+        if (inFlight >= concurrency) break;
+      }
+      if (!cancelled && inFlight === 0 && cursor >= queue.length) {
+        setEnriching(false);
+      }
+    };
+
+    void pump();
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible' && !cancelled) {
+        void pump();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
       cancelled = true;
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [franchises, qc]);
 
