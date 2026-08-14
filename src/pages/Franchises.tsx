@@ -1,13 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Layers, Star } from 'lucide-react';
+import { AlertTriangle, Layers, RefreshCw, Search } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { SEOMetadata } from '@/components/SEOMetadata';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFranchises, type FranchiseSummary } from '@/hooks/useFranchises';
+import {
+  useFranchises,
+  franchiseErrorMessage,
+  type FranchiseSummary,
+} from '@/hooks/useFranchises';
 
 const FranchiseCard = ({ franchise }: { franchise: FranchiseSummary }) => {
   const titleCount = franchise.content_order?.length || 0;
@@ -57,7 +62,7 @@ const FranchiseCard = ({ franchise }: { franchise: FranchiseSummary }) => {
 };
 
 const FranchisesPage = () => {
-  const { franchises, loading, isError } = useFranchises();
+  const { franchises, loading, isError, error, refetch, isFetching } = useFranchises();
   const [query, setQuery] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -101,9 +106,10 @@ const FranchisesPage = () => {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search franchises…"
               className="pl-9 h-10 bg-secondary/50 border-border/60"
+              disabled={isError && franchises.length === 0}
             />
           </div>
-          {!loading && (
+          {!loading && !isError && (
             <p className="text-xs text-muted-foreground">
               {filtered.length} franchise{filtered.length !== 1 ? 's' : ''}
               {query.trim() ? ' matched' : ''}
@@ -112,8 +118,24 @@ const FranchisesPage = () => {
         </div>
 
         {isError && (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            Could not load franchises. Please try again later.
+          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-start gap-3 flex-1">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-destructive">Could not load franchises</p>
+                <p className="text-xs text-destructive/90">{franchiseErrorMessage(error)}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+              {isFetching ? 'Retrying…' : 'Try again'}
+            </Button>
           </div>
         )}
 
@@ -130,16 +152,20 @@ const FranchisesPage = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-            {filtered.map((f) => (
-              <FranchiseCard key={f.id} franchise={f} />
-            ))}
-          </div>
+          !isError && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              {filtered.map((f) => (
+                <FranchiseCard key={f.id} franchise={f} />
+              ))}
+            </div>
+          )
         )}
 
-        {!loading && filtered.length === 0 && !isError && (
+        {!loading && !isError && filtered.length === 0 && (
           <div className="text-center py-16 text-muted-foreground text-sm">
-            No franchises match “{query}”.
+            {query.trim()
+              ? `No franchises match “${query.trim()}”.`
+              : 'No franchises available right now.'}
           </div>
         )}
       </main>

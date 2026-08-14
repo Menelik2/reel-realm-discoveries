@@ -1,13 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Layers, Loader2, Star } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Layers, Loader2, RefreshCw, Star } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { SEOMetadata } from '@/components/SEOMetadata';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFranchise, type FranchiseContentItem } from '@/hooks/useFranchises';
+import {
+  useFranchise,
+  franchiseErrorMessage,
+  isNotFoundError,
+  type FranchiseContentItem,
+} from '@/hooks/useFranchises';
 import { searchContent } from '@/api/tmdbService';
 import { toast } from 'sonner';
 
@@ -77,13 +82,12 @@ const FranchiseTitleCard = ({
 const FranchiseDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { franchise, loading, isError, error } = useFranchise(slug);
+  const { franchise, loading, isError, error, refetch, isFetching } = useFranchise(slug);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [resolvingId, setResolvingId] = useState<number | null>(null);
 
   const titles = useMemo(() => {
     if (!franchise?.content?.length) return [];
-    // Prefer content_order sequence when available
     const byId = new Map(franchise.content.map((c) => [c.content_id, c]));
     if (franchise.content_order?.length) {
       const ordered = franchise.content_order
@@ -95,35 +99,49 @@ const FranchiseDetailPage = () => {
   }, [franchise]);
 
   const handleOpen = async (item: FranchiseContentItem) => {
+    if (!item.title?.trim()) {
+      toast.error('This title has no name and cannot be opened.');
+      return;
+    }
+    if (resolvingId != null) return;
+
     setResolvingId(item.content_id);
     try {
       const { movies } = await searchContent({ searchQuery: item.title, currentPage: 1 });
+      if (!Array.isArray(movies) || movies.length === 0) {
+        toast.error('Could not find this title. Try searching for it instead.');
+        return;
+      }
+
       const year = yearOf(item.release_date);
+      const titleLower = item.title.toLowerCase();
       const match =
         movies.find((m) => {
           const t = (m.title || m.name || '').toLowerCase();
           const y = (m.release_date || m.first_air_date || '').slice(0, 4);
-          return t === item.title.toLowerCase() && (!year || y === year);
+          return t === titleLower && (!year || y === year);
         }) ||
-        movies.find((m) => (m.title || m.name || '').toLowerCase() === item.title.toLowerCase()) ||
+        movies.find((m) => (m.title || m.name || '').toLowerCase() === titleLower) ||
         movies[0];
 
-      if (!match) {
-        toast.error('Could not find this title on TMDB');
+      if (!match?.id) {
+        toast.error('Could not find this title on TMDB.');
         return;
       }
 
       const mediaType =
         match.media_type === 'tv' || item.content_type === 'SERIES' ? 'tv' : 'movie';
       navigate(`/${mediaType}/${match.id}`);
-    } catch {
-      toast.error('Failed to open title');
+    } catch (err) {
+      console.error('franchise open title failed', err);
+      toast.error('Failed to open title. Check your connection and try again.');
     } finally {
       setResolvingId(null);
     }
   };
 
-  const notFound = isError && error instanceof Error && error.message === 'not_found';
+  const notFound = isNotFoundError(error);
+  const missingSlug = !slug?.trim();
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,24 +186,44 @@ const FranchiseDetailPage = () => {
           </div>
         )}
 
-        {notFound && (
+        {(missingSlug || notFound) && !loading && (
           <div className="text-center py-20 space-y-3">
             <Layers className="h-10 w-10 mx-auto text-muted-foreground/50" />
             <h1 className="text-xl font-semibold">Franchise not found</h1>
-            <p className="text-sm text-muted-foreground">This franchise may have been removed.</p>
+            <p className="text-sm text-muted-foreground">
+              {missingSlug
+                ? 'This link is incomplete.'
+                : 'This franchise may have been removed or the link is invalid.'}
+            </p>
             <Button asChild variant="outline" size="sm">
               <Link to="/franchises">Back to franchises</Link>
             </Button>
           </div>
         )}
 
-        {isError && !notFound && (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            Could not load this franchise. Please try again later.
+        {isError && !notFound && !missingSlug && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-start gap-3 flex-1">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-destructive">Could not load this franchise</p>
+                <p className="text-xs text-destructive/90">{franchiseErrorMessage(error)}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+              {isFetching ? 'Retrying…' : 'Try again'}
+            </Button>
           </div>
         )}
 
-        {!loading && franchise && (
+        {!loading && franchise && !isError && (
           <>
             <div className="mb-8 space-y-2 max-w-2xl">
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{franchise.name}</h1>
