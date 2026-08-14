@@ -169,7 +169,12 @@ const FranchiseDetailPage = () => {
 
     setResolvingId(item.content_id);
     try {
-      const { movies } = await searchContent({ searchQuery: item.title, currentPage: 1 });
+      const preferTv = item.content_type === 'SERIES';
+      const { movies } = await searchContent({
+        searchQuery: item.title,
+        currentPage: 1,
+        contentType: preferTv ? 'tv' : undefined,
+      });
       if (!Array.isArray(movies) || movies.length === 0) {
         toast.error('Could not find this title. Try searching for it instead.');
         return;
@@ -181,9 +186,15 @@ const FranchiseDetailPage = () => {
         movies.find((m) => {
           const t = (m.title || m.name || '').toLowerCase();
           const y = (m.release_date || m.first_air_date || '').slice(0, 4);
-          return t === titleLower && (!year || y === year);
+          const typeOk = preferTv
+            ? m.media_type === 'tv'
+            : m.media_type !== 'tv';
+          return t === titleLower && (!year || y === year) && typeOk;
         }) ||
-        movies.find((m) => (m.title || m.name || '').toLowerCase() === titleLower) ||
+        movies.find((m) => {
+          const t = (m.title || m.name || '').toLowerCase();
+          return t === titleLower && (preferTv ? m.media_type === 'tv' : true);
+        }) ||
         movies[0];
 
       if (!match?.id) {
@@ -273,7 +284,8 @@ const FranchiseDetailPage = () => {
                 )}
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
-                    {titles.length} title{titles.length !== 1 ? 's' : ''}
+                    {(titles.length || franchise.content_order?.length || 0)} title
+                    {(titles.length || franchise.content_order?.length || 0) !== 1 ? 's' : ''}
                   </span>
                   {movieCount > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
