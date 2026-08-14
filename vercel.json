@@ -5,6 +5,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/franchise",
+      "destination": "https://phonofilm.net/svc/api/franchise"
+    },
+    {
+      "source": "/api/franchise/:slug",
+      "destination": "https://phonofilm.net/svc/api/franchise/:slug"
+    },
+    {
       "source": "/movie/:id",
       "has": [
         {

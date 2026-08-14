@@ -8,6 +8,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      // Same-origin franchise API in dev (matches Vercel /api/franchise rewrite)
+      "/api/franchise": {
+        target: "https://phonofilm.net",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/franchise/, "/svc/api/franchise"),
+      },
+    },
   },
   plugins: [
     react(),
