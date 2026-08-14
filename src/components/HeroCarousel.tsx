@@ -55,22 +55,6 @@ export const HeroCarousel = () => {
   });
 
   useEffect(() => {
-    if (movies.length === 0) return;
-    const ids = [
-      movies[currentIndex]?.id,
-      movies[(currentIndex + 1) % movies.length]?.id,
-    ].filter(Boolean) as number[];
-
-    ids.forEach((id) => {
-      if (!trailerKeys[id]) {
-        fetchTrailerKey(id).then((key) => {
-          if (key) setTrailerKeys((prev) => ({ ...prev, [id]: key }));
-        });
-      }
-    });
-  }, [movies, currentIndex]);
-
-  useEffect(() => {
     if (movies.length === 0 || isPaused) return;
 
     const prefersReduced =
@@ -106,8 +90,13 @@ export const HeroCarousel = () => {
   const currentMovie = movies[currentIndex];
   const backdropPath = currentMovie.backdrop_path;
 
-  const handleWatchTrailer = () => {
-    const key = trailerKeys[currentMovie.id];
+  const handleWatchTrailer = async () => {
+    const id = currentMovie.id;
+    let key = trailerKeys[id];
+    if (!key) {
+      key = (await fetchTrailerKey(id)) || undefined;
+      if (key) setTrailerKeys((prev) => ({ ...prev, [id]: key! }));
+    }
     if (key) window.open(`https://www.youtube.com/watch?v=${key}`, '_blank', 'noopener,noreferrer');
   };
 
@@ -169,7 +158,6 @@ export const HeroCarousel = () => {
               <Button
                 size="sm"
                 onClick={handleWatchTrailer}
-                disabled={!trailerKeys[currentMovie.id]}
                 className="rounded-full px-3 sm:px-4 h-8 sm:h-9 gap-1.5 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/25"
               >
                 <Play className="h-3.5 w-3.5 fill-current" />
