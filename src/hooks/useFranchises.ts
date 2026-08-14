@@ -22,6 +22,12 @@ export { franchiseErrorMessage, isNotFoundError };
 const LIST_KEY = ['franchises'] as const;
 const detailKey = (slug: string) => ['franchise', slug] as const;
 
+/** Build a partial detail payload from list row for instant detail paint */
+export const summaryToOptimisticDetail = (summary: FranchiseSummary): FranchiseDetail => ({
+  ...summary,
+  content: [],
+});
+
 export const useFranchises = () => {
   const query = useQuery({
     queryKey: LIST_KEY,
@@ -62,9 +68,16 @@ export const useFranchise = (slug: string | undefined) => {
     },
   });
 
+  const isOptimistic =
+    !!query.data &&
+    Array.isArray(query.data.content) &&
+    query.data.content.length === 0 &&
+    (query.isFetching || query.isLoading);
+
   return {
     franchise: query.data,
-    loading: query.isLoading,
+    loading: query.isLoading && !query.data,
+    isOptimistic,
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
@@ -72,19 +85,55 @@ export const useFranchise = (slug: string | undefined) => {
   };
 };
 
-/** Prefetch detail on hover for instant navigation */
+/**
+ * Prefetch + optimistic seed:
+ * - Writes list summary into detail cache immediately (instant header on navigate)
+ * - Starts background fetch for full detail
+ */
 export const usePrefetchFranchise = () => {
   const qc = useQueryClient();
-  return useCallback(
-    (slug: string) => {
+
+  const seedOptimistic = useCallback(
+    (summary: FranchiseSummary) => {
+      const slug = summary.slug.trim().toLowerCase();
+      if (!slug) return;
+
+      const key = detailKey(slug);
+      const existing = qc.getQueryData<FranchiseDetail>(key);
+
+      if (existing?.content && existing.content.length > 0) {
+        return;
+      }
+
+      qc.setQueryData<FranchiseDetail>(key, (prev) => {
+        if (prev?.content && prev.content.length > 0) return prev;
+        return summaryToOptimisticDetail(summary);
+      });
+    },
+    [qc]
+  );
+
+  const prefetch = useCallback(
+    (slug: string, summary?: FranchiseSummary) => {
       const s = slug.trim().toLowerCase();
       if (!s) return;
+
+      if (summary) {
+        seedOptimistic(summary);
+      } else {
+        const list = qc.getQueryData<FranchiseSummary[]>(LIST_KEY);
+        const row = list?.find((f) => f.slug.toLowerCase() === s);
+        if (row) seedOptimistic(row);
+      }
+
       void qc.prefetchQuery({
         queryKey: detailKey(s),
         queryFn: () => fetchFranchise(s),
         staleTime: 30 * 60 * 1000,
       });
     },
-    [qc]
+    [qc, seedOptimistic]
   );
+
+  return { prefetch, seedOptimistic };
 };

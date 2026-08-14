@@ -114,7 +114,7 @@ const FranchiseTitleCard = memo(function FranchiseTitleCard({
 const FranchiseDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { franchise, loading, isError, error, refetch, isFetching } = useFranchise(slug);
+  const { franchise, loading, isOptimistic, isError, error, refetch, isFetching } = useFranchise(slug);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [resolvingId, setResolvingId] = useState<number | null>(null);
 
@@ -241,7 +241,7 @@ const FranchiseDetailPage = () => {
               All franchises
             </Button>
 
-            {loading && (
+            {loading && !franchise && (
               <div className="space-y-3 max-w-xl pb-4">
                 <Skeleton className="h-9 w-64" />
                 <Skeleton className="h-4 w-full max-w-md" />
@@ -252,7 +252,7 @@ const FranchiseDetailPage = () => {
               </div>
             )}
 
-            {!loading && franchise && !isError && (
+            {!loading && !isOptimistic && franchise && !isError && (
               <div className="max-w-2xl space-y-3 pb-2">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
                   {franchise.name}
@@ -284,7 +284,7 @@ const FranchiseDetailPage = () => {
         </div>
 
         <div className="container mx-auto px-4">
-          {loading && (
+          {(loading || isOptimistic) && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3">
               {Array.from({ length: 14 }).map((_, i) => (
                 <Skeleton key={i} className="aspect-[2/3] rounded-xl" />
@@ -329,7 +329,7 @@ const FranchiseDetailPage = () => {
             </div>
           )}
 
-          {!loading && franchise && !isError && (
+          {!loading && !isOptimistic && franchise && !isError && (
             <>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3">
                 {titles.map((item, index) => (

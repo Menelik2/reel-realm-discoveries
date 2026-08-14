@@ -11,14 +11,26 @@ const PaymentSuccess = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (sessionId) {
-      supabase.functions.invoke('verify-payment-session', {
+    if (!sessionId) return;
+
+    // Optimistic: unlock ad-free UI immediately while payment verifies
+    queryClient.setQueriesData({ queryKey: ['ad-free-status'] }, true);
+
+    supabase.functions
+      .invoke('verify-payment-session', {
         body: { session_id: sessionId },
-      }).then(() => {
-        // Invalidate queries to refetch data, like ad-free status
+      })
+      .then(({ error }) => {
+        if (error) {
+          // Roll back optimistic unlock if verification fails
+          queryClient.setQueriesData({ queryKey: ['ad-free-status'] }, false);
+        }
+        queryClient.invalidateQueries({ queryKey: ['ad-free-status'] });
+      })
+      .catch(() => {
+        queryClient.setQueriesData({ queryKey: ['ad-free-status'] }, false);
         queryClient.invalidateQueries({ queryKey: ['ad-free-status'] });
       });
-    }
   }, [sessionId, queryClient]);
 
   return (

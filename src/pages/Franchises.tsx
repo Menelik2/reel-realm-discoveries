@@ -36,7 +36,7 @@ const FranchiseCard = memo(function FranchiseCard({
   onPrefetch,
 }: {
   franchise: FranchiseSummary;
-  onPrefetch: (slug: string) => void;
+  onPrefetch: (slug: string, summary: FranchiseSummary) => void;
 }) {
   const titleCount = franchise.content_order?.length || 0;
   const img = franchise.titleImageUrl;
@@ -44,9 +44,10 @@ const FranchiseCard = memo(function FranchiseCard({
   return (
     <Link
       to={`/franchise/${franchise.slug}`}
-      onMouseEnter={() => onPrefetch(franchise.slug)}
-      onFocus={() => onPrefetch(franchise.slug)}
-      onTouchStart={() => onPrefetch(franchise.slug)}
+      onMouseEnter={() => onPrefetch(franchise.slug, franchise)}
+      onFocus={() => onPrefetch(franchise.slug, franchise)}
+      onTouchStart={() => onPrefetch(franchise.slug, franchise)}
+      onClick={() => onPrefetch(franchise.slug, franchise)}
       className={cn(
         'group relative flex gap-3 sm:gap-4 rounded-2xl overflow-hidden',
         'bg-card/80 border border-border/50 p-3 sm:p-3.5',
@@ -117,7 +118,7 @@ const GridSkeleton = () => (
 
 const FranchisesPage = () => {
   const { franchises, loading, isError, error, refetch, isFetching } = useFranchises();
-  const prefetch = usePrefetchFranchise();
+  const { prefetch } = usePrefetchFranchise();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('featured');
   const [isDarkMode, setIsDarkMode] = useState(false);
