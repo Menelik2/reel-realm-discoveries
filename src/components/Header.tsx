@@ -40,6 +40,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
     { to: '/', label: 'Home' },
     { to: '/?type=movie', label: 'Movies' },
     { to: '/?type=tv', label: 'TV Series' },
+    { to: '/franchises', label: 'Franchises' },
     { to: '/top-box-office', label: 'Box Office' },
   ];
 

@@ -51,7 +51,13 @@ export const SearchOverlay = ({ open, onOpenChange }: SearchOverlayProps) => {
   const handleSelect = async (item: PhonoSearchResult) => {
     if (item.content_type === 'FRANCHISE') {
       onOpenChange(false);
-      navigate(`/?search=${encodeURIComponent(item.title)}`);
+      const slug =
+        item.franchise_slug ||
+        item.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+      navigate(`/franchise/${slug}`);
       return;
     }
 

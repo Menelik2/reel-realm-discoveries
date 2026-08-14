@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { Home, Play, Star, Search, BarChart3 } from 'lucide-react';
+import { Home, Play, Star, Search, BarChart3, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { MobileSearchDialog } from './MobileSearchDialog';
@@ -10,6 +10,9 @@ export const MobileBottomNav = () => {
   const currentType = searchParams.get('type');
   const isHomePath = typeof window !== 'undefined' && window.location.pathname === '/';
   const isBoxOfficePath = typeof window !== 'undefined' && window.location.pathname === '/top-box-office';
+  const isFranchisesPath =
+    typeof window !== 'undefined' &&
+    (window.location.pathname === '/franchises' || window.location.pathname.startsWith('/franchise/'));
   const [searchOpen, setSearchOpen] = useState(false);
 
   const isHidden = useScrollHide({
@@ -22,6 +25,7 @@ export const MobileBottomNav = () => {
     { id: 'home', to: '/?category=popular', icon: Home, label: 'Home', isActive: isHomePath && !currentType },
     { id: 'movies', to: '/?category=popular&type=movie', icon: Play, label: 'Movies', isActive: isHomePath && currentType === 'movie' },
     { id: 'tv', to: '/?category=popular&type=tv', icon: Star, label: 'Series', isActive: isHomePath && currentType === 'tv' },
+    { id: 'franchises', to: '/franchises', icon: Layers, label: 'Franchises', isActive: isFranchisesPath },
     { id: 'box_office', to: '/top-box-office', icon: BarChart3, label: 'Box Office', isActive: isBoxOfficePath },
   ];
 
