@@ -1,0 +1,57 @@
+name: Deploy Supabase Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/**"
+      - "supabase/config.toml"
+      - ".github/workflows/deploy-functions.yml"
+  workflow_dispatch:
+    inputs:
+      function:
+        description: "Function name (empty = all)"
+        required: false
+        default: ""
+
+jobs:
+  deploy:
+    name: Deploy functions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets
+        env:
+          HAS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
+          HAS_PROJECT: ${{ secrets.SUPABASE_PROJECT_ID != '' }}
+        run: |
+          if [ "$HAS_TOKEN" != "true" ] || [ "$HAS_PROJECT" != "true" ]; then
+            echo "::error::Missing repo secrets. Add SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_ID under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          FN="${{ github.event.inputs.function }}"
+          if [ -n "$FN" ]; then
+            echo "Deploying function: $FN"
+            supabase functions deploy "$FN" --project-ref "$SUPABASE_PROJECT_ID"
+          else
+            echo "Deploying all functions"
+            for dir in supabase/functions/*/; do
+              name="$(basename "$dir")"
+              echo "→ $name"
+              supabase functions deploy "$name" --project-ref "$SUPABASE_PROJECT_ID"
+            done
+          fi

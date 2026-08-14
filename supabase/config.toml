@@ -26,3 +26,6 @@ verify_jwt = true
 
 [functions.phono-search]
 verify_jwt = false
+
+[functions.phono-franchise]
+verify_jwt = false
