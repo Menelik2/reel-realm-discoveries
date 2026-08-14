@@ -13,7 +13,7 @@
           "value": ".*(bot|crawl|spider|slurp|facebook|whatsapp|telegram|twitterbot|linkedinbot|discord|slack|pinterest|embedly|quora|outbrain|vkshare|facebookexternalhit|Facebot|W3C_Validator).*"
         }
       ],
-      "destination": "https://suxbqdcnidvdfmkrshem.supabase.co/functions/v1/og-image/movie/:id"
+      "destination": "https://khwwpvctzyurngshagke.supabase.co/functions/v1/og-image/movie/:id"
     },
     {
       "source": "/tv/:id",
@@ -24,7 +24,7 @@
           "value": ".*(bot|crawl|spider|slurp|facebook|whatsapp|telegram|twitterbot|linkedinbot|discord|slack|pinterest|embedly|quora|outbrain|vkshare|facebookexternalhit|Facebot|W3C_Validator).*"
         }
       ],
-      "destination": "https://suxbqdcnidvdfmkrshem.supabase.co/functions/v1/og-image/tv/:id"
+      "destination": "https://khwwpvctzyurngshagke.supabase.co/functions/v1/og-image/tv/:id"
     },
     {
       "source": "/(.*)",

@@ -46,8 +46,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `https://suxbqdcnidvdfmkrshem.supabase.co/functions/v1/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://suxbqdcnidvdfmkrshem.supabase.co/functions/v1/payment-cancelled`,
+      success_url: `https://khwwpvctzyurngshagke.supabase.co/functions/v1/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://khwwpvctzyurngshagke.supabase.co/functions/v1/payment-cancelled`,
       customer_email: user.email,
     });
 

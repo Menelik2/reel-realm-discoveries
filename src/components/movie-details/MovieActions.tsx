@@ -7,7 +7,7 @@ import { useTelegramUrl } from '@/hooks/useTelegramUrl';
 import { toast } from 'sonner';
 import { trackEvent } from '@/utils/analytics';
 
-const SUPABASE_URL = "https://suxbqdcnidvdfmkrshem.supabase.co";
+const SUPABASE_URL = "https://khwwpvctzyurngshagke.supabase.co";
 
 interface MovieActionsProps {
   trailerUrl: string | null;

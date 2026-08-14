@@ -23,7 +23,7 @@ serve(async (req) => {
 
   try {
     const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1eGJxZGNuaWR2ZGZta3JzaGVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4MTAwODcsImV4cCI6MjA2MzM4NjA4N30.QGFkoeQC7zRrnZYLKLPMr-7HTwUolEhFdzLkWFF-GkE';
-    const projectRef = 'suxbqdcnidvdfmkrshem';
+    const projectRef = 'khwwpvctzyurngshagke';
 
     // Ensure extensions are enabled
     await sql`CREATE EXTENSION IF NOT EXISTS pg_cron CASCADE`;
