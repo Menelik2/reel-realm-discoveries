@@ -1,6 +1,15 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Layers, Loader2, RefreshCw, Star } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Clapperboard,
+  Layers,
+  Loader2,
+  RefreshCw,
+  Star,
+  Tv,
+} from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
@@ -15,35 +24,44 @@ import {
 } from '@/hooks/useFranchises';
 import { searchContent } from '@/api/tmdbService';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const yearOf = (date: string | null) => (date && date.length >= 4 ? date.slice(0, 4) : '');
 
-const FranchiseTitleCard = ({
+const FranchiseTitleCard = memo(function FranchiseTitleCard({
   item,
+  index,
   onOpen,
   resolving,
 }: {
   item: FranchiseContentItem;
+  index: number;
   onOpen: (item: FranchiseContentItem) => void;
   resolving: boolean;
-}) => {
+}) {
   const year = yearOf(item.release_date);
   const rating = item.mean_rating;
+  const isSeries = item.content_type === 'SERIES';
 
   return (
     <button
       type="button"
       onClick={() => onOpen(item)}
       disabled={resolving}
-      className="group relative rounded-lg overflow-hidden bg-card text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all duration-300 hover:scale-[1.03] hover:shadow-[var(--card-shadow-hover)] disabled:opacity-70"
+      className={cn(
+        'group relative rounded-xl overflow-hidden bg-card text-left w-full',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        'transition-all duration-200 hover:scale-[1.03] hover:shadow-[var(--card-shadow-hover)]',
+        'disabled:opacity-70 disabled:pointer-events-none'
+      )}
       style={{ boxShadow: 'var(--card-shadow)' }}
     >
-      <div className="relative aspect-[2/3] overflow-hidden card-poster-host">
+      <div className="relative aspect-[2/3] overflow-hidden card-poster-host bg-secondary">
         {item.poster ? (
           <img
             src={item.poster}
             alt={item.title}
-            loading="lazy"
+            loading={index < 8 ? 'eager' : 'lazy'}
             decoding="async"
             width={342}
             height={513}
@@ -53,21 +71,35 @@ const FranchiseTitleCard = ({
             }}
           />
         ) : (
-          <div className="w-full h-full bg-secondary flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center">
             <Layers className="h-8 w-8 text-muted-foreground/40" />
           </div>
         )}
+
+        {/* Order badge */}
+        <div className="absolute top-1.5 left-1.5 min-w-[1.35rem] h-5 px-1 rounded-md bg-background/85 backdrop-blur-sm flex items-center justify-center">
+          <span className="text-[10px] font-bold tabular-nums text-foreground">{index + 1}</span>
+        </div>
+
         {resolving && (
-          <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+          <div className="absolute inset-0 bg-background/65 flex items-center justify-center backdrop-blur-[1px]">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         )}
+
         {rating != null && rating > 0 && (
-          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
+          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 bg-background/85 backdrop-blur-sm px-1.5 py-0.5 rounded-full">
             <Star className="h-2.5 w-2.5 text-primary fill-primary" />
             <span className="text-[10px] font-semibold text-foreground">{rating.toFixed(1)}</span>
           </div>
         )}
+
+        <div className="absolute bottom-1.5 left-1.5">
+          <span className="inline-flex items-center gap-0.5 rounded-md bg-background/80 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+            {isSeries ? <Tv className="h-2.5 w-2.5" /> : <Clapperboard className="h-2.5 w-2.5" />}
+            {isSeries ? 'Series' : 'Movie'}
+          </span>
+        </div>
       </div>
       <div className="p-1.5 md:p-2 space-y-0.5">
         <h3 className="font-semibold text-[11px] md:text-xs text-card-foreground line-clamp-2 leading-snug">
@@ -77,7 +109,7 @@ const FranchiseTitleCard = ({
       </div>
     </button>
   );
-};
+});
 
 const FranchiseDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -97,6 +129,27 @@ const FranchiseDetailPage = () => {
     }
     return franchise.content;
   }, [franchise]);
+
+  const yearRange = useMemo(() => {
+    const years = titles
+      .map((t) => yearOf(t.release_date))
+      .filter(Boolean)
+      .map(Number)
+      .filter((y) => y > 1900);
+    if (!years.length) return null;
+    const min = Math.min(...years);
+    const max = Math.max(...years);
+    return min === max ? String(min) : `${min}–${max}`;
+  }, [titles]);
+
+  const avgRating = useMemo(() => {
+    const rated = titles.filter((t) => t.mean_rating != null && t.mean_rating > 0);
+    if (!rated.length) return null;
+    const sum = rated.reduce((a, t) => a + (t.mean_rating || 0), 0);
+    return sum / rated.length;
+  }, [titles]);
+
+  const heroBackdrop = titles.find((t) => t.backdrop)?.backdrop || titles[0]?.poster || null;
 
   const handleOpen = async (item: FranchiseContentItem) => {
     if (!item.title?.trim()) {
@@ -160,99 +213,144 @@ const FranchiseDetailPage = () => {
         setIsDarkMode={setIsDarkMode}
       />
 
-      <main className="container mx-auto px-4 pt-24 pb-28 md:pb-12">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mb-4 -ml-2 gap-1.5 text-muted-foreground hover:text-foreground"
-          onClick={() => navigate('/franchises')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          All franchises
-        </Button>
+      <main className="pb-28 md:pb-12">
+        {/* Hero */}
+        <div className="relative pt-16 mb-6 overflow-hidden">
+          {heroBackdrop && !loading && franchise && (
+            <>
+              <div className="absolute inset-0 h-56 sm:h-64">
+                <img
+                  src={heroBackdrop}
+                  alt=""
+                  className="h-full w-full object-cover object-center opacity-40"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+              </div>
+            </>
+          )}
 
-        {loading && (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-full max-w-lg" />
-              <Skeleton className="h-4 w-24" />
-            </div>
+          <div className="relative container mx-auto px-4 pt-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mb-4 -ml-2 gap-1.5 text-muted-foreground hover:text-foreground bg-background/50 backdrop-blur-sm"
+              onClick={() => navigate('/franchises')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              All franchises
+            </Button>
+
+            {loading && (
+              <div className="space-y-3 max-w-xl pb-4">
+                <Skeleton className="h-9 w-64" />
+                <Skeleton className="h-4 w-full max-w-md" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+              </div>
+            )}
+
+            {!loading && franchise && !isError && (
+              <div className="max-w-2xl space-y-3 pb-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+                  {franchise.name}
+                </h1>
+                {franchise.description && (
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                    {franchise.description}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+                    {titles.length} title{titles.length !== 1 ? 's' : ''}
+                  </span>
+                  {yearRange && (
+                    <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      {yearRange}
+                    </span>
+                  )}
+                  {avgRating != null && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+                      <Star className="h-3 w-3 text-primary fill-primary" />
+                      {avgRating.toFixed(1)} avg
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4">
+          {loading && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-[2/3] rounded-lg" />
+              {Array.from({ length: 14 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-[2/3] rounded-xl" />
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {(missingSlug || notFound) && !loading && (
-          <div className="text-center py-20 space-y-3">
-            <Layers className="h-10 w-10 mx-auto text-muted-foreground/50" />
-            <h1 className="text-xl font-semibold">Franchise not found</h1>
-            <p className="text-sm text-muted-foreground">
-              {missingSlug
-                ? 'This link is incomplete.'
-                : 'This franchise may have been removed or the link is invalid.'}
-            </p>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/franchises">Back to franchises</Link>
-            </Button>
-          </div>
-        )}
-
-        {isError && !notFound && !missingSlug && (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-start gap-3 flex-1">
-              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-destructive">Could not load this franchise</p>
-                <p className="text-xs text-destructive/90">{franchiseErrorMessage(error)}</p>
-              </div>
+          {(missingSlug || notFound) && !loading && (
+            <div className="text-center py-20 space-y-3">
+              <Layers className="h-10 w-10 mx-auto text-muted-foreground/50" />
+              <h1 className="text-xl font-semibold">Franchise not found</h1>
+              <p className="text-sm text-muted-foreground">
+                {missingSlug
+                  ? 'This link is incomplete.'
+                  : 'This franchise may have been removed or the link is invalid.'}
+              </p>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/franchises">Back to franchises</Link>
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
-              onClick={() => refetch()}
-              disabled={isFetching}
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-              {isFetching ? 'Retrying…' : 'Try again'}
-            </Button>
-          </div>
-        )}
+          )}
 
-        {!loading && franchise && !isError && (
-          <>
-            <div className="mb-8 space-y-2 max-w-2xl">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{franchise.name}</h1>
-              {franchise.description && (
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {franchise.description}
+          {isError && !notFound && !missingSlug && (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-start gap-3 flex-1">
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-destructive">Could not load this franchise</p>
+                  <p className="text-xs text-destructive/90">{franchiseErrorMessage(error)}</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+                onClick={() => refetch()}
+                disabled={isFetching}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+                {isFetching ? 'Retrying…' : 'Try again'}
+              </Button>
+            </div>
+          )}
+
+          {!loading && franchise && !isError && (
+            <>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3">
+                {titles.map((item, index) => (
+                  <FranchiseTitleCard
+                    key={item.content_id}
+                    item={item}
+                    index={index}
+                    onOpen={handleOpen}
+                    resolving={resolvingId === item.content_id}
+                  />
+                ))}
+              </div>
+
+              {titles.length === 0 && (
+                <p className="text-sm text-muted-foreground py-12 text-center">
+                  No titles listed in this franchise yet.
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">
-                {titles.length} title{titles.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3">
-              {titles.map((item) => (
-                <FranchiseTitleCard
-                  key={item.content_id}
-                  item={item}
-                  onOpen={handleOpen}
-                  resolving={resolvingId === item.content_id}
-                />
-              ))}
-            </div>
-
-            {titles.length === 0 && (
-              <p className="text-sm text-muted-foreground py-8">No titles listed yet.</p>
-            )}
-          </>
-        )}
+            </>
+          )}
+        </div>
       </main>
 
       <Footer />
