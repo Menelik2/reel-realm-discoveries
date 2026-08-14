@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
   Layers,
   RefreshCw,
   Search,
@@ -31,6 +33,8 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'name', label: 'A–Z' },
   { key: 'featured', label: 'Featured' },
 ];
+
+const PAGE_SIZE = 10;
 
 /** Stacked poster group (movies + series) for a franchise */
 const PosterGroup = memo(function PosterGroup({
@@ -173,11 +177,11 @@ const GridSkeleton = () => (
 
 const FranchisesPage = () => {
   const { franchises, loading, isError, error, refetch, isFetching } = useFranchises();
-  const { postersBySlug, enriching } = useFranchiseGroupPosters(franchises);
   const { prefetch } = usePrefetchFranchise();
   // Default: Most titles
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('titles');
+  const [page, setPage] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const filtered = useMemo(() => {
@@ -201,6 +205,27 @@ const FranchisesPage = () => {
     // featured = API order
     return list;
   }, [franchises, query, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+
+  const pageItems = useMemo(() => {
+    const start = safePage * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, safePage]);
+
+  // Only fetch posters for the visible page (lighter than all franchises)
+  const { postersBySlug, enriching } = useFranchiseGroupPosters(pageItems);
+
+  // Reset to first page when search or sort changes
+  const handleQuery = (value: string) => {
+    setQuery(value);
+    setPage(0);
+  };
+  const handleSort = (key: SortKey) => {
+    setSort(key);
+    setPage(0);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -234,7 +259,7 @@ const FranchisesPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => handleQuery(e.target.value)}
                 placeholder="Search franchises…"
                 className="pl-9 pr-9 h-10 bg-secondary/50 border-border/60"
                 disabled={isError && franchises.length === 0}
@@ -243,7 +268,7 @@ const FranchisesPage = () => {
               {query && (
                 <button
                   type="button"
-                  onClick={() => setQuery('')}
+                  onClick={() => handleQuery('')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
                   aria-label="Clear search"
                 >
@@ -259,7 +284,7 @@ const FranchisesPage = () => {
                   <button
                     key={opt.key}
                     type="button"
-                    onClick={() => setSort(opt.key)}
+                    onClick={() => handleSort(opt.key)}
                     className={cn(
                       'px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors',
                       sort === opt.key
@@ -271,11 +296,11 @@ const FranchisesPage = () => {
                   </button>
                 ))}
               </div>
-              {!loading && !isError && (
+              {!loading && !isError && filtered.length > 0 && (
                 <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-                  {filtered.length}
-                  {query.trim() ? ` of ${franchises.length}` : ''} franchise
-                  {filtered.length !== 1 ? 's' : ''}
+                  Page {safePage + 1} of {totalPages}
+                  {' · '}
+                  {filtered.length} total
                   {enriching ? ' · fetching…' : ''}
                 </span>
               )}
@@ -308,17 +333,58 @@ const FranchisesPage = () => {
         {loading ? (
           <GridSkeleton />
         ) : (
-          !isError && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-              {filtered.map((f) => (
-                <FranchiseCard
-                  key={f.id}
-                  franchise={f}
-                  posters={postersBySlug[f.slug.toLowerCase()] || []}
-                  onPrefetch={prefetch}
-                />
-              ))}
-            </div>
+          !isError &&
+          pageItems.length > 0 && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                {pageItems.map((f) => (
+                  <FranchiseCard
+                    key={f.id}
+                    franchise={f}
+                    posters={postersBySlug[f.slug.toLowerCase()] || []}
+                    onPrefetch={prefetch}
+                  />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 min-w-[7.5rem]"
+                      disabled={safePage <= 0}
+                      onClick={() => {
+                        setPage((p) => Math.max(0, p - 1));
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground tabular-nums px-2">
+                      {safePage + 1} / {totalPages}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 min-w-[7.5rem]"
+                      disabled={safePage >= totalPages - 1}
+                      onClick={() => {
+                        setPage((p) => Math.min(totalPages - 1, p + 1));
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )
         )}
 
@@ -334,7 +400,7 @@ const FranchisesPage = () => {
                 : 'Franchises will appear when the catalog is available.'}
             </p>
             {query.trim() && (
-              <Button variant="outline" size="sm" className="mt-2" onClick={() => setQuery('')}>
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => handleQuery('')}>
                 Clear search
               </Button>
             )}
