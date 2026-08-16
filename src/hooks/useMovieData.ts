@@ -3,7 +3,6 @@ import type { ContentType } from '@/types/tmdb';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMovies, searchContent } from '@/api/tmdbService';
 import { fetchCustomContent } from '@/api/customContentService';
-import { useAuth } from './useAuth';
 
 interface UseMovieDataProps {
   searchQuery: string;
@@ -14,6 +13,8 @@ interface UseMovieDataProps {
   currentPage: number;
   refreshKey?: number;
   enabled?: boolean;
+  /** Optional user id for custom lists — avoid useAuth in every row */
+  userId?: string;
 }
 
 export const useMovieData = ({
@@ -25,8 +26,9 @@ export const useMovieData = ({
   currentPage,
   refreshKey = 0,
   enabled = true,
+  userId,
 }: UseMovieDataProps) => {
-  const { user } = useAuth();
+  const isCustom = currentCategory === 'custom';
 
   const queryKey = [
     'movies',
@@ -38,7 +40,7 @@ export const useMovieData = ({
       selectedYear,
       currentPage,
       refreshKey,
-      userId: user?.id,
+      userId: isCustom ? userId : undefined,
     },
   ];
 
@@ -46,8 +48,8 @@ export const useMovieData = ({
     if (searchQuery) {
       return searchContent({ searchQuery, currentPage });
     }
-    if (currentCategory === 'custom') {
-      return fetchCustomContent(user?.id);
+    if (isCustom) {
+      return fetchCustomContent(userId);
     }
     return fetchMovies({ currentCategory, contentType, selectedGenre, selectedYear, currentPage });
   };
@@ -55,11 +57,12 @@ export const useMovieData = ({
   const { data, isLoading } = useQuery({
     queryKey,
     queryFn,
-    enabled,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    enabled: enabled && (!isCustom || !!userId),
+    staleTime: 15 * 60 * 1000,
+    gcTime: 45 * 60 * 1000,
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   return {

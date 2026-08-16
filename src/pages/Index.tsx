@@ -1,14 +1,17 @@
 import type { ContentType } from '@/types/tmdb';
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { HomeCategoryRows } from "@/components/HomeCategoryRows";
 import { SEOMetadata } from "@/components/SEOMetadata";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useMovieData } from "@/hooks/useMovieData";
+
+const HeroCarousel = lazy(() =>
+  import("@/components/HeroCarousel").then((m) => ({ default: m.HeroCarousel }))
+);
 
 const getInitialDarkMode = () => {
   if (typeof window !== "undefined") {
@@ -137,7 +140,11 @@ const Index = () => {
         />
 
         <main>
-          {!searchQuery && <HeroCarousel />}
+          {!searchQuery && (
+            <Suspense fallback={<div className="w-full aspect-[16/10] min-h-[260px] max-h-[340px] bg-secondary animate-pulse" />}>
+              <HeroCarousel />
+            </Suspense>
+          )}
 
           {searchQuery ? (
             <MovieGrid

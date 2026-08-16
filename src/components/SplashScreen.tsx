@@ -44,7 +44,7 @@ export function SplashScreen() {
     previouslyFocused.current = document.activeElement as HTMLElement | null;
 
     const idleDelay = prefersReducedMotion ? 0 : 50;
-    const visibleDuration = prefersReducedMotion ? 600 : 1200;
+    const visibleDuration = prefersReducedMotion ? 300 : 700;
     const exitDuration = prefersReducedMotion ? 150 : 350;
 
     const enterTimer = window.setTimeout(() => {

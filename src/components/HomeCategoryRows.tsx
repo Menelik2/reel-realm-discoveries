@@ -94,14 +94,14 @@ interface LazyCategorySectionProps {
 }
 
 const LazyCategorySection = memo(({ eager, ...props }: LazyCategorySectionProps) => {
-  const { ref, isVisible } = useLazyVisible('80px');
+  const { ref, isVisible } = useLazyVisible('120px');
 
-  if (eager) return <CategorySection {...props} />;
+  if (eager) return <CategorySection {...props} fetchEnabled />;
 
   return (
     <div ref={ref}>
       {isVisible ? (
-        <CategorySection {...props} />
+        <CategorySection {...props} fetchEnabled />
       ) : (
         <section className="container mx-auto px-4">
           <div className="flex items-center gap-3 mb-5">
@@ -109,7 +109,7 @@ const LazyCategorySection = memo(({ eager, ...props }: LazyCategorySectionProps)
             <h2 className="text-xl md:text-2xl font-bold text-foreground">{props.category.label}</h2>
           </div>
           <div className={CARD_GRID}>
-            {Array.from({ length: 7 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="aspect-[2/3] bg-secondary rounded-lg" />
             ))}
           </div>
@@ -121,7 +121,7 @@ const LazyCategorySection = memo(({ eager, ...props }: LazyCategorySectionProps)
 
 LazyCategorySection.displayName = 'LazyCategorySection';
 
-const CategorySection = memo(({ category, contentType, selectedGenre, onMovieClick, showAdAfter, sectionIndex }: Omit<LazyCategorySectionProps, 'eager'>) => {
+const CategorySection = memo(({ category, contentType, selectedGenre, onMovieClick, showAdAfter, sectionIndex, fetchEnabled = true }: Omit<LazyCategorySectionProps, 'eager'> & { fetchEnabled?: boolean }) => {
   const { movies, loading } = useMovieData({
     searchQuery: '',
     selectedGenre,
@@ -129,7 +129,7 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
     contentType,
     currentCategory: category.key,
     currentPage: 1,
-    enabled: true,
+    enabled: fetchEnabled,
   });
 
   const icon = categoryIcons[category.key];
@@ -172,11 +172,11 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
           {icon || <div className="w-1 h-6 rounded-full bg-primary" />}
           <h2 className="text-xl md:text-2xl font-bold text-foreground">{category.label}</h2>
           <span className="text-xs font-medium text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
-            {Math.min(movies.length, 14)}
+            {Math.min(movies.length, 10)}
           </span>
         </div>
         <div className={CARD_GRID}>
-          {movies.slice(0, 14).map(movie => (
+          {movies.slice(0, 10).map(movie => (
             <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
           ))}
         </div>

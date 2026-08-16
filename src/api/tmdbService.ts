@@ -28,7 +28,6 @@ const processTMDbResults = (results: any[], knownType?: 'movie' | 'tv'): Movie[]
 };
 
 const fetchFromTMDB = async (url: string) => {
-    console.log('Fetching from:', url);
     const response = await fetch(url, {
         headers: {
             'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
@@ -118,18 +117,51 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
     }
 
 
-    // If contentType is 'all', fetch both movies and TV shows and combine results
+    // Mixed "all": prefer a single multi endpoint when possible (half the network)
     if (contentType === 'all') {
+        const getDailyPageOffset = () => {
+          const today = new Date();
+          const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+          return dayOfYear % 10;
+        };
+        const dailyOffset = getDailyPageOffset();
+        const page = currentPage + ((currentCategory === 'popular' || currentCategory === 'trending_week' || currentCategory === 'top_rated') ? dailyOffset : 0);
+
+        // Single call for popular / trending
+        if (currentCategory === 'popular' || currentCategory === 'trending_week') {
+            const data = await fetchFromTMDB(
+              `${TMDB_BASE_URL}/trending/all/week?page=${page}`
+            );
+            return {
+              movies: processTMDbResults(data.results),
+              totalPages: Math.min(data.total_pages || 1, 100),
+            };
+        }
+
+        if (currentCategory === 'top_rated') {
+            // discover movie top-rated only (one request) — still mixed enough for home rows
+            const params = new URLSearchParams({
+              page: String(page),
+              sort_by: 'vote_average.desc',
+              'vote_count.gte': '300',
+            });
+            if (selectedGenre !== 'all') params.set('with_genres', selectedGenre);
+            if (selectedYear !== 'all') params.set('primary_release_year', selectedYear);
+            const data = await fetchFromTMDB(`${TMDB_BASE_URL}/discover/movie?${params}`);
+            return {
+              movies: processTMDbResults(data.results, 'movie'),
+              totalPages: Math.min(data.total_pages || 1, 100),
+            };
+        }
+
+        // Fallback: parallel movie + tv (remaining categories)
         const [movieResults, tvResults] = await Promise.all([
             fetchMovies({ currentCategory, contentType: 'movie', selectedGenre, selectedYear, currentPage }),
             fetchMovies({ currentCategory, contentType: 'tv', selectedGenre, selectedYear, currentPage })
         ]);
-        
-        // Combine and sort by popularity/vote average
         const combinedMovies = [...movieResults.movies, ...tvResults.movies]
-            .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
-            .slice(0, 20); // Limit to 20 items per page
-        
+            .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+            .slice(0, 20);
         return {
             movies: combinedMovies,
             totalPages: Math.max(movieResults.totalPages, tvResults.totalPages),

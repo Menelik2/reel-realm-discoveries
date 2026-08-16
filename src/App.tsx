@@ -32,10 +32,12 @@ const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 10 * 60 * 1000, // 10 minutes
-      gcTime: 30 * 60 * 1000, // 30 minutes
+      staleTime: 15 * 60 * 1000,
+      gcTime: 45 * 60 * 1000,
       refetchOnWindowFocus: false,
       retry: 1,
+      // Avoid flooding the network when many sections mount
+      networkMode: 'online',
     },
   },
 });
