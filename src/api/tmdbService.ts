@@ -1,4 +1,5 @@
 import type { ContentType, Movie } from '@/types/tmdb';
+import { clampPage, normalizeTotalPages } from '@/utils/pagination';
 
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
@@ -62,7 +63,7 @@ const fetchCuratedCollection = async (
 ) => {
   const buildUrl = (media: 'movie' | 'tv') => {
     const params = new URLSearchParams();
-    params.append('page', currentPage.toString());
+    params.append('page', String(clampPage(currentPage)));
     params.append('sort_by', currentCategory === 'top_rated' ? 'vote_average.desc' : 'popularity.desc');
     params.append('vote_count.gte', currentCategory === 'top_rated' ? '150' : '20');
 
@@ -107,7 +108,7 @@ const fetchCuratedCollection = async (
 
   return {
     movies: combined.slice(0, 20),
-    totalPages: Math.min(Math.max(movieData.total_pages || 1, tvData.total_pages || 1), 100),
+    totalPages: normalizeTotalPages(Math.max(movieData.total_pages || 1, tvData.total_pages || 1)),
   };
 };
 
@@ -117,16 +118,10 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
     }
 
 
+    const page = clampPage(currentPage);
+
     // Mixed "all": prefer a single multi endpoint when possible (half the network)
     if (contentType === 'all') {
-        const getDailyPageOffset = () => {
-          const today = new Date();
-          const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
-          return dayOfYear % 10;
-        };
-        const dailyOffset = getDailyPageOffset();
-        const page = currentPage + ((currentCategory === 'popular' || currentCategory === 'trending_week' || currentCategory === 'top_rated') ? dailyOffset : 0);
-
         // Single call for popular / trending
         if (currentCategory === 'popular' || currentCategory === 'trending_week') {
             const data = await fetchFromTMDB(
@@ -134,7 +129,7 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
             );
             return {
               movies: processTMDbResults(data.results),
-              totalPages: Math.min(data.total_pages || 1, 100),
+              totalPages: normalizeTotalPages(data.total_pages),
             };
         }
 
@@ -150,41 +145,39 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
             const data = await fetchFromTMDB(`${TMDB_BASE_URL}/discover/movie?${params}`);
             return {
               movies: processTMDbResults(data.results, 'movie'),
-              totalPages: Math.min(data.total_pages || 1, 100),
+              totalPages: normalizeTotalPages(data.total_pages),
             };
         }
 
-        // Fallback: parallel movie + tv (remaining categories)
+        // Fallback: parallel movie + tv (remaining categories), de-duped by id
         const [movieResults, tvResults] = await Promise.all([
-            fetchMovies({ currentCategory, contentType: 'movie', selectedGenre, selectedYear, currentPage }),
-            fetchMovies({ currentCategory, contentType: 'tv', selectedGenre, selectedYear, currentPage })
+            fetchMovies({ currentCategory, contentType: 'movie', selectedGenre, selectedYear, currentPage: page }),
+            fetchMovies({ currentCategory, contentType: 'tv', selectedGenre, selectedYear, currentPage: page })
         ]);
+        const seen = new Set<number>();
         const combinedMovies = [...movieResults.movies, ...tvResults.movies]
             .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+            .filter((m) => {
+              if (seen.has(m.id)) return false;
+              seen.add(m.id);
+              return true;
+            })
             .slice(0, 20);
         return {
             movies: combinedMovies,
-            totalPages: Math.max(movieResults.totalPages, tvResults.totalPages),
+            totalPages: normalizeTotalPages(
+              Math.max(movieResults.totalPages, tvResults.totalPages)
+            ),
         };
     }
-
-    // Rotate popular content daily by picking a different page offset based on the date
-    const getDailyPageOffset = () => {
-      const today = new Date();
-      const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
-      return (dayOfYear % 10); // cycles through 0-9 extra pages
-    };
 
     const supportsFiltering = currentCategory === 'popular' || currentCategory === 'top_rated';
     const useDiscover = (selectedGenre !== 'all' || selectedYear !== 'all') && supportsFiltering;
 
     let url;
     const params = new URLSearchParams();
-    // Apply daily rotation for popular/trending/top_rated so content changes each day
-    const dailyOffset = getDailyPageOffset();
-    const shouldRotate = currentCategory === 'popular' || currentCategory === 'trending_week' || currentCategory === 'top_rated';
-    const effectivePage = shouldRotate ? currentPage + dailyOffset : currentPage;
-    params.append('page', effectivePage.toString());
+    // Honest page mapping — no daily offset (offset broke page 2+ navigation)
+    params.append('page', String(page));
 
     let apiCategory = currentCategory;
     if (contentType === 'tv') {
@@ -232,7 +225,7 @@ export const fetchMovies = async ({ currentCategory, contentType, selectedGenre,
 
     return {
         movies: processTMDbResults(data.results, contentType),
-        totalPages: Math.min(data.total_pages || 1, 100),
+        totalPages: normalizeTotalPages(data.total_pages),
     };
 };
 
@@ -243,9 +236,10 @@ interface SearchContentParams {
 }
 
 export const searchContent = async ({ searchQuery, currentPage, contentType }: SearchContentParams) => {
+    const page = clampPage(currentPage);
     const params = new URLSearchParams();
     params.append('query', searchQuery);
-    params.append('page', currentPage.toString());
+    params.append('page', String(page));
 
     // Use specific search endpoint if a single media type is provided, otherwise search all
     const singleType = contentType === 'movie' || contentType === 'tv' ? contentType : undefined;
@@ -255,9 +249,8 @@ export const searchContent = async ({ searchQuery, currentPage, contentType }: S
 
     return {
         movies: processTMDbResults(data.results, singleType),
-        totalPages: Math.min(data.total_pages || 1, 100),
+        totalPages: normalizeTotalPages(data.total_pages),
     };
-
 };
 
 export const fetchMovieDetails = async (id: number, contentType: 'movie' | 'tv') => {

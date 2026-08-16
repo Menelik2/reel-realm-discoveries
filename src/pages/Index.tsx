@@ -8,6 +8,7 @@ import { HomeCategoryRows } from "@/components/HomeCategoryRows";
 import { SEOMetadata } from "@/components/SEOMetadata";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useMovieData } from "@/hooks/useMovieData";
+import { clampPage } from "@/utils/pagination";
 
 const HeroCarousel = lazy(() =>
   import("@/components/HeroCarousel").then((m) => ({ default: m.HeroCarousel }))
@@ -101,9 +102,9 @@ const Index = () => {
   });
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    const next = clampPage(page, totalPages || 1);
+    setCurrentPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleMovieClick = (movieId: number, typeOverride?: "movie" | "tv") => {

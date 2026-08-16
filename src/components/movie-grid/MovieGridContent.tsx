@@ -2,6 +2,7 @@ import type { ContentType } from '@/types/tmdb';
 import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import type { Movie } from '@/types/tmdb';
+import { pageWindow, canGoPrev, canGoNext, clampPage } from '@/utils/pagination';
 
 interface MovieGridContentProps {
   movies: Movie[];
@@ -73,48 +74,54 @@ export const MovieGridContent = ({
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    onPageChange(currentPage - 1);
+                    if (canGoPrev(currentPage)) onPageChange(clampPage(currentPage - 1, totalPages));
                   }}
-                  className={currentPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                  className={!canGoPrev(currentPage) ? 'pointer-events-none opacity-50' : ''}
+                  aria-disabled={!canGoPrev(currentPage)}
                 />
               </PaginationItem>
               
-              {/* Page numbers */}
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = Math.max(1, currentPage - 2) + i;
-                if (pageNum > totalPages) return null;
-                
-                return (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onPageChange(pageNum);
-                      }}
-                      isActive={pageNum === currentPage}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
+              {pageWindow(currentPage, totalPages, 5).map((pageNum) => (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onPageChange(pageNum);
+                    }}
+                    isActive={pageNum === currentPage}
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
               
               <PaginationItem>
                 <PaginationNext 
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    onPageChange(currentPage + 1);
+                    if (canGoNext(currentPage, totalPages)) {
+                      onPageChange(clampPage(currentPage + 1, totalPages));
+                    }
                   }}
-                  className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''}
+                  className={!canGoNext(currentPage, totalPages) ? 'pointer-events-none opacity-50' : ''}
+                  aria-disabled={!canGoNext(currentPage, totalPages)}
                 />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
           
           <div className="text-center mt-4 text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages} (Showing up to 2000 {!!searchQuery ? 'results' : (contentType === 'movie' ? 'movies' : contentType === 'tv' ? 'series' : 'items')})
+            Page {currentPage} of {totalPages}
+            {' · '}
+            {searchQuery
+              ? 'search results'
+              : contentType === 'movie'
+                ? 'movies'
+                : contentType === 'tv'
+                  ? 'series'
+                  : 'titles'}
           </div>
         </div>
       )}
