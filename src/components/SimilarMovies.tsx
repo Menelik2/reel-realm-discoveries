@@ -69,9 +69,7 @@ export const SimilarMovies = memo(({ movieId, contentType, onMovieClick, current
         // Fetch from multiple sources including keywords endpoint
         const requests: Promise<Response>[] = [
           fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/similar?page=1`, { headers }),
-          fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/similar?page=2`, { headers }),
           fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/recommendations?page=1`, { headers }),
-          fetch(`${TMDB_BASE_URL}/${contentType}/${movieId}/recommendations?page=2`, { headers }),
         ];
 
         // Fetch keywords/tags for this movie to find thematically similar content
@@ -226,10 +224,10 @@ export const SimilarMovies = memo(({ movieId, contentType, onMovieClick, current
         scoredResults.sort((a, b) => b.similarityScore - a.similarityScore);
 
         const storyMatches = scoredResults.filter(i => i.similarityScore > 0);
-        const ranked = storyMatches.length >= 20 ? storyMatches : scoredResults;
+        const ranked = storyMatches.length >= 10 ? storyMatches : scoredResults;
 
         const normalizedResults: Movie[] = ranked
-          .slice(0, 20)
+          .slice(0, 10)
           .map(item => ({
             id: item.id,
             title: item.title || item.name || 'Unknown Title',
