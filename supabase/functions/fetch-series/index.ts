@@ -45,6 +45,34 @@ interface SeriesResponse {
   };
 }
 
+/** Extract every Telegram URL from invite_link text (supports multi-link lines with |). */
+function parseTelegramInviteLinks(inviteLink: string): Array<{ label: string; url: string }> {
+  if (!inviteLink || typeof inviteLink !== 'string') return [];
+
+  const urlRegex = /(https?:\/\/(?:t\.me|telegram\.dog|telegram\.me)\/[^\s|]+)/gi;
+  const links: Array<{ label: string; url: string }> = [];
+
+  for (const rawLine of inviteLink.split(/\n+/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    const matches = [...line.matchAll(urlRegex)];
+    if (matches.length === 0) continue;
+
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+      const url = match[1];
+      const prevEnd = i > 0 ? (matches[i - 1].index! + matches[i - 1][0].length) : 0;
+      let label = line.substring(prevEnd, match.index!).trim();
+      // Strip trailing / leading separators left by "Label - url | Label2 - url"
+      label = label.replace(/[-–—:|]+\s*$/g, '').replace(/^[-–—:|]+\s*/g, '').trim();
+      if (!label) label = 'Download';
+      links.push({ label, url });
+    }
+  }
+
+  return links;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -113,10 +141,10 @@ serve(async (req) => {
     const seriesData = await tmdbResponse.json();
     console.log(`Series data fetched for: ${seriesData.name}`);
 
-    // Get IMDb ID if not provided
-    const finalImdbId = imdbId || seriesData.external_ids?.imdb_id;
+    // Get IMDb ID if not provided (TV puts it under external_ids, not top-level)
+    const finalImdbId = imdbId || seriesData.external_ids?.imdb_id || seriesData.imdb_id;
 
-    // Try to fetch from Telegram API
+    // Try to fetch from Telegram / series download API
     let telegramLinks: Array<{ label: string; url: string }> = [];
     if (finalImdbId) {
       try {
@@ -125,36 +153,30 @@ serve(async (req) => {
         
         if (telegramResponse.ok) {
           const telegramData = await telegramResponse.json();
-          const urlRegex = /(https?:\/\/(?:t\.me|telegram\.dog|telegram\.me)\/[^\s]+)/i;
           
           if (telegramData.invite_link && typeof telegramData.invite_link === 'string') {
-            const lines = telegramData.invite_link.split('\n');
-            telegramLinks = lines
-              .map((line: string) => {
-                const match = line.match(urlRegex);
-                if (!match) return null;
-                const url = match[1];
-                // Extract label = text before the URL, stripping trailing separators
-                let label = line.substring(0, line.indexOf(url)).trim();
-                label = label.replace(/[-–—:|]+\s*$/, '').trim();
-                if (!label) label = 'Download';
-                return { label, url };
-              })
-              .filter((item: { label: string; url: string } | null) => item !== null);
-            
+            telegramLinks = parseTelegramInviteLinks(telegramData.invite_link);
             console.log(`Parsed ${telegramLinks.length} Telegram URLs`);
+          } else if (telegramData.success === false) {
+            console.warn('Series API reported not found:', telegramData.message);
           }
+        } else {
+          console.warn('Series download API status:', telegramResponse.status);
         }
       } catch (error) {
         console.warn('Failed to fetch Telegram URL:', error);
       }
+    } else {
+      console.warn('No IMDb ID available for series; cannot fetch download links');
     }
 
 
     // Prepare response data
     const responseData: SeriesResponse = {
       success: true,
-      message: `Series "${seriesData.name}" fetched successfully`,
+      message: telegramLinks.length > 0
+        ? `Series "${seriesData.name}" fetched successfully`
+        : `Series "${seriesData.name}" found but no download links available`,
       data: {
         tmdbId,
         title: seriesData.name || title,
@@ -169,6 +191,7 @@ serve(async (req) => {
     console.log(`Number of seasons: ${seriesData.seasons?.length || 0}`);
     console.log(`First air date: ${seriesData.first_air_date}`);
     console.log(`Status: ${seriesData.status}`);
+    console.log(`Download links: ${telegramLinks.length}`);
 
     return new Response(
       JSON.stringify(responseData),
