@@ -74,8 +74,53 @@ export const useFastDownload = () => {
   return { start, pendingId, isPending: (id: string) => pendingId === id };
 };
 
-/** Extracts the Telegram message id from a `?start=` deep link. */
+/**
+ * Decode IrisFileStore / PhonoFilm `?start=` tokens into a numeric Telegram message id
+ * when possible.
+ *
+ * Supported forms:
+ * - Numeric deep links: `?start=123456` (Phonofilmbot movies)
+ * - Base64 batch tokens: `?start=Z2V0LTE1NTkz...` → decodes to `get-<messageId>` or
+ *   `get-<startId>-<endId>` (series file batches). Uses the first numeric id.
+ * - Opaque hex keys (e.g. `66f83d25460d4925…`) cannot be resolved client-side — returns null.
+ */
 export const extractMessageId = (telegramUrl: string): string | null => {
-  const match = telegramUrl.match(/[?&]start=(-?\d+)/);
-  return match ? match[1] : null;
+  if (!telegramUrl) return null;
+
+  const startMatch = telegramUrl.match(/[?&]start=([^&#\s]+)/i);
+  if (!startMatch) return null;
+
+  let token = decodeURIComponent(startMatch[1]).trim();
+
+  // 1) Plain numeric message id (movies / Phonofilmbot)
+  if (/^-?\d+$/.test(token)) {
+    return token;
+  }
+
+  // 2) Base64 / base64url payload used by IrisFileStore bots for series batches
+  try {
+    const normalized = token.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
+    const decoded = atob(normalized + pad);
+
+    // `get-<messageId>` or `get-<fromId>-<toId>`
+    const getMatch = decoded.match(/^get-(-?\d+)(?:-(-?\d+))?$/i);
+    if (getMatch) {
+      return getMatch[1];
+    }
+
+    // Any other decoded string that is purely numeric
+    if (/^-?\d+$/.test(decoded.trim())) {
+      return decoded.trim();
+    }
+  } catch {
+    // not valid base64 — fall through
+  }
+
+  // 3) Opaque store keys (hex UUID-like) — Fast Download bridge needs a real message id
+  return null;
 };
+
+/** True when this Telegram URL can use the premium Fast Download bridge. */
+export const canFastDownload = (telegramUrl: string): boolean =>
+  extractMessageId(telegramUrl) !== null;
