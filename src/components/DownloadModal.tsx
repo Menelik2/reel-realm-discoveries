@@ -57,7 +57,8 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
       fetchDownloadData();
       setSearchTerm('');
     }
-  }, [open, tmdbId]);
+    // Refetch when series identity changes (imdbId often arrives after TMDB external_ids load)
+  }, [open, tmdbId, contentType, imdbId, title]);
 
   const fetchDownloadData = async () => {
     setLoading(true);
@@ -252,7 +253,9 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
       return (
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>No download links available for this TV series.</AlertDescription>
+          <AlertDescription>
+            {downloadData?.error || 'No download links available for this TV series.'}
+          </AlertDescription>
         </Alert>
       );
     }
@@ -332,7 +335,7 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                 {contentType === 'tv' ? 'Fetching series information...' : 'Fetching download links...'}
               </span>
             </div>
-          ) : downloadData?.error ? (
+          ) : downloadData?.error && (!downloadData.downloadLinks || downloadData.downloadLinks.length === 0) ? (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{downloadData.error}</AlertDescription>
