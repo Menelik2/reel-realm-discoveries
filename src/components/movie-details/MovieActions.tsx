@@ -7,8 +7,6 @@ import { useTelegramUrl } from '@/hooks/useTelegramUrl';
 import { toast } from 'sonner';
 import { trackEvent } from '@/utils/analytics';
 
-const SUPABASE_URL = "https://khwwpvctzyurngshagke.supabase.co";
-
 interface MovieActionsProps {
   trailerUrl: string | null;
   homepage?: string;
@@ -23,7 +21,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   
-  // Get Telegram URL for TV series
+  // Prefetch series Telegram availability (same PhonoFilm / t4tsa source as download modal)
   const { data: telegramUrl } = useTelegramUrl(contentType === 'tv' ? {
     id: movieId,
     media_type: 'tv',
@@ -33,6 +31,11 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
   } as any : null);
 
   const handleDownload = () => {
+    setIsDownloadOpen(true);
+  };
+
+  /** Series Telegram: open Download modal so users get season list + Fast Download when available. */
+  const handleTelegramDownload = () => {
     setIsDownloadOpen(true);
   };
 
@@ -92,6 +95,11 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
     }
   };
 
+  // PhonoFilm catalog page for the same title (browse files / seasons on their site)
+  const phonoFilmBrowseUrl = imdbId
+    ? `https://phonofilm.net/search?q=${encodeURIComponent(imdbId)}`
+    : `https://phonofilm.net/search?q=${encodeURIComponent(title)}`;
+
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -134,16 +142,33 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
             <span className="sm:hidden">Download</span>
           </Button>
           
-          {/* Telegram button for TV series */}
-          {contentType === 'tv' && telegramUrl && (
+          {/* Telegram / series files — opens modal with season links + Fast Download */}
+          {contentType === 'tv' && (
             <Button 
               variant="outline" 
               className="flex-1 sm:flex-none"
-              onClick={() => window.open(telegramUrl, '_blank')}
+              onClick={handleTelegramDownload}
+              title={telegramUrl ? 'Browse series seasons & Fast Download' : 'Fetch series download links'}
             >
               <Send className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Telegram</span>
               <span className="sm:hidden">Telegram Download</span>
+            </Button>
+          )}
+
+          {/* Browse same title on PhonoFilm (source catalog) */}
+          {contentType === 'tv' && (
+            <Button variant="outline" asChild className="flex-1 sm:flex-none">
+              <a
+                href={phonoFilmBrowseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Browse files on PhonoFilm"
+              >
+                <Globe className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">PhonoFilm</span>
+                <span className="sm:hidden">Browse</span>
+              </a>
             </Button>
           )}
           
@@ -189,7 +214,7 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         } as any}
       />
 
-      {/* Download modal for both movies and TV series */}
+      {/* Download modal for both movies and TV series (includes Fast Download when message id is known) */}
       <DownloadModal
         open={isDownloadOpen}
         onClose={() => setIsDownloadOpen(false)}
