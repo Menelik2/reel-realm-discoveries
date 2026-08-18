@@ -254,8 +254,17 @@ export const searchContent = async ({ searchQuery, currentPage, contentType }: S
 };
 
 export const fetchMovieDetails = async (id: number, contentType: 'movie' | 'tv') => {
-    const url = `${TMDB_BASE_URL}/${contentType}/${id}?append_to_response=videos,credits`;
+    // TV series expose imdb_id only under external_ids — required for series download fetch
+    const append = contentType === 'tv'
+      ? 'videos,credits,external_ids'
+      : 'videos,credits,external_ids';
+    const url = `${TMDB_BASE_URL}/${contentType}/${id}?append_to_response=${append}`;
     const data = await fetchFromTMDB(url);
+
+    // Normalize imdb_id for both movies and TV (TV: external_ids.imdb_id)
+    if (!data.imdb_id && data.external_ids?.imdb_id) {
+      data.imdb_id = data.external_ids.imdb_id;
+    }
 
     return {
         movie: data,
