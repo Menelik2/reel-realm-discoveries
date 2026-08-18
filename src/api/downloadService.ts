@@ -30,6 +30,97 @@ export interface DownloadResult {
 
 const TELEGRAM_BOT_BASE = 'https://telegram.dog/Phonofilmbot?start=';
 
+/** Extract every Telegram URL from invite_link text (supports multi-link lines with |). */
+export const parseSeriesInviteLinks = (inviteLink: string): SeriesDownloadLink[] => {
+  if (!inviteLink || typeof inviteLink !== 'string') return [];
+
+  const urlRegex = /(https?:\/\/(?:t\.me|telegram\.dog|telegram\.me)\/[^\s|]+)/gi;
+  const links: SeriesDownloadLink[] = [];
+
+  for (const rawLine of inviteLink.split(/\n+/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    const matches = [...line.matchAll(urlRegex)];
+    if (matches.length === 0) continue;
+
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+      const url = match[1];
+      const prevEnd = i > 0 ? (matches[i - 1].index! + matches[i - 1][0].length) : 0;
+      let label = line.substring(prevEnd, match.index!).trim();
+      label = label.replace(/[-–—:|]+\s*$/g, '').replace(/^[-–—:|]+\s*/g, '').trim();
+      if (!label) label = 'Download';
+      links.push({ label, url });
+    }
+  }
+
+  return links;
+};
+
+const fetchSeriesLinksDirect = async (imdbId: string): Promise<SeriesDownloadLink[]> => {
+  const formattedImdbId = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
+  const directApiUrl = `https://api.t4tsa.cc/get-series/?imdb_id=${formattedImdbId}`;
+
+  let data: { success?: boolean; invite_link?: string; message?: string };
+
+  try {
+    const response = await fetch(directApiUrl, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error(`Series API status ${response.status}`);
+    }
+    data = await response.json();
+  } catch (directError) {
+    console.log('Direct series API failed, trying AllOrigins proxy:', directError);
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(directApiUrl)}`;
+    const response = await fetch(proxyUrl, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      throw new Error(`Proxy series API status ${response.status}`);
+    }
+    const responseData = await response.json();
+    if (!responseData.contents) {
+      throw new Error('No contents in proxy response');
+    }
+    data = JSON.parse(responseData.contents);
+  }
+
+  if (!data?.invite_link) {
+    return [];
+  }
+  return parseSeriesInviteLinks(data.invite_link);
+};
+
+const resolveSeriesImdbId = async (tmdbId: string, existingImdbId?: string): Promise<string | undefined> => {
+  if (existingImdbId) {
+    return existingImdbId.startsWith('tt') ? existingImdbId : `tt${existingImdbId}`;
+  }
+
+  try {
+    const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/${tmdbId}/external_ids`,
+      {
+        headers: {
+          Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json;charset=utf-8',
+        },
+      }
+    );
+    if (!response.ok) return undefined;
+    const externalIds = await response.json();
+    return externalIds.imdb_id || undefined;
+  } catch (error) {
+    console.warn('Failed to resolve IMDb ID for series:', error);
+    return undefined;
+  }
+};
+
 export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadResult> => {
   try {
     console.log('🔍 Fetching movie download links for TMDB ID:', tmdbId);
@@ -58,7 +149,7 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
         throw new Error(`Direct API failed with status: ${response.status}`);
       }
     } catch (corsError) {
-      console.log('❌ Direct API failed, trying AllOrigins proxy:', corsError.message);
+      console.log('❌ Direct API failed, trying AllOrigins proxy:', (corsError as Error).message);
       
       // Fallback to AllOrigins proxy
       const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(directApiUrl)}`;
@@ -161,34 +252,55 @@ export const fetchMovieDownloadLinks = async (tmdbId: string): Promise<DownloadR
 export const fetchSeriesDownloadLinks = async (tmdbId: string, title: string, imdbId?: string): Promise<DownloadResult> => {
   try {
     console.log('🔍 Fetching TV series download links for TMDB ID:', tmdbId);
-    
-    // Call our Supabase edge function
-    const { supabase } = await import('@/integrations/supabase/client');
-    
-    const { data, error } = await supabase.functions.invoke('fetch-series', {
-      body: {
-        tmdbId,
-        title,
-        imdbId
+
+    // Prefer Supabase edge function (server-side, no CORS)
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+
+      const { data, error } = await supabase.functions.invoke('fetch-series', {
+        body: {
+          tmdbId,
+          title,
+          imdbId
+        }
+      });
+
+      if (!error && data?.success) {
+        const links = data.data?.downloadLinks || [];
+        console.log('✅ Series data from edge function:', links.length, 'links');
+        return {
+          tmdbId,
+          type: 'tv',
+          downloadLinks: links,
+        };
       }
-    });
 
-    if (error) {
-      console.error('❌ Edge function error:', error);
-      throw new Error(`Edge function error: ${error.message}`);
+      console.warn('Edge function series fetch failed, falling back to client:', error?.message || data?.message);
+    } catch (edgeError) {
+      console.warn('Edge function invoke error, falling back to client:', edgeError);
     }
 
-    if (!data || !data.success) {
-      console.error('❌ Edge function returned error:', data?.message);
-      throw new Error(data?.message || 'Failed to fetch series data');
+    // Client-side fallback (direct API + proxy), same parsing as edge function
+    const resolvedImdb = await resolveSeriesImdbId(tmdbId, imdbId);
+    if (!resolvedImdb) {
+      return {
+        tmdbId,
+        type: 'tv',
+        downloadLinks: [],
+        error: 'No IMDb ID found for this series — cannot fetch download links',
+      };
     }
 
-    console.log('✅ Series data fetched successfully:', data.data);
+    const downloadLinks = await fetchSeriesLinksDirect(resolvedImdb);
+    console.log('✅ Series links from client fallback:', downloadLinks.length);
 
     return {
       tmdbId,
       type: 'tv',
-      downloadLinks: data.data?.downloadLinks || [],
+      downloadLinks,
+      ...(downloadLinks.length === 0
+        ? { error: 'No download links available for this series' }
+        : {}),
     };
 
   } catch (error) {
