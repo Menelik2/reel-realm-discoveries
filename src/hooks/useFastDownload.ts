@@ -74,15 +74,71 @@ export const useFastDownload = () => {
   return { start, pendingId, isPending: (id: string) => pendingId === id };
 };
 
+/** True if token looks like base64 / base64url (not a pure hex store key). */
+const isBase64ish = (token: string): boolean => {
+  // Standard or url-safe alphabet, optional padding
+  if (!/^[A-Za-z0-9+/_-]+={0,2}$/.test(token)) return false;
+  // Pure hex (IrisFileStore opaque keys) is valid base64 alphabet but is NOT a batch token.
+  // Reject 32-char hex keys early so atob does not emit binary garbage.
+  if (/^[0-9a-fA-F]{32}$/.test(token)) return false;
+  // Real batch tokens are longer (encoded "get-<big-id>...")
+  if (token.replace(/=+$/, '').length < 12) return false;
+  return true;
+};
+
+/** Decode base64 or base64url to a UTF-8 string; returns null on failure. */
+const decodeBase64Token = (token: string): string | null => {
+  const attempts = [
+    // Prefer url-safe → standard mapping first (PhonoFilm tokens are usually standard b64)
+    token.replace(/-/g, '+').replace(/_/g, '/'),
+    // Then raw token in case mapping corrupted a rare payload
+    token,
+  ];
+
+  for (const candidate of attempts) {
+    try {
+      const normalized = candidate.replace(/=+$/, '');
+      const pad =
+        normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
+      const decoded = atob(normalized + pad);
+
+      // Reject binary / non-printable garbage (hex keys that slip through)
+      if (!/^[\x20-\x7E]+$/.test(decoded)) continue;
+
+      return decoded;
+    } catch {
+      // try next attempt
+    }
+  }
+  return null;
+};
+
+/**
+ * Parse a decoded IrisFileStore payload into a Telegram message id string.
+ * Forms: `get-<id>`, `get-<from>-<to>` (batch range — uses first id).
+ */
+const messageIdFromDecoded = (decoded: string): string | null => {
+  const trimmed = decoded.trim();
+
+  const getMatch = trimmed.match(/^get-(-?\d+)(?:-(-?\d+))?$/i);
+  if (getMatch) return getMatch[1];
+
+  if (/^-?\d+$/.test(trimmed)) return trimmed;
+
+  return null;
+};
+
 /**
  * Decode IrisFileStore / PhonoFilm `?start=` tokens into a numeric Telegram message id
  * when possible.
  *
  * Supported forms:
  * - Numeric deep links: `?start=123456` (Phonofilmbot movies)
- * - Base64 batch tokens: `?start=Z2V0LTE1NTkz...` → decodes to `get-<messageId>` or
+ * - Base64 batch tokens: `?start=Z2V0LTE1NTkz...` → `get-<messageId>` or
  *   `get-<startId>-<endId>` (series file batches). Uses the first numeric id.
  * - Opaque hex keys (e.g. `66f83d25460d4925…`) cannot be resolved client-side — returns null.
+ *
+ * Message ids are returned as strings (they often exceed Number.MAX_SAFE_INTEGER).
  */
 export const extractMessageId = (telegramUrl: string): string | null => {
   if (!telegramUrl) return null;
@@ -90,35 +146,36 @@ export const extractMessageId = (telegramUrl: string): string | null => {
   const startMatch = telegramUrl.match(/[?&]start=([^&#\s]+)/i);
   if (!startMatch) return null;
 
-  let token = decodeURIComponent(startMatch[1]).trim();
+  let token: string;
+  try {
+    token = decodeURIComponent(startMatch[1]).trim();
+  } catch {
+    // Malformed % sequences — use raw capture
+    token = startMatch[1].trim();
+  }
+
+  // Strip accidental whitespace / quotes from copied links
+  token = token.replace(/^['"]|['"]$/g, '');
 
   // 1) Plain numeric message id (movies / Phonofilmbot)
   if (/^-?\d+$/.test(token)) {
     return token;
   }
 
-  // 2) Base64 / base64url payload used by IrisFileStore bots for series batches
-  try {
-    const normalized = token.replace(/-/g, '+').replace(/_/g, '/');
-    const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
-    const decoded = atob(normalized + pad);
-
-    // `get-<messageId>` or `get-<fromId>-<toId>`
-    const getMatch = decoded.match(/^get-(-?\d+)(?:-(-?\d+))?$/i);
-    if (getMatch) {
-      return getMatch[1];
-    }
-
-    // Any other decoded string that is purely numeric
-    if (/^-?\d+$/.test(decoded.trim())) {
-      return decoded.trim();
-    }
-  } catch {
-    // not valid base64 — fall through
+  // 2) Opaque hex store keys — not decodable to a message id
+  if (/^[0-9a-fA-F]{32}$/.test(token)) {
+    return null;
   }
 
-  // 3) Opaque store keys (hex UUID-like) — Fast Download bridge needs a real message id
-  return null;
+  // 3) Base64 / base64url batch tokens (`get-<id>` / `get-<from>-<to>`)
+  if (!isBase64ish(token)) {
+    return null;
+  }
+
+  const decoded = decodeBase64Token(token);
+  if (!decoded) return null;
+
+  return messageIdFromDecoded(decoded);
 };
 
 /** True when this Telegram URL can use the premium Fast Download bridge. */
