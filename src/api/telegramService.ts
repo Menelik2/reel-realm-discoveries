@@ -1,7 +1,10 @@
+import { parseSeriesInviteLinks } from '@/api/downloadService';
+
 export interface TelegramResponse {
   invite_link?: string;
   status?: string;
   message?: string;
+  success?: boolean;
 }
 
 export const fetchTelegramUrl = async (imdbId: string): Promise<string | null> => {
@@ -21,10 +24,16 @@ export const fetchTelegramUrl = async (imdbId: string): Promise<string | null> =
     const data: TelegramResponse = await response.json();
     console.log('Telegram API response:', data);
     
-    // Extract invite_link if it exists
+    // invite_link is often multi-line season list — pick the first real t.me URL
     if (data.invite_link) {
-      console.log('Found Telegram invite link:', data.invite_link);
-      return data.invite_link;
+      const links = parseSeriesInviteLinks(data.invite_link);
+      if (links.length > 0) {
+        console.log('Found Telegram invite link:', links[0].url);
+        return links[0].url;
+      }
+      // Fallback: first URL in the blob
+      const match = data.invite_link.match(/https?:\/\/(?:t\.me|telegram\.dog|telegram\.me)\/[^\s|]+/i);
+      if (match) return match[0];
     }
     
     console.log('No Telegram invite link found in response');
