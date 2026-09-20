@@ -1,6 +1,7 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Star } from 'lucide-react';
 import type { Movie } from '@/types/tmdb';
+import { movieGenres, tvGenres } from '@/constants/genres';
 
 interface MovieCardProps {
   movie: Movie;
@@ -12,6 +13,13 @@ const getReleaseYear = (date?: string) => {
   if (date && date.length >= 4) return date.substring(0, 4);
   return '';
 };
+
+// Combined lookup for movie + TV genres
+const GENRE_MAP = new Map<number, string>();
+movieGenres.forEach((g) => GENRE_MAP.set(g.id, g.name));
+tvGenres.forEach((g) => {
+  if (!GENRE_MAP.has(g.id)) GENRE_MAP.set(g.id, g.name);
+});
 
 export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCardProps) => {
   const posterUrl = fullPosterUrl
@@ -32,6 +40,14 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
   };
 
   const year = getReleaseYear(movie.release_date);
+
+  const genreNames = useMemo(() => {
+    if (!movie.genre_ids?.length) return [];
+    return movie.genre_ids
+      .map((id) => GENRE_MAP.get(id))
+      .filter(Boolean)
+      .slice(0, 2) as string[];
+  }, [movie.genre_ids]);
 
   return (
     <button
@@ -54,10 +70,10 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
         />
 
-        {/* Soft bottom gradient always present for text readability on hover */}
+        {/* Soft bottom gradient on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Rating badge — slightly larger & more polished */}
+        {/* Rating badge */}
         {movie.vote_average > 0 && (
           <div className="absolute top-2 right-2 flex items-center gap-1 bg-background/85 backdrop-blur-md px-2 py-1 rounded-full shadow-sm border border-border/40">
             <Star className="h-3 w-3 text-primary fill-primary" />
@@ -68,14 +84,29 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl }: MovieCard
         )}
       </div>
 
-      {/* Info — normal readable size */}
-      <div className="p-2.5 md:p-3 space-y-1">
+      {/* Info */}
+      <div className="p-2.5 md:p-3 space-y-1.5">
         <h3 className="font-semibold text-sm md:text-[15px] leading-snug text-card-foreground line-clamp-2 min-h-[2.5rem]">
           {movie.title}
         </h3>
-        {year && (
-          <p className="text-xs text-muted-foreground">{year}</p>
-        )}
+
+        {/* Year + Genre tags */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {year && (
+            <span className="text-xs text-muted-foreground shrink-0">{year}</span>
+          )}
+          {genreNames.length > 0 && year && (
+            <span className="text-muted-foreground/50 text-xs">·</span>
+          )}
+          {genreNames.map((name) => (
+            <span
+              key={name}
+              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-secondary/80 text-muted-foreground border border-border/40 leading-none"
+            >
+              {name}
+            </span>
+          ))}
+        </div>
       </div>
     </button>
   );
