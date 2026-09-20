@@ -176,7 +176,8 @@ const Index = () => {
           )}
         </main>
 
-        {!isMobile && <Footer />}
+        {/* Footer with Telegram banner — shown on all devices so users can join easily */}
+        <Footer />
         <MobileBottomNav />
         
       </div>
