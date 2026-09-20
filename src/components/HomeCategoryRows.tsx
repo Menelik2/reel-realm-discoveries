@@ -24,8 +24,8 @@ const categoryIcons: Record<string, React.ReactNode> = {
   latest_releases: <Sparkles className="h-5 w-5 text-primary" />,
 };
 
-// Slightly denser grid = smaller cards
-const CARD_GRID = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3';
+// Normal-sized cards: fewer columns = larger, more attractive cards
+const CARD_GRID = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4';
 
 export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: HomeCategoryRowsProps) => {
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
@@ -110,7 +110,7 @@ const LazyCategorySection = memo(({ eager, ...props }: LazyCategorySectionProps)
           </div>
           <div className={CARD_GRID}>
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-secondary rounded-lg" />
+              <div key={i} className="aspect-[2/3] bg-secondary rounded-xl" />
             ))}
           </div>
         </section>
@@ -143,8 +143,8 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
             <h2 className="text-xl md:text-2xl font-bold text-foreground">{category.label}</h2>
           </div>
           <div className={CARD_GRID}>
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-secondary animate-pulse rounded-lg" />
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="aspect-[2/3] bg-secondary animate-pulse rounded-xl" />
             ))}
           </div>
         </section>

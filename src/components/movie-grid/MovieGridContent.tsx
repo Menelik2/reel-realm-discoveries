@@ -16,7 +16,8 @@ interface MovieGridContentProps {
   currentCategory: string;
 }
 
-const CARD_GRID = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3';
+// Normal-sized cards for consistent look across the app
+const CARD_GRID = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4';
 
 export const MovieGridContent = ({ 
   movies, 
@@ -33,7 +34,7 @@ export const MovieGridContent = ({
     return (
       <div className={CARD_GRID}>
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-lg" />
+          <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-xl" />
         ))}
       </div>
     );
