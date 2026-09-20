@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Film } from 'lucide-react';
+import { Film, Send } from 'lucide-react';
 import { AdBanner } from './AdBanner';
+
+const TELEGRAM_CHANNEL = 'https://t.me/yenimovie';
 
 export const Footer = () => {
   return (
@@ -17,6 +19,15 @@ export const Footer = () => {
             <p className="text-sm text-muted-foreground leading-relaxed">
               Your ultimate destination for discovering movies and TV series.
             </p>
+            <a
+              href={TELEGRAM_CHANNEL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mt-2 px-3 py-2 rounded-lg bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9]/20 text-sm font-medium transition-colors"
+            >
+              <Send className="h-4 w-4" />
+              Join @yenimovie
+            </a>
           </div>
 
           <div>
@@ -41,7 +52,17 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold text-foreground text-sm mb-3">Follow Us</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Telegram</a></li>
+              <li>
+                <a
+                  href={TELEGRAM_CHANNEL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  Telegram Channel
+                </a>
+              </li>
               <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Facebook</a></li>
               <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Instagram</a></li>
             </ul>

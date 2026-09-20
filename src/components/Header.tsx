@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Menu, X, Moon, Sun, Film } from 'lucide-react';
+import { Search, Menu, X, Moon, Sun, Film, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -7,6 +7,8 @@ import { ActorSearch } from '@/components/ActorSearch';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { SearchOverlay } from '@/components/SearchOverlay';
 import { useScrollHide } from '@/hooks/useScrollHide';
+
+const TELEGRAM_CHANNEL = 'https://t.me/yenimovie';
 
 interface HeaderProps {
   searchQuery: string;
@@ -90,6 +92,18 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Join Telegram — easy access */}
+              <a
+                href={TELEGRAM_CHANNEL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-[#229ED9] text-white text-sm font-medium hover:bg-[#1c8bbd] transition-colors shadow-sm"
+                aria-label="Join our Telegram channel"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">Join Channel</span>
+              </a>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -150,6 +164,16 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
                     {link.label}
                   </Link>
                 ))}
+                <a
+                  href={TELEGRAM_CHANNEL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-[#229ED9] hover:bg-[#229ED9]/10 rounded-lg transition-all"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Send className="h-4 w-4" />
+                  Join Telegram Channel
+                </a>
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className="flex items-center justify-between px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-all"

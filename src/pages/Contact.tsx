@@ -9,6 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdBanner } from '@/components/AdBanner';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+
+const TELEGRAM_CHANNEL = 'https://t.me/yenimovie';
+
 const Contact = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,7 +34,7 @@ const Contact = () => {
   return <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
       <Helmet>
         <title>Contact YENI MOVIE — Get in Touch</title>
-        <meta name="description" content="Contact the YENI MOVIE team via Telegram or email with questions, feedback, or feature requests." />
+        <meta name="description" content="Contact the YENI MOVIE team via Telegram or email with questions, feedback, or feature requests. Join our channel @yenimovie." />
         <link rel="canonical" href="https://yeni-movies.lovable.app/contact" />
       </Helmet>
       <div className="bg-background text-foreground transition-colors">
@@ -55,23 +58,36 @@ const Contact = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  
-                  
                   <div className="flex items-center space-x-3">
-                    <Send className="h-5 w-5 text-primary" />
+                    <Send className="h-5 w-5 text-[#229ED9]" />
                     <div>
-                      <p className="font-medium">Telegram</p>
-                      <a href="https://t.me/medebereya" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
-                        @medebereya
+                      <p className="font-medium">Telegram Channel</p>
+                      <a
+                        href={TELEGRAM_CHANNEL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-[#229ED9] hover:underline font-medium"
+                      >
+                        @yenimovie — Join now
                       </a>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3">
+                  <a
+                    href={TELEGRAM_CHANNEL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full mt-2 px-4 py-3 rounded-xl bg-[#229ED9] text-white font-medium hover:bg-[#1c8bbd] transition-colors"
+                  >
+                    <Send className="h-4 w-4" />
+                    Open Telegram Channel
+                  </a>
+
+                  <div className="flex items-center space-x-3 pt-2">
                     <Globe className="h-5 w-5 text-primary" />
                     <div>
                       <p className="font-medium">Website</p>
-                      <p className="text-sm text-muted-foreground">​</p>
+                      <p className="text-sm text-muted-foreground">yeni-movie.vercel.app</p>
                     </div>
                   </div>
                 </CardContent>
@@ -98,7 +114,7 @@ const Contact = () => {
                 <h3 className="font-medium mb-2">Can I suggest features or report bugs?</h3>
                 <p className="text-muted-foreground text-sm">
                   Absolutely! We welcome all feedback, feature suggestions, and bug reports. 
-                  Please use the contact form above or reach out via Telegram.
+                  Please reach out via our Telegram channel @yenimovie.
                 </p>
               </div>
               
