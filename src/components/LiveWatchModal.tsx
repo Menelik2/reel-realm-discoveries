@@ -150,7 +150,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         data-video-player-root="true"
       >
         {showControlsBar && (
-          <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-black/80 border-b border-white/10 flex-shrink-0 z-20">
+          <div className="flex flex-wrap items-center gap-2 px-3 py-2.5 bg-black/90 backdrop-blur-md border-b border-white/10 flex-shrink-0 z-20">
             {SOURCES.length > 1 && (
               <div className="flex gap-1">
                 {SOURCES.map(source => (
@@ -158,6 +158,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                     key={source.url}
                     variant={selectedSource === source.url ? "default" : "outline"}
                     size="sm"
+                    className="rounded-full h-8"
                     onClick={() => setSelectedSource(source.url)}
                   >
                     {source.name}
@@ -168,8 +169,8 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
             {type === "tv" && seasons.length > 0 && (
               <div className="flex items-center gap-2 ml-auto sm:ml-0">
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-muted-foreground hidden sm:inline">Season</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-white/50 hidden sm:inline font-medium">Season</span>
                   <Select
                     value={String(selectedSeason)}
                     onValueChange={(v) => {
@@ -177,7 +178,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                       setSelectedEpisode(1);
                     }}
                   >
-                    <SelectTrigger className="w-[100px] h-8 text-xs bg-black/50 border-white/20 text-white">
+                    <SelectTrigger className="w-[100px] h-8 text-xs rounded-full bg-white/10 border-white/15 text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-[10000] max-h-64">
@@ -190,13 +191,13 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                   </Select>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-muted-foreground hidden sm:inline">Episode</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-white/50 hidden sm:inline font-medium">Episode</span>
                   <Select
                     value={String(selectedEpisode)}
                     onValueChange={(v) => setSelectedEpisode(Number(v))}
                   >
-                    <SelectTrigger className="w-[90px] h-8 text-xs bg-black/50 border-white/20 text-white">
+                    <SelectTrigger className="w-[90px] h-8 text-xs rounded-full bg-white/10 border-white/15 text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-[10000] max-h-64">
@@ -231,12 +232,12 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
               e.stopPropagation();
               handleBack();
             }}
-            className="absolute z-40 flex items-center gap-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full px-3 py-2 backdrop-blur-sm transition-colors border border-white/20 shadow-lg"
+            className="absolute z-40 flex items-center gap-1.5 bg-black/75 hover:bg-black/90 text-white rounded-full px-3.5 py-2 backdrop-blur-md transition-colors border border-white/15 shadow-lg"
             style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: '12px' }}
             title="Back"
             aria-label="Back"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
             <span className="text-sm font-medium max-w-[140px] truncate hidden sm:inline">{title}</span>
           </button>
 
@@ -246,7 +247,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
               e.stopPropagation();
               toggleFullscreen();
             }}
-            className="absolute z-40 bg-black/70 hover:bg-black/90 text-white rounded-lg p-2 backdrop-blur-sm transition-colors border border-white/10 shadow-lg"
+            className="absolute z-40 bg-black/75 hover:bg-black/90 text-white rounded-full p-2.5 backdrop-blur-md transition-colors border border-white/15 shadow-lg"
             style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)', right: '12px' }}
             title={isFullscreen ? "Exit Fullscreen (F)" : "Fullscreen (F)"}
             aria-label={isFullscreen ? "Exit fullscreen" : "Toggle fullscreen"}
