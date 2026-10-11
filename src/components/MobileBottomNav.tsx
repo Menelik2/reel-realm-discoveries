@@ -40,38 +40,42 @@ export const MobileBottomNav = () => {
           isHidden ? 'translate-y-full' : 'translate-y-0'
         )}
       >
-        <nav className="flex justify-around items-center h-16 px-1.5 pb-[env(safe-area-inset-bottom,0px)]">
-          {navItems.map(({ to, icon: Icon, label, isActive }) => {
-            return (
-              <Link
-                key={label}
-                to={to}
-                replace
-                className={cn(
-                  'flex flex-col items-center justify-center w-full h-full rounded-2xl transition-all',
-                  isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <div className={cn(
-                  'flex items-center justify-center w-10 h-7 rounded-full transition-all',
-                  isActive && 'bg-primary/15'
-                )}>
-                  <Icon className={cn('h-5 w-5', isActive && 'scale-105')} />
-                </div>
-                <span className={cn('text-[10px] font-semibold mt-0.5', isActive && 'text-primary')}>
-                  {label}
-                </span>
-              </Link>
-            );
-          })}
+        <nav
+          className="flex justify-around items-center h-16 px-1.5 pb-[env(safe-area-inset-bottom,0px)]"
+          aria-label="Primary"
+        >
+          {navItems.map(({ to, icon: Icon, label, isActive }) => (
+            <Link
+              key={label}
+              to={to}
+              replace
+              aria-current={isActive ? 'page' : undefined}
+              className={cn(
+                'flex flex-col items-center justify-center w-full h-full rounded-2xl transition-all pressable',
+                isActive
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <div className={cn(
+                'flex items-center justify-center w-10 h-7 rounded-full transition-all',
+                isActive && 'bg-primary/15'
+              )}>
+                <Icon className={cn('h-5 w-5', isActive && 'scale-105')} aria-hidden="true" />
+              </div>
+              <span className={cn('text-[10px] font-semibold mt-0.5', isActive && 'text-primary')}>
+                {label}
+              </span>
+            </Link>
+          ))}
           <button
+            type="button"
             onClick={() => setSearchOpen(true)}
-            className="flex flex-col items-center justify-center text-muted-foreground w-full h-full rounded-2xl transition-all hover:text-foreground"
+            aria-label="Open search"
+            className="flex flex-col items-center justify-center text-muted-foreground w-full h-full rounded-2xl transition-all hover:text-foreground pressable"
           >
             <div className="flex items-center justify-center w-10 h-7">
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5" aria-hidden="true" />
             </div>
             <span className="text-[10px] font-semibold mt-0.5">Search</span>
           </button>
