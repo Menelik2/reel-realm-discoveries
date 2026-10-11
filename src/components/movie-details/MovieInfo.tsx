@@ -45,7 +45,7 @@ export const MovieInfo = ({
   const year = releaseDate ? new Date(releaseDate).getFullYear() : null;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-10">
+    <div className="flex flex-col lg:flex-row gap-5 md:gap-8 lg:gap-10">
       {/* Poster */}
       <div className="flex-shrink-0 mx-auto lg:mx-0">
         <div
@@ -62,13 +62,10 @@ export const MovieInfo = ({
         </div>
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0 space-y-4">
+      {/* Info — title always fully visible here (not in hero) */}
+      <div className="flex-1 min-w-0 space-y-4 text-center lg:text-left">
         <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-bold tracking-tight mb-1.5 hidden md:block">
-            {title}
-          </h1>
-          <h1 className="text-2xl sm:text-3xl font-playfair font-bold tracking-tight mb-1.5 md:hidden">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-bold tracking-tight mb-1.5 text-foreground">
             {title}
           </h1>
           {tagline && (
@@ -79,10 +76,10 @@ export const MovieInfo = ({
         </div>
 
         {/* Meta chips */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
           {voteAverage > 0 && (
             <div className="inline-flex items-center gap-1.5 bg-secondary/80 border border-border/50 px-2.5 py-1.5 rounded-full">
-              <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+              <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" aria-hidden="true" />
               <span className="text-sm font-semibold tabular-nums">{voteAverage.toFixed(1)}</span>
               <span className="text-xs text-muted-foreground">/ 10</span>
               {voteCount > 0 && (
@@ -94,13 +91,13 @@ export const MovieInfo = ({
           )}
           {year && (
             <div className="inline-flex items-center gap-1.5 bg-secondary/80 border border-border/50 px-2.5 py-1.5 rounded-full text-sm">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
               <span className="font-medium tabular-nums">{year}</span>
             </div>
           )}
           {runtime > 0 && (
             <div className="inline-flex items-center gap-1.5 bg-secondary/80 border border-border/50 px-2.5 py-1.5 rounded-full text-sm">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
               <span className="font-medium tabular-nums">{runtime} min</span>
             </div>
           )}
@@ -108,7 +105,7 @@ export const MovieInfo = ({
 
         {/* Genres */}
         {genres?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap justify-center lg:justify-start gap-1.5">
             {genres.map(genre => (
               <Badge
                 key={genre.id}
@@ -123,12 +120,12 @@ export const MovieInfo = ({
 
         {/* Overview */}
         {overview && (
-          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0">
             {overview}
           </p>
         )}
 
-        <div className="pt-1">
+        <div className="pt-1 flex justify-center lg:justify-start">
           <MovieActions
             trailerUrl={trailerUrl}
             homepage={homepage}
