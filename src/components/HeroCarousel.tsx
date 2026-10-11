@@ -37,7 +37,6 @@ const fetchTrailerKey = async (movieId: number): Promise<string | null> => {
   }
 };
 
-/** Cinematic hero proportions */
 const HERO_SHELL =
   'relative w-full overflow-hidden ' +
   'aspect-[16/11] sm:aspect-[21/9] md:aspect-[2.4/1] ' +
@@ -81,9 +80,9 @@ export const HeroCarousel = () => {
 
   if (isLoading || movies.length === 0) {
     return (
-      <div className={`${HERO_SHELL} bg-secondary animate-pulse`}>
+      <div className={`${HERO_SHELL} bg-secondary animate-pulse`} role="status" aria-label="Loading featured titles">
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-10 h-10 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-primary/40 border-t-primary rounded-full animate-spin" aria-hidden="true" />
         </div>
       </div>
     );
@@ -107,8 +106,10 @@ export const HeroCarousel = () => {
   };
 
   return (
-    <div
+    <section
       className={HERO_SHELL}
+      aria-roledescription="carousel"
+      aria-label="Featured trending movies"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}
@@ -116,6 +117,10 @@ export const HeroCarousel = () => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsPaused(false);
       }}
     >
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        Slide {currentIndex + 1} of {movies.length}: {currentMovie.title}
+      </div>
+
       <picture className="absolute inset-0 block">
         {backdropPath && (
           <>
@@ -126,7 +131,7 @@ export const HeroCarousel = () => {
             <img
               src={`https://image.tmdb.org/t/p/w1280${backdropPath}`}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover object-center scale-105 transition-transform duration-[8000ms] ease-out"
+              className="absolute inset-0 h-full w-full object-cover object-center scale-105 transition-transform duration-[8000ms] ease-out motion-reduce:transition-none motion-reduce:scale-100"
               decoding="async"
               loading="eager"
               fetchPriority="high"
@@ -137,17 +142,16 @@ export const HeroCarousel = () => {
         )}
       </picture>
 
-      {/* Layered cinematic gradients */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/5" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent sm:from-background/80 sm:via-background/25" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent opacity-60" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/5" aria-hidden="true" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent sm:from-background/80 sm:via-background/25" aria-hidden="true" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent opacity-60" aria-hidden="true" />
 
       <div className="relative z-10 h-full flex items-end pb-10 sm:pb-12 md:pb-14 pt-6">
         <div className="container mx-auto px-4 sm:px-5">
           <div className="max-w-[min(100%,22rem)] sm:max-w-lg md:max-w-xl lg:max-w-2xl space-y-2.5 sm:space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-1 bg-primary px-2.5 py-1 rounded-full shadow-md shadow-primary/30">
-                <Star className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
+                <Star className="h-3 w-3 text-primary-foreground fill-primary-foreground" aria-hidden="true" />
                 <span className="text-xs font-bold text-primary-foreground tabular-nums">
                   {currentMovie.vote_average.toFixed(1)}
                 </span>
@@ -172,18 +176,18 @@ export const HeroCarousel = () => {
               <Button
                 size="sm"
                 onClick={handleWatchTrailer}
-                className="rounded-full px-5 h-10 gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10"
+                className="rounded-full px-5 h-10 gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10 pressable"
               >
-                <Play className="h-4 w-4 fill-current" />
+                <Play className="h-4 w-4 fill-current" aria-hidden="true" />
                 Trailer
               </Button>
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={handleDetails}
-                className="rounded-full px-5 h-10 gap-2 text-sm font-semibold bg-background/50 backdrop-blur-md border border-border/50 hover:bg-background/70"
+                className="rounded-full px-5 h-10 gap-2 text-sm font-semibold bg-background/50 backdrop-blur-md border border-border/50 hover:bg-background/70 pressable"
               >
-                <Info className="h-4 w-4" />
+                <Info className="h-4 w-4" aria-hidden="true" />
                 Details
               </Button>
             </div>
@@ -194,27 +198,28 @@ export const HeroCarousel = () => {
       <button
         type="button"
         aria-label="Previous slide"
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-background/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-foreground hover:bg-background/70 active:scale-95 transition-all touch-manipulation shadow-md"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-background/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-foreground hover:bg-background/70 active:scale-95 transition-all touch-manipulation shadow-md pressable"
         onClick={prevSlide}
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-5 w-5" aria-hidden="true" />
       </button>
       <button
         type="button"
         aria-label="Next slide"
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-background/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-foreground hover:bg-background/70 active:scale-95 transition-all touch-manipulation shadow-md"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-background/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-foreground hover:bg-background/70 active:scale-95 transition-all touch-manipulation shadow-md pressable"
         onClick={nextSlide}
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRight className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <div className="absolute bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-        {movies.map((_, i) => (
+      <div className="absolute bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5" role="tablist" aria-label="Slides">
+        {movies.map((m, i) => (
           <button
-            key={i}
+            key={m.id}
             type="button"
-            aria-label={`Go to slide ${i + 1}`}
-            aria-current={i === currentIndex ? 'true' : undefined}
+            role="tab"
+            aria-label={`${m.title}, slide ${i + 1} of ${movies.length}`}
+            aria-selected={i === currentIndex}
             className={`h-1.5 rounded-full transition-all duration-400 touch-manipulation ${
               i === currentIndex
                 ? 'w-7 bg-primary shadow-sm shadow-primary/40'
@@ -224,6 +229,6 @@ export const HeroCarousel = () => {
           />
         ))}
       </div>
-    </div>
+    </section>
   );
 };
