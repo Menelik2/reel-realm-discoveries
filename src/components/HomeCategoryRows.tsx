@@ -26,6 +26,10 @@ const categoryIcons: Record<string, React.ReactNode> = {
 
 const CARD_WIDTH = 'w-[132px] sm:w-[148px] md:w-[168px] lg:w-[180px]';
 
+/** Registered AdSense units used on home feed */
+const HOME_AD_TOP = '1571190202';
+const HOME_AD_MID = '7834561902';
+
 export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: HomeCategoryRowsProps) => {
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
 
@@ -40,7 +44,6 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
 
   return (
     <div className="space-y-8 md:space-y-10 pb-24 md:pb-10">
-      {/* Filters bar */}
       <div className="container mx-auto px-4 pt-6 md:pt-8">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between w-full min-w-0">
           <ContentTypeToggle contentType={contentType} setContentType={setContentType} />
@@ -62,7 +65,7 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
       </div>
 
       <div className="container mx-auto px-4">
-        <AdBanner slot="1571190202" />
+        <AdBanner slot={HOME_AD_TOP} className="my-2" />
       </div>
 
       {categories.map((category, index) => (
@@ -73,7 +76,6 @@ export const HomeCategoryRows = ({ contentType, setContentType, onMovieClick }: 
           selectedGenre={selectedGenre}
           onMovieClick={onMovieClick}
           showAdAfter={index === 1}
-          sectionIndex={index}
           eager={index < 1}
         />
       ))}
@@ -87,7 +89,6 @@ interface LazyCategorySectionProps {
   selectedGenre: string;
   onMovieClick: (movieId: number) => void;
   showAdAfter?: boolean;
-  sectionIndex: number;
   eager?: boolean;
 }
 
@@ -119,7 +120,7 @@ const LazyCategorySection = memo(({ eager, ...props }: LazyCategorySectionProps)
 
 LazyCategorySection.displayName = 'LazyCategorySection';
 
-const CategorySection = memo(({ category, contentType, selectedGenre, onMovieClick, showAdAfter, sectionIndex, fetchEnabled = true }: Omit<LazyCategorySectionProps, 'eager'> & { fetchEnabled?: boolean }) => {
+const CategorySection = memo(({ category, contentType, selectedGenre, onMovieClick, showAdAfter, fetchEnabled = true }: Omit<LazyCategorySectionProps, 'eager'> & { fetchEnabled?: boolean }) => {
   const { movies, loading } = useMovieData({
     searchQuery: '',
     selectedGenre,
@@ -131,6 +132,12 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
   });
 
   const icon = categoryIcons[category.key];
+
+  const adBlock = showAdAfter ? (
+    <div className="container mx-auto px-4">
+      <AdBanner slot={HOME_AD_MID} className="my-2" />
+    </div>
+  ) : null;
 
   if (loading) {
     return (
@@ -146,21 +153,13 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
             ))}
           </div>
         </section>
-        {showAdAfter && (
-          <div className="container mx-auto px-4">
-            <AdBanner slot={`892642019${sectionIndex}`} className="my-6" />
-          </div>
-        )}
+        {adBlock}
       </>
     );
   }
 
   if (movies.length === 0) {
-    return showAdAfter ? (
-      <div className="container mx-auto px-4">
-        <AdBanner slot={`892642019${sectionIndex}`} className="my-6" />
-      </div>
-    ) : null;
+    return adBlock;
   }
 
   return (
@@ -176,7 +175,7 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
               {Math.min(movies.length, 12)}
             </span>
           </div>
-          <span className="hidden md:inline-flex items-center gap-0.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors cursor-default">
+          <span className="hidden md:inline-flex items-center gap-0.5 text-xs font-medium text-muted-foreground">
             Explore
             <ChevronRight className="h-3.5 w-3.5" />
           </span>
@@ -195,11 +194,7 @@ const CategorySection = memo(({ category, contentType, selectedGenre, onMovieCli
           </div>
         </div>
       </section>
-      {showAdAfter && (
-        <div className="container mx-auto px-4">
-          <AdBanner slot={`892642019${sectionIndex}`} className="my-6" />
-        </div>
-      )}
+      {adBlock}
     </>
   );
 });
