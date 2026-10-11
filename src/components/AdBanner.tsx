@@ -20,108 +20,109 @@ interface AdBannerProps {
   className?: string;
 }
 
-export const AdBanner = ({ slot, className, format = 'auto', style = { display: 'block' } }: AdBannerProps) => {
+export const AdBanner = ({ slot, className, format = 'auto', style }: AdBannerProps) => {
   const { user } = useAuth();
   const { data: isAdFree, isLoading: isStatusLoading } = useAdFreeStatus();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [adLoaded, setAdLoaded] = useState(false);
   const [adError, setAdError] = useState(false);
+  const [isUnfilled, setIsUnfilled] = useState(false);
   const adRef = useRef<HTMLDivElement>(null);
   const retryCountRef = useRef(0);
-  const maxRetries = 3;
+  const maxRetries = 2;
+
+  const checkFilled = useCallback(() => {
+    if (!adRef.current) return;
+    const ins = adRef.current.querySelector('ins.adsbygoogle');
+    if (!ins) return;
+    const status = ins.getAttribute('data-ad-status');
+    if (status === 'unfilled') {
+      setIsUnfilled(true);
+      return;
+    }
+    // Also hide if iframe exists but has near-zero height (common empty fill)
+    const iframe = ins.querySelector('iframe');
+    if (status === 'filled' || (iframe && iframe.clientHeight > 40)) {
+      setAdLoaded(true);
+      setIsUnfilled(false);
+    }
+  }, []);
 
   const pushAd = useCallback(() => {
     try {
-      // Skip if already processing this slot
       if (adManager.isSlotInitialized(slot)) {
-        console.log(`Ad slot ${slot} already initialized, skipping`);
         setAdLoaded(true);
         return;
       }
 
       if (window.adsbygoogle && !isAdFree && !isStatusLoading && adRef.current) {
-        // Check if the current ad element already has ads
         const insElement = adRef.current.querySelector('ins.adsbygoogle');
         if (insElement && insElement.getAttribute('data-adsbygoogle-status')) {
-          console.log(`Current element already has processed ad for slot: ${slot}, skipping`);
           setAdLoaded(true);
           adManager.markSlotAsInitialized(slot);
+          setTimeout(checkFilled, 400);
           return;
         }
 
-        // Ensure we only have one ins element per container
         const existingIns = adRef.current.querySelectorAll('ins.adsbygoogle');
         if (existingIns.length > 1) {
-          // Remove extra ins elements
           for (let i = 1; i < existingIns.length; i++) {
             existingIns[i].remove();
           }
         }
 
-        // Mark as initialized BEFORE pushing to prevent race conditions
         adManager.markSlotAsInitialized(slot);
-        
-        // Initialize the ad with a small delay to ensure DOM is ready
+
         setTimeout(() => {
           try {
             (window.adsbygoogle = window.adsbygoogle || []).push({});
             setAdLoaded(true);
-            console.log(`Ad successfully pushed for slot: ${slot}`);
-          } catch (pushError) {
-            console.error("AdSense push error for slot", slot, ":", pushError);
+            // Poll for fill status — hide if unfilled
+            setTimeout(checkFilled, 500);
+            setTimeout(checkFilled, 1500);
+            setTimeout(checkFilled, 3000);
+          } catch (pushError: unknown) {
+            console.error('AdSense push error for slot', slot, ':', pushError);
             adManager.resetSlot(slot);
             setAdError(true);
           }
         }, 50);
       }
-    } catch (error) {
-      console.error("AdSense error for slot", slot, ":", error);
-      
-      // Handle the specific duplicate ad error
-      if (error?.message?.includes('already have ads') || error?.name === 'TagError') {
-        console.log(`TagError detected for slot: ${slot}, setting as loaded`);
+    } catch (error: unknown) {
+      const err = error as { message?: string; name?: string };
+      if (err?.message?.includes('already have ads') || err?.name === 'TagError') {
         setAdLoaded(true);
         adManager.markSlotAsInitialized(slot);
+        setTimeout(checkFilled, 400);
         return;
       }
-      
-      // Reset slot for other errors and potentially retry
+
       adManager.resetSlot(slot);
       setAdError(true);
-      
+
       if (retryCountRef.current < maxRetries) {
         retryCountRef.current += 1;
-        console.log(`Retrying ad initialization for slot: ${slot}, attempt: ${retryCountRef.current}`);
         setTimeout(() => {
           setAdError(false);
           pushAd();
-        }, 1000 * retryCountRef.current);
+        }, 800 * retryCountRef.current);
       }
     }
-  }, [slot, isAdFree, isStatusLoading]);
+  }, [slot, isAdFree, isStatusLoading, checkFilled]);
 
   useEffect(() => {
     if (!isAdFree && !isStatusLoading) {
-      // Small delay to ensure DOM is ready and avoid race conditions
-      const timer = setTimeout(() => {
-        pushAd();
-      }, 100);
-      
-      return () => {
-        clearTimeout(timer);
-      };
+      const timer = setTimeout(() => pushAd(), 120);
+      return () => clearTimeout(timer);
     }
   }, [slot, isAdFree, isStatusLoading, pushAd]);
 
-  // Cleanup when component unmounts
   useEffect(() => {
     return () => {
-      // Clean up this specific slot to prevent conflicts on remount
       adManager.cleanupSlot(slot);
     };
   }, [slot]);
 
-  // Intersection Observer for lazy loading
   useEffect(() => {
     if (!adRef.current || isAdFree || isStatusLoading || adManager.isSlotInitialized(slot)) return;
 
@@ -137,9 +138,19 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
     );
 
     observer.observe(adRef.current);
-
     return () => observer.disconnect();
   }, [isAdFree, isStatusLoading, adLoaded, adError, slot, pushAd]);
+
+  // Watch for AdSense status attribute changes
+  useEffect(() => {
+    if (!adRef.current) return;
+    const ins = adRef.current.querySelector('ins.adsbygoogle');
+    if (!ins) return;
+
+    const mo = new MutationObserver(() => checkFilled());
+    mo.observe(ins, { attributes: true, attributeFilter: ['data-ad-status', 'data-adsbygoogle-status'] });
+    return () => mo.disconnect();
+  }, [adLoaded, checkFilled]);
 
   const handlePurchase = async () => {
     setIsRedirecting(true);
@@ -155,70 +166,60 @@ export const AdBanner = ({ slot, className, format = 'auto', style = { display: 
     }
   };
 
-  if (isStatusLoading) {
-    return <div className={`flex justify-center items-center ${className}`} style={{ height: '90px', ...style }}>
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
-  
-  if (isAdFree) {
+  // Ad-free users: render nothing
+  if (isAdFree) return null;
+
+  // Still checking premium status — no layout jump
+  if (isStatusLoading) return null;
+
+  // Failed after retries or confirmed unfilled — collapse completely (no white box)
+  if (isUnfilled || (adError && retryCountRef.current >= maxRetries)) {
     return null;
   }
 
   return (
-    <div ref={adRef} className={`relative bg-background border border-border rounded-lg overflow-hidden ${className}`} 
-         style={{ minHeight: '280px', width: '100%' }}>
-      <ins 
+    <div
+      ref={adRef}
+      className={`relative overflow-hidden rounded-2xl border border-border/40 bg-card/40 ${className || ''}`}
+      style={{
+        minHeight: adLoaded ? undefined : 100,
+        width: '100%',
+        ...style,
+      }}
+    >
+      <ins
         className="adsbygoogle"
-        style={{ 
+        style={{
           display: 'block',
-          minHeight: '280px',
           width: '100%',
-          ...style 
+          minHeight: 100,
         }}
         data-ad-client="ca-pub-8938310552882401"
         data-ad-slot={slot}
-        data-ad-format="rectangle"
+        data-ad-format={format || 'auto'}
         data-full-width-responsive="true"
-        data-adtest={process.env.NODE_ENV === 'development' ? 'on' : 'off'}
       />
-      
-      {/* Loading indicator for ads */}
+
       {!adLoaded && !adError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/10 backdrop-blur-sm">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading advertisement...</p>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-card/60 pointer-events-none">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
+          <span className="sr-only">Loading advertisement</span>
         </div>
       )}
-      
-      {/* Error state */}
-      {adError && retryCountRef.current >= maxRetries && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/10">
-          <div className="text-center p-8">
-            <div className="w-16 h-16 bg-muted rounded-lg mx-auto mb-4 flex items-center justify-center">
-              <div className="w-8 h-8 bg-muted-foreground/20 rounded"></div>
-            </div>
-            <p className="text-sm text-muted-foreground">Advertisement space</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Content loading temporarily unavailable</p>
-          </div>
-        </div>
-      )}
-      
-      {user && (
-         <div className="absolute top-2 right-2 z-10">
-           <Button 
-            size="sm" 
+
+      {user && adLoaded && !isUnfilled && (
+        <div className="absolute top-2 right-2 z-10">
+          <Button
+            size="sm"
             variant="secondary"
             onClick={handlePurchase}
             disabled={isRedirecting}
-            className="shadow-md"
-           >
-            {isRedirecting && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-             Remove Ads ($5)
-           </Button>
-         </div>
+            className="shadow-md h-8 text-xs rounded-full"
+          >
+            {isRedirecting && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
+            Remove Ads
+          </Button>
+        </div>
       )}
     </div>
   );
