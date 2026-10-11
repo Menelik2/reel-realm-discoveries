@@ -20,8 +20,7 @@ interface MovieActionsProps {
 export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title, seasons, imdbId }: MovieActionsProps) => {
   const [isLiveWatchOpen, setIsLiveWatchOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
-  
-  // Prefetch series Telegram availability (same PhonoFilm / t4tsa source as download modal)
+
   const { data: telegramUrl } = useTelegramUrl(contentType === 'tv' ? {
     id: movieId,
     media_type: 'tv',
@@ -34,7 +33,6 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
     setIsDownloadOpen(true);
   };
 
-  /** Series Telegram: open Download modal so users get season list + Fast Download when available. */
   const handleTelegramDownload = () => {
     setIsDownloadOpen(true);
   };
@@ -54,7 +52,6 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
       url: shareUrl,
     };
 
-    // Try native Web Share API on any device that supports it
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         if (!navigator.canShare || navigator.canShare(shareData)) {
@@ -67,13 +64,11 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
           trackEvent('share_native_cancelled', { ...baseProps, method: 'native' });
           return;
         }
-        // otherwise fall through to clipboard
       }
     } else {
       trackEvent('share_unsupported', baseProps);
     }
 
-    // Fallback: copy to clipboard
     try {
       await navigator.clipboard.writeText(shareUrl);
       trackEvent('share_clipboard_success', { ...baseProps, method: 'clipboard' });
@@ -95,70 +90,64 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
     }
   };
 
-  // PhonoFilm catalog page for the same title (browse files / seasons on their site)
   const phonoFilmBrowseUrl = imdbId
     ? `https://phonofilm.net/search?q=${encodeURIComponent(imdbId)}`
     : `https://phonofilm.net/search?q=${encodeURIComponent(title)}`;
 
+  const secondaryBtn =
+    'rounded-full h-10 px-4 border-border/50 bg-secondary/40 hover:bg-secondary/70 shadow-sm';
+
   return (
     <>
-      <div className="flex flex-col gap-4">
-        {/* Primary action - Live Watch */}
-        <Button 
+      <div className="flex flex-col gap-3">
+        <Button
           onClick={() => setIsLiveWatchOpen(true)}
           size="lg"
-          className="w-full bg-[hsl(348,83%,55%)] hover:bg-[hsl(348,83%,48%)] text-white rounded-xl py-6 text-lg font-bold shadow-lg shadow-[hsl(348,83%,55%)]/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full rounded-2xl h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10 transition-all hover:scale-[1.01] active:scale-[0.99]"
         >
-          <Eye className="mr-3 h-5 w-5" />
+          <Eye className="mr-2.5 h-5 w-5" />
           Watch Now
         </Button>
-        
-        {/* Secondary actions */}
-        <div className="flex flex-wrap gap-2 sm:gap-3">
+
+        <div className="flex flex-wrap gap-2">
           {trailerUrl && (
-            <Button asChild variant="outline" className="flex-1 sm:flex-none">
+            <Button asChild variant="outline" className={`flex-1 sm:flex-none ${secondaryBtn}`}>
               <a href={trailerUrl} target="_blank" rel="noopener noreferrer">
                 <Play className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Trailer</span>
-                <span className="sm:hidden">Play</span>
+                Trailer
               </a>
             </Button>
           )}
-          
-          <Button variant="outline" className="flex-1 sm:flex-none">
+
+          <Button variant="outline" className={`flex-1 sm:flex-none ${secondaryBtn}`}>
             <Heart className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Favorite</span>
             <span className="sm:hidden">Like</span>
           </Button>
-          
-          {/* Download button for both movies and TV series */}
-          <Button 
-            variant="outline" 
-            className="flex-1 sm:flex-none"
+
+          <Button
+            variant="outline"
+            className={`flex-1 sm:flex-none ${secondaryBtn}`}
             onClick={handleDownload}
           >
             <Download className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Download</span>
-            <span className="sm:hidden">Download</span>
+            Download
           </Button>
-          
-          {/* Telegram / series files — opens modal with season links + Fast Download */}
+
           {contentType === 'tv' && (
-            <Button 
-              variant="outline" 
-              className="flex-1 sm:flex-none"
+            <Button
+              variant="outline"
+              className={`flex-1 sm:flex-none ${secondaryBtn}`}
               onClick={handleTelegramDownload}
               title={telegramUrl ? 'Browse series seasons & Fast Download' : 'Fetch series download links'}
             >
               <Send className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Telegram</span>
-              <span className="sm:hidden">Telegram Download</span>
+              Telegram
             </Button>
           )}
 
-          {/* Browse same title on PhonoFilm (source catalog) */}
           {contentType === 'tv' && (
-            <Button variant="outline" asChild className="flex-1 sm:flex-none">
+            <Button variant="outline" asChild className={`flex-1 sm:flex-none ${secondaryBtn}`}>
               <a
                 href={phonoFilmBrowseUrl}
                 target="_blank"
@@ -171,23 +160,20 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
               </a>
             </Button>
           )}
-          
-          {/* Share button */}
-          <Button 
-            variant="outline" 
-            className="flex-1 sm:flex-none"
+
+          <Button
+            variant="outline"
+            className={`flex-1 sm:flex-none ${secondaryBtn}`}
             onClick={handleShare}
           >
             <Share2 className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Share</span>
-            <span className="sm:hidden">Share</span>
+            Share
           </Button>
-          
-          {/* Official button - use homepage if available, otherwise TMDB page */}
-          <Button variant="outline" asChild className="flex-1 sm:flex-none">
-            <a 
-              href={homepage || `https://www.themoviedb.org/${contentType}/${movieId}`} 
-              target="_blank" 
+
+          <Button variant="outline" asChild className={`flex-1 sm:flex-none ${secondaryBtn}`}>
+            <a
+              href={homepage || `https://www.themoviedb.org/${contentType}/${movieId}`}
+              target="_blank"
               rel="noopener noreferrer"
             >
               <Globe className="mr-2 h-4 w-4" />
@@ -214,7 +200,6 @@ export const MovieActions = ({ trailerUrl, homepage, movieId, contentType, title
         } as any}
       />
 
-      {/* Download modal for both movies and TV series (includes Fast Download when message id is known) */}
       <DownloadModal
         open={isDownloadOpen}
         onClose={() => setIsDownloadOpen(false)}
