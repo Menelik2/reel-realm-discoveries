@@ -1,11 +1,11 @@
 import type { ContentType } from '@/types/tmdb';
 
-import { AdBanner } from '@/components/AdBanner';
 import { ContentTypeToggle } from '@/components/movie-grid/ContentTypeToggle';
 import { CategoryTabs } from '@/components/movie-grid/CategoryTabs';
 import { MovieFilters } from '@/components/movie-grid/MovieFilters';
 import { MovieGridContent } from '@/components/movie-grid/MovieGridContent';
 import type { Movie } from '@/types/tmdb';
+import { Search } from 'lucide-react';
 
 interface MovieGridProps {
   searchQuery: string;
@@ -26,11 +26,11 @@ interface MovieGridProps {
   isMobile: boolean;
 }
 
-export const MovieGrid = ({ 
-  searchQuery, 
-  selectedGenre, 
-  setSelectedGenre, 
-  selectedYear, 
+export const MovieGrid = ({
+  searchQuery,
+  selectedGenre,
+  setSelectedGenre,
+  selectedYear,
   setSelectedYear,
   onMovieClick,
   contentType,
@@ -45,56 +45,60 @@ export const MovieGrid = ({
   isMobile,
 }: MovieGridProps) => {
   return (
-    <section className="container mx-auto px-4 py-6 md:py-8">
+    <section className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
       {!searchQuery ? (
         currentCategory === 'custom' ? (
           <div className="mb-6 md:mb-8">
-            <h2 className="text-3xl font-bold tracking-tight">My List</h2>
-            <p className="text-muted-foreground mt-1">
+            <h2 className="text-2xl md:text-3xl font-playfair font-bold tracking-tight">My List</h2>
+            <p className="text-muted-foreground mt-1 text-sm">
               A collection of your hand-picked movies and TV series.
             </p>
           </div>
         ) : (
-        <>
-          {/* Content Type Toggle */}
-          <ContentTypeToggle 
-            contentType={contentType}
-            setContentType={setContentType}
-          />
+          <>
+            <ContentTypeToggle
+              contentType={contentType}
+              setContentType={setContentType}
+            />
 
-          {/* Category Tabs & Filters */}
-          <div className="mb-6 md:mb-8">
-            {!isMobile && (
-              <CategoryTabs 
-                currentCategory={currentCategory}
-                setCurrentCategory={setCurrentCategory}
-                contentType={contentType}
-              />
-            )}
+            <div className="mb-6 md:mb-8 mt-4">
+              {!isMobile && (
+                <CategoryTabs
+                  currentCategory={currentCategory}
+                  setCurrentCategory={setCurrentCategory}
+                  contentType={contentType}
+                />
+              )}
 
-            {/* Filters - only for popular and top_rated */}
-            {(currentCategory === 'popular' || currentCategory === 'top_rated') && (
-              <MovieFilters 
-                selectedGenre={selectedGenre}
-                setSelectedGenre={setSelectedGenre}
-                selectedYear={selectedYear}
-                setSelectedYear={setSelectedYear}
-                contentType={contentType}
-              />
-            )}
-          </div>
-        </>
+              {(currentCategory === 'popular' || currentCategory === 'top_rated') && (
+                <MovieFilters
+                  selectedGenre={selectedGenre}
+                  setSelectedGenre={setSelectedGenre}
+                  selectedYear={selectedYear}
+                  setSelectedYear={setSelectedYear}
+                  contentType={contentType}
+                />
+              )}
+            </div>
+          </>
         )
       ) : (
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold">
-            Search Results for "{searchQuery}"
-          </h2>
+        <div className="mb-6 md:mb-8 flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <Search className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight">
+              Search results
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Showing matches for “{searchQuery}”
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Content Grid */}
-      <MovieGridContent 
+      <MovieGridContent
         movies={movies}
         loading={loading}
         currentPage={currentPage}
