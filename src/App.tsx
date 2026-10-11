@@ -36,15 +36,23 @@ const queryClient = new QueryClient({
       gcTime: 45 * 60 * 1000,
       refetchOnWindowFocus: false,
       retry: 1,
-      // Avoid flooding the network when many sections mount
       networkMode: 'online',
     },
   },
 });
 
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  <div
+    className="min-h-screen flex items-center justify-center bg-background"
+    role="status"
+    aria-live="polite"
+    aria-label="Loading page"
+  >
+    <div
+      className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"
+      aria-hidden="true"
+    />
+    <span className="sr-only">Loading…</span>
   </div>
 );
 
