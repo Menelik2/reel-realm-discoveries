@@ -6,9 +6,8 @@ import { ProductionDetails } from '@/components/movie-details/ProductionDetails'
 import { MovieCast } from '@/components/movie-details/MovieCast';
 import { useMovieDetails } from '@/hooks/useMovieDetails';
 import { MovieDetailsSkeleton } from './movie-details/MovieDetailsSkeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 import { ActorDetails } from './actor/ActorDetails';
 import { SEOMetadata } from './SEOMetadata';
 import { AdBanner } from '@/components/AdBanner';
@@ -24,20 +23,14 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
   const { movie, cast, videos, loading, error } = useMovieDetails(movieId, contentType);
   const [selectedActorId, setSelectedActorId] = useState<number | null>(null);
 
-  useEffect(() => {
-    console.log('[MovieDetails] PROPS', { movieId, contentType });
-    console.log('[MovieDetails] DATA', { movie, loading, error });
-  }, [movieId, contentType, movie, loading, error]);
-
   const getTrailerUrl = () => {
-    const trailer = videos?.results?.find(video => 
+    const trailer = videos?.results?.find(video =>
       video.type === 'Trailer' && video.site === 'YouTube'
     );
     return trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null;
   };
 
   const handleSimilarMovieClick = (newMovieId: number) => {
-    console.log('Opening similar movie:', newMovieId);
     onMovieClick(newMovieId, contentType);
   };
 
@@ -50,13 +43,10 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
   };
 
   const handleActorMovieClick = (movieId: number, contentType: 'movie' | 'tv') => {
-    // Close actor details first
     setSelectedActorId(null);
-    // Navigate to the movie/series with correct content type
     onMovieClick(movieId, contentType);
   };
 
-  // Handle escape key press
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -72,7 +62,6 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose, selectedActorId]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -81,12 +70,10 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
   }, []);
 
   if (loading) {
-    console.log('[MovieDetails] Loading...');
     return <MovieDetailsSkeleton />;
   }
-  
+
   if (error) {
-    console.log('[MovieDetails] Error:', error);
     return (
       <div className="fixed inset-0 bg-background z-50 flex items-center justify-center p-4">
         <Alert variant="destructive" className="max-w-lg">
@@ -99,15 +86,15 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
       </div>
     );
   }
+
   if (!movie) {
-    console.log('[MovieDetails] No movie data found');
     return (
       <div className="fixed inset-0 bg-background z-50 flex items-center justify-center p-4">
         <Alert variant="destructive" className="max-w-lg">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Not Found</AlertTitle>
           <AlertDescription>
-            No details available for this {contentType === "movie" ? "movie" : "series"}.
+            No details available for this {contentType === 'movie' ? 'movie' : 'series'}.
           </AlertDescription>
         </Alert>
       </div>
@@ -136,16 +123,16 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
         numberOfSeasons={contentType === 'tv' ? (movie as any).number_of_seasons : undefined}
         numberOfEpisodes={contentType === 'tv' ? (movie as any).number_of_episodes : undefined}
       />
-      {/* Full-size container */}
-      <div className="min-h-screen w-full">
-        <MovieDetailsHeader 
+
+      <div className="min-h-screen w-full pb-20 md:pb-8">
+        <MovieDetailsHeader
           backdropPath={movie.backdrop_path}
           title={title}
           onClose={onClose}
         />
 
-        <div className="container mx-auto px-4 py-6 -mt-20 relative z-10 max-w-7xl">
-          <MovieInfo 
+        <div className="container mx-auto px-4 py-6 -mt-16 sm:-mt-20 relative z-10 max-w-7xl">
+          <MovieInfo
             posterPath={movie.poster_path}
             title={title}
             tagline={movie.tagline}
@@ -163,8 +150,8 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             imdbId={movie.imdb_id}
           />
 
-          <div className="mt-8">
-            <ProductionDetails 
+          <div className="mt-10">
+            <ProductionDetails
               budget={movie.budget || 0}
               revenue={movie.revenue || 0}
               productionCountries={movie.production_countries}
@@ -172,14 +159,13 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
               productionCompanies={movie.production_companies}
             />
           </div>
-          
+
           <AdBanner slot="1571190202" className="my-8" />
 
-          {/* Similar Movies/Series */}
           {movie.id && (
-            <div className="mt-8">
-              <SimilarMovies 
-                movieId={movie.id} 
+            <div className="mt-10">
+              <SimilarMovies
+                movieId={movie.id}
                 contentType={contentType}
                 onMovieClick={handleSimilarMovieClick}
                 currentGenres={movie.genres?.map(g => g.id) || []}
@@ -190,28 +176,26 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
             </div>
           )}
 
-          {/* Cast */}
           {cast.length > 0 && (
-            <div className="mt-8">
-               <Card>
-                <CardHeader>
-                  <CardTitle>Top Cast</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MovieCast cast={cast} onActorClick={handleActorClick} />
-                </CardContent>
-              </Card>
-            </div>
+            <section className="mt-10">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-1 h-5 rounded-full bg-primary" />
+                <h2 className="text-lg md:text-xl font-bold tracking-tight">Top Cast</h2>
+                <span className="text-[11px] font-semibold text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full tabular-nums">
+                  {Math.min(cast.length, 16)}
+                </span>
+              </div>
+              <MovieCast cast={cast} onActorClick={handleActorClick} />
+            </section>
           )}
 
-          {/* Bottom ad */}
           <AdBanner slot="7834561902" className="my-8" />
-
         </div>
       </div>
-      <ActorDetails 
-        actorId={selectedActorId} 
-        onClose={handleCloseActorDetails} 
+
+      <ActorDetails
+        actorId={selectedActorId}
+        onClose={handleCloseActorDetails}
         onMovieClick={handleActorMovieClick}
       />
     </div>
