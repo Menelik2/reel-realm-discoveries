@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -35,6 +35,13 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 ];
 
 const PAGE_SIZE = 10;
+
+const getInitialDarkMode = () => {
+  if (typeof window === 'undefined') return false;
+  const stored = localStorage.getItem('darkMode');
+  if (stored !== null) return stored === 'true';
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+};
 
 /** Stacked poster group (movies + series) for a franchise */
 const PosterGroup = memo(function PosterGroup({
@@ -178,11 +185,23 @@ const GridSkeleton = () => (
 const FranchisesPage = () => {
   const { franchises, loading, isError, error, refetch, isFetching } = useFranchises();
   const { prefetch } = usePrefetchFranchise();
-  // Default: Most titles
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortKey>('titles');
   const [page, setPage] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      body.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+      body.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', String(isDarkMode));
+  }, [isDarkMode]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -202,7 +221,6 @@ const FranchisesPage = () => {
         (a, b) => (b.content_order?.length || 0) - (a.content_order?.length || 0)
       );
     }
-    // featured = API order
     return list;
   }, [franchises, query, sort]);
 
@@ -214,10 +232,8 @@ const FranchisesPage = () => {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, safePage]);
 
-  // Only fetch posters for the visible page (lighter than all franchises)
   const { postersBySlug, enriching } = useFranchiseGroupPosters(pageItems);
 
-  // Reset to first page when search or sort changes
   const handleQuery = (value: string) => {
     setQuery(value);
     setPage(0);
@@ -240,15 +256,15 @@ const FranchisesPage = () => {
         setIsDarkMode={setIsDarkMode}
       />
 
-      <main className="container mx-auto px-4 pt-24 pb-28 md:pb-12">
+      <main className="container mx-auto px-4 pt-6 pb-28 md:pb-12">
         <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-2.5 mb-1.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-              <Layers className="h-4.5 w-4.5 text-primary" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+              <Layers className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Franchises</h1>
+            <h1 className="text-2xl md:text-3xl font-playfair font-bold tracking-tight">Franchises</h1>
           </div>
-          <p className="text-sm text-muted-foreground max-w-xl ml-0 md:ml-11">
+          <p className="text-sm text-muted-foreground max-w-xl ml-0 md:ml-12">
             Every franchise with all movies and series — sorted by most titles.
           </p>
         </div>
@@ -261,7 +277,7 @@ const FranchisesPage = () => {
                 value={query}
                 onChange={(e) => handleQuery(e.target.value)}
                 placeholder="Search franchises…"
-                className="pl-9 pr-9 h-10 bg-secondary/50 border-border/60"
+                className="pl-9 pr-9 h-10 rounded-full bg-secondary/50 border-border/60"
                 disabled={isError && franchises.length === 0}
                 aria-label="Search franchises"
               />
@@ -279,14 +295,14 @@ const FranchisesPage = () => {
 
             <div className="flex items-center gap-2 flex-wrap">
               <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
-              <div className="flex rounded-lg border border-border/60 bg-secondary/40 p-0.5">
+              <div className="flex rounded-xl border border-border/60 bg-secondary/40 p-0.5">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.key}
                     type="button"
                     onClick={() => handleSort(opt.key)}
                     className={cn(
-                      'px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors',
+                      'px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors',
                       sort === opt.key
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -320,7 +336,7 @@ const FranchisesPage = () => {
             <Button
               variant="outline"
               size="sm"
-              className="shrink-0 gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+              className="shrink-0 gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10 rounded-full"
               onClick={() => refetch()}
               disabled={isFetching}
             >
@@ -354,7 +370,7 @@ const FranchisesPage = () => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 min-w-[7.5rem]"
+                      className="gap-1.5 min-w-[7.5rem] rounded-full"
                       disabled={safePage <= 0}
                       onClick={() => {
                         setPage((p) => Math.max(0, p - 1));
@@ -371,7 +387,7 @@ const FranchisesPage = () => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 min-w-[7.5rem]"
+                      className="gap-1.5 min-w-[7.5rem] rounded-full"
                       disabled={safePage >= totalPages - 1}
                       onClick={() => {
                         setPage((p) => Math.min(totalPages - 1, p + 1));
@@ -400,7 +416,7 @@ const FranchisesPage = () => {
                 : 'Franchises will appear when the catalog is available.'}
             </p>
             {query.trim() && (
-              <Button variant="outline" size="sm" className="mt-2" onClick={() => handleQuery('')}>
+              <Button variant="outline" size="sm" className="mt-2 rounded-full" onClick={() => handleQuery('')}>
                 Clear search
               </Button>
             )}
