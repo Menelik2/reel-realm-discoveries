@@ -10,22 +10,34 @@ const MoviePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract content type from the current path
   const contentType = location.pathname.startsWith('/tv/') ? 'tv' : 'movie';
 
-  // Always force white theme for now
+  // Keep theme consistent with user preference (do not force light mode)
   useEffect(() => {
-    document.documentElement.classList.remove('dark');
-    document.body.classList.remove('dark');
+    const stored = localStorage.getItem('darkMode');
+    const prefersDark =
+      stored !== null
+        ? stored === 'true'
+        : window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+
+    const root = document.documentElement;
+    const body = document.body;
+    if (prefersDark) {
+      root.classList.add('dark');
+      body.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+      body.classList.remove('dark');
+    }
   }, []);
 
   const handleClose = () => {
     navigate('/');
   };
 
-  const handleMovieClick = (movieId: number) => {
-    // This allows clicking on similar movies to navigate to a new movie page
-    navigate(`/${contentType}/${movieId}`);
+  const handleMovieClick = (movieId: number, typeOverride?: 'movie' | 'tv') => {
+    const type = typeOverride || contentType;
+    navigate(`/${type}/${movieId}`);
   };
 
   if (!id || isNaN(parseInt(id))) {
@@ -44,7 +56,7 @@ const MoviePage = () => {
 
   return (
     <>
-      <MovieDetails 
+      <MovieDetails
         movieId={parseInt(id)}
         contentType={contentType as 'movie' | 'tv'}
         onClose={handleClose}
