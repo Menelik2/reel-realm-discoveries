@@ -41,7 +41,6 @@ const Index = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Update search query from URL params
   useEffect(() => {
     const searchParam = searchParams.get('search');
     if (searchParam) {
@@ -49,7 +48,6 @@ const Index = () => {
     }
   }, [searchParams]);
 
-  // Update content type from URL params
   useEffect(() => {
     const typeParam = searchParams.get('type');
     if (typeParam === 'movie' || typeParam === 'tv' || typeParam === 'anime' || typeParam === 'asian') {
@@ -59,8 +57,6 @@ const Index = () => {
     }
   }, [searchParams]);
 
-
-  // Detect mobile
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -70,7 +66,6 @@ const Index = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Apply .dark class based on isDarkMode
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
@@ -84,12 +79,10 @@ const Index = () => {
     localStorage.setItem("darkMode", String(isDarkMode));
   }, [isDarkMode]);
 
-  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [currentCategory, selectedGenre, selectedYear, searchQuery, contentType]);
 
-  // Only fetch via react-query when searching (HomeCategoryRows handles browse)
   const { movies, totalPages, loading } = useMovieData({
     searchQuery,
     selectedGenre: selectedGenre || 'all',
@@ -114,12 +107,10 @@ const Index = () => {
     } else if (contentType === 'movie' || contentType === 'tv') {
       type = contentType;
     } else {
-      // Mixed collections (All / Anime / Asian) default to movie routing
       type = 'movie';
     }
     navigate(`/${type}/${movieId}`);
   };
-
 
   const handleSetCurrentCategory = (category: string) => {
     setCurrentCategory(category);
@@ -140,9 +131,9 @@ const Index = () => {
           setIsDarkMode={setIsDarkMode}
         />
 
-        <main>
+        <main id="main-content" tabIndex={-1}>
           {!searchQuery && (
-            <Suspense fallback={<div className="w-full aspect-[16/10] min-h-[260px] max-h-[340px] bg-secondary animate-pulse" />}>
+            <Suspense fallback={<div className="w-full aspect-[16/10] min-h-[260px] max-h-[340px] bg-secondary animate-pulse" aria-hidden="true" />}>
               <HeroCarousel />
             </Suspense>
           )}
@@ -176,10 +167,8 @@ const Index = () => {
           )}
         </main>
 
-        {/* Footer with Telegram banner — shown on all devices so users can join easily */}
         <Footer />
         <MobileBottomNav />
-        
       </div>
     </div>
   );
