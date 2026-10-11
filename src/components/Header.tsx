@@ -48,7 +48,12 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
   return (
     <>
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
+
       <header
+        role="banner"
         className={
           'fixed top-0 left-0 right-0 z-50 w-full ' +
           'bg-background/80 backdrop-blur-2xl border-b border-border/40 ' +
@@ -59,16 +64,16 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+            <Link to="/" className="flex items-center gap-2.5 shrink-0 group pressable" aria-label="YENI MOVIE home">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
-                <Film className="h-4.5 w-4.5 text-primary-foreground" style={{ width: 18, height: 18 }} />
+                <Film className="text-primary-foreground" style={{ width: 18, height: 18 }} aria-hidden="true" />
               </div>
               <span className="font-playfair text-xl font-bold tracking-tight text-foreground">
                 YENI<span className="text-primary">MOVIE</span>
               </span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-0.5">
+            <nav className="hidden md:flex items-center gap-0.5" aria-label="Main">
               {navLinks.map(link => (
                 <Link
                   key={link.label}
@@ -82,15 +87,17 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
             <div className="hidden md:flex items-center flex-1 max-w-xs mx-5">
               <div className="relative w-full group">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 group-focus-within:text-primary transition-colors" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 group-focus-within:text-primary transition-colors" aria-hidden="true" />
                 <Input
-                  type="text"
+                  type="search"
                   placeholder="Search movies & shows…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchOverlayOpen(true)}
+                  aria-label="Search movies and shows"
                   className="pl-10 h-9 bg-secondary/40 border-border/40 rounded-full text-sm focus-visible:ring-primary/25 focus-visible:border-primary/30 shadow-sm"
                 />
-                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden lg:inline-flex h-5 items-center gap-0.5 rounded border border-border/60 bg-muted/50 px-1.5 text-[10px] font-medium text-muted-foreground">
+                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden lg:inline-flex h-5 items-center gap-0.5 rounded border border-border/60 bg-muted/50 px-1.5 text-[10px] font-medium text-muted-foreground" aria-hidden="true">
                   ⌘K
                 </kbd>
               </div>
@@ -101,17 +108,17 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
                 href={TELEGRAM_CHANNEL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[#229ED9] text-white text-sm font-medium hover:bg-[#1c8bbd] transition-colors shadow-sm shadow-[#229ED9]/25"
+                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[#229ED9] text-white text-sm font-medium hover:bg-[#1c8bbd] transition-colors shadow-sm shadow-[#229ED9]/25 pressable"
                 aria-label="Join our Telegram channel"
               >
-                <Send className="h-3.5 w-3.5" />
+                <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="hidden lg:inline">Join Channel</span>
               </a>
 
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full"
+                className="h-9 w-9 rounded-full pressable"
                 aria-label="Open search"
                 onClick={() => setIsSearchOverlayOpen(true)}
               >
@@ -124,8 +131,8 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsDarkMode(!isDarkMode)}
-                className="hidden md:flex h-9 w-9 rounded-full"
-                aria-label="Toggle theme"
+                className="hidden md:flex h-9 w-9 rounded-full pressable"
+                aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
@@ -133,30 +140,38 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden h-9 w-9 rounded-full"
+                className="md:hidden h-9 w-9 rounded-full pressable"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="mobile-nav-menu"
               >
                 {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </Button>
             </div>
           </div>
 
-          {/* Mobile Search */}
           <div className="md:hidden pb-3">
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
               <Input
-                type="text"
+                type="search"
                 placeholder="Search movies & shows…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchOverlayOpen(true)}
+                aria-label="Search movies and shows"
                 className="pl-10 h-9 bg-secondary/40 border-border/40 rounded-full text-sm shadow-sm"
               />
             </div>
           </div>
 
           {isMobileMenuOpen && (
-            <nav className="md:hidden pb-4 border-t border-border/40 pt-3 animate-in slide-in-from-top-2 duration-200">
+            <nav
+              id="mobile-nav-menu"
+              aria-label="Mobile"
+              className="md:hidden pb-4 border-t border-border/40 pt-3 animate-in slide-in-from-top-2 duration-200"
+            >
               <div className="flex flex-col gap-0.5">
                 {[...navLinks, { to: '/about', label: 'About' }, { to: '/contact', label: 'Contact' }, { to: '/privacy', label: 'Privacy' }].map(link => (
                   <Link
@@ -175,15 +190,16 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
                   className="flex items-center gap-2 px-3.5 py-2.5 text-sm font-medium text-[#229ED9] hover:bg-[#229ED9]/10 rounded-xl transition-all"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-4 w-4" aria-hidden="true" />
                   Join Telegram Channel
                 </a>
                 <button
+                  type="button"
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className="flex items-center justify-between px-3.5 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/80 rounded-xl transition-all"
                 >
                   <span>{isDarkMode ? 'Light mode' : 'Dark mode'}</span>
-                  {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {isDarkMode ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
                 </button>
               </div>
             </nav>
