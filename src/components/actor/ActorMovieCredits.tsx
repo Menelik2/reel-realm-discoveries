@@ -1,11 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, Film, Tv } from 'lucide-react';
 import type { ActorCredit } from '@/hooks/useActorDetails';
 
 interface ActorMovieCreditsProps {
   credits: ActorCredit[];
-  /** Optional analytics/tracking hook — routing is handled internally. */
   onMovieClick?: (movieId: number, contentType: 'movie' | 'tv') => void;
 }
 
@@ -16,10 +14,6 @@ const formatVotes = (n?: number) => {
   return `${n}`;
 };
 
-/**
- * Robustly resolve a credit's content type from TMDB payload.
- * Priority: explicit media_type → presence of movie/tv-specific fields → default 'movie'.
- */
 const resolveContentType = (credit: ActorCredit): 'movie' | 'tv' => {
   if (credit.media_type === 'movie' || credit.media_type === 'tv') {
     return credit.media_type;
@@ -33,15 +27,17 @@ export const ActorMovieCredits = ({ credits, onMovieClick }: ActorMovieCreditsPr
   if (credits.length === 0) return null;
 
   return (
-    <Card className="mt-6">
-      <CardHeader className="flex-row items-baseline justify-between space-y-0">
-        <CardTitle>Known For</CardTitle>
-        <span className="text-sm text-muted-foreground font-mono">
-          {credits.length} titles
+    <section>
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="w-1 h-5 rounded-full bg-primary" />
+        <h2 className="text-lg md:text-xl font-bold tracking-tight">Known For</h2>
+        <span className="text-[11px] font-semibold text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full tabular-nums">
+          {credits.length}
         </span>
-      </CardHeader>
-      <CardContent className="p-0">
-        <ol className="divide-y divide-border">
+      </div>
+
+      <div className="rounded-2xl border border-border/50 bg-card/80 overflow-hidden shadow-sm">
+        <ol className="divide-y divide-border/50">
           {credits.map((credit, idx) => {
             const contentType = resolveContentType(credit);
             const isMovie = contentType === 'movie';
@@ -54,7 +50,7 @@ export const ActorMovieCredits = ({ credits, onMovieClick }: ActorMovieCreditsPr
 
             const rowInner = (
               <>
-                <span className="w-6 sm:w-8 text-center text-sm font-mono text-muted-foreground tabular-nums">
+                <span className="w-6 sm:w-8 text-center text-xs font-semibold text-muted-foreground tabular-nums">
                   {idx + 1}
                 </span>
 
@@ -64,47 +60,42 @@ export const ActorMovieCredits = ({ credits, onMovieClick }: ActorMovieCreditsPr
                       ? `https://image.tmdb.org/t/p/w154${credit.poster_path}`
                       : '/placeholder.svg'
                   }
-                  alt={title}
+                  alt=""
                   loading="lazy"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).src = '/placeholder.svg';
                   }}
-                  className="w-12 h-16 sm:w-14 sm:h-20 rounded-md object-cover flex-shrink-0 shadow-sm bg-muted"
+                  className="w-11 h-[66px] sm:w-12 sm:h-[72px] rounded-lg object-cover flex-shrink-0 ring-1 ring-border/40 bg-secondary"
                 />
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm sm:text-base truncate group-hover:text-primary transition-colors">
+                  <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
                     {title}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 font-mono">
-                    {year && <span>{year}</span>}
-                    {year && <span>·</span>}
-                    <span className="inline-flex items-center gap-1 uppercase">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                    {year && <span className="tabular-nums">{year}</span>}
+                    {year && <span className="opacity-40">·</span>}
+                    <span className="inline-flex items-center gap-1">
                       <TypeIcon className="h-3 w-3" />
                       {isMovie ? 'Movie' : 'TV'}
                     </span>
-                    {!hasValidId && (
-                      <span className="ml-1 text-[10px] uppercase text-muted-foreground/70">
-                        · unavailable
-                      </span>
-                    )}
                   </div>
                   {credit.character && (
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
                       as {credit.character}
                     </p>
                   )}
                 </div>
 
-                <div className="flex flex-col items-end flex-shrink-0 text-xs sm:text-sm">
+                <div className="flex flex-col items-end flex-shrink-0 text-xs">
                   <div className="flex items-center gap-1">
-                    <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
+                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                     <span className="font-semibold tabular-nums">
                       {credit.vote_average ? credit.vote_average.toFixed(1) : '—'}
                     </span>
                   </div>
                   {credit.vote_count ? (
-                    <span className="text-[10px] sm:text-xs text-muted-foreground font-mono mt-0.5">
+                    <span className="text-[10px] text-muted-foreground tabular-nums mt-0.5">
                       {formatVotes(credit.vote_count)}
                     </span>
                   ) : null}
@@ -113,7 +104,7 @@ export const ActorMovieCredits = ({ credits, onMovieClick }: ActorMovieCreditsPr
             );
 
             const rowClasses =
-              'group flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 transition-colors';
+              'group flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 transition-colors';
 
             return (
               <li key={`${credit.id}-${credit.character || idx}`}>
@@ -138,7 +129,7 @@ export const ActorMovieCredits = ({ credits, onMovieClick }: ActorMovieCreditsPr
             );
           })}
         </ol>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 };
