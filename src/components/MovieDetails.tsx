@@ -177,7 +177,7 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
           )}
 
           {cast.length > 0 && (
-            <section className="mt-10">
+            <section className="mt-10 mb-6">
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-1 h-5 rounded-full bg-primary" />
                 <h2 className="text-lg md:text-xl font-bold tracking-tight">Top Cast</h2>
@@ -188,8 +188,6 @@ export const MovieDetails = ({ movieId, contentType = 'movie', onClose, onMovieC
               <MovieCast cast={cast} onActorClick={handleActorClick} />
             </section>
           )}
-
-          <AdBanner slot="7834561902" className="my-8" />
         </div>
       </div>
 
