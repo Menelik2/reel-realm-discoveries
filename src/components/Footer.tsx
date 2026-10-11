@@ -5,28 +5,25 @@ const TELEGRAM_CHANNEL = 'https://t.me/yenimovie';
 
 export const Footer = () => {
   return (
-    <footer className="border-t border-border/50 bg-secondary/30 mt-auto">
-      {/* Prominent Telegram join banner — final section users see */}
+    <footer className="border-t border-border/40 bg-secondary/20 mt-auto">
       <div className="container mx-auto px-4 pt-8 pb-2">
         <a
           href={TELEGRAM_CHANNEL}
           target="_blank"
           rel="noopener noreferrer"
-          className="group relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6 overflow-hidden rounded-2xl p-5 sm:p-6 transition-all duration-300 hover:scale-[1.01] hover:shadow-lg"
+          className="group relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6 overflow-hidden rounded-2xl p-5 sm:p-6 transition-all duration-300 hover:scale-[1.01]"
           style={{
             background: 'linear-gradient(135deg, #229ED9 0%, #1a7fb8 50%, #0d6a9a 100%)',
-            boxShadow: '0 8px 24px rgba(34, 158, 217, 0.35)',
+            boxShadow: '0 8px 28px rgba(34, 158, 217, 0.3)',
           }}
         >
-          {/* Decorative circles */}
           <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
           <div className="pointer-events-none absolute -bottom-10 left-1/3 h-40 w-40 rounded-full bg-white/5" />
 
-          {/* Telegram icon circle */}
-          <div className="relative shrink-0 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-white shadow-md">
+          <div className="relative shrink-0 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-white shadow-md">
             <svg
               viewBox="0 0 24 24"
-              className="h-9 w-9 sm:h-11 sm:w-11 text-[#229ED9]"
+              className="h-8 w-8 sm:h-9 sm:w-9 text-[#229ED9]"
               fill="currentColor"
               aria-hidden="true"
             >
@@ -34,12 +31,11 @@ export const Footer = () => {
             </svg>
           </div>
 
-          {/* Text */}
           <div className="relative flex-1 text-center sm:text-left text-white">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wider text-white/80 mb-1">
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
               Official Channel
             </p>
-            <h3 className="text-xl sm:text-2xl font-bold leading-tight">
+            <h3 className="text-lg sm:text-xl font-bold leading-tight tracking-tight">
               Join YENI MOVIE on Telegram
             </h3>
             <p className="mt-1 text-sm text-white/90">
@@ -47,7 +43,6 @@ export const Footer = () => {
             </p>
           </div>
 
-          {/* CTA button */}
           <div className="relative shrink-0">
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#229ED9] shadow-sm transition-transform group-hover:scale-105">
               <Send className="h-4 w-4" />
@@ -61,11 +56,11 @@ export const Footer = () => {
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm shadow-primary/25">
                 <Film className="h-3.5 w-3.5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-foreground">YENI MOVIE</span>
+              <span className="font-playfair font-bold text-foreground tracking-tight">YENI MOVIE</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Your ultimate destination for discovering movies and TV series.
@@ -74,7 +69,7 @@ export const Footer = () => {
               href={TELEGRAM_CHANNEL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-2 px-3 py-2 rounded-lg bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9]/20 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 mt-1 px-3 py-2 rounded-xl bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9]/20 text-sm font-medium transition-colors"
             >
               <Send className="h-4 w-4" />
               Join @yenimovie
@@ -114,23 +109,21 @@ export const Footer = () => {
                   Telegram Channel
                 </a>
               </li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Facebook</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Instagram</a></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold text-foreground text-sm mb-3">Data Source</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               This product uses the TMDB API but is not endorsed or certified by TMDB.
             </p>
-            <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline mt-1 inline-block">
+            <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline mt-1.5 inline-block font-medium">
               The Movie Database
             </a>
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border/50 text-center">
+        <div className="mt-8 pt-6 border-t border-border/40 text-center">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} YENI MOVIE. All rights reserved.
           </p>
