@@ -16,9 +16,9 @@ const years = ['2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '
 export const MovieFilters = ({ selectedGenre, setSelectedGenre, selectedYear, setSelectedYear, contentType = 'movie' }: MovieFiltersProps) => {
   const genres = getGenresForContentType(contentType);
   return (
-    <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
+    <div className="flex flex-col sm:flex-row gap-3 mb-4 md:mb-6">
       <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px] h-9 rounded-full bg-secondary/50 border-border/50 text-sm">
           <SelectValue placeholder="All Genres" />
         </SelectTrigger>
         <SelectContent>
@@ -32,7 +32,7 @@ export const MovieFilters = ({ selectedGenre, setSelectedGenre, selectedYear, se
       </Select>
 
       <Select value={selectedYear} onValueChange={setSelectedYear}>
-        <SelectTrigger className="w-full sm:w-[180px]">
+        <SelectTrigger className="w-full sm:w-[180px] h-9 rounded-full bg-secondary/50 border-border/50 text-sm">
           <SelectValue placeholder="All Years" />
         </SelectTrigger>
         <SelectContent>
