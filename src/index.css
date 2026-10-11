@@ -2,12 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Performance optimizations */
+/* Performance: skip layout for off-screen images/cards */
 img {
   content-visibility: auto;
 }
 
-/* Skip layout work for off-screen poster cards */
 .card-poster-host {
   content-visibility: auto;
   contain-intrinsic-size: 200px 300px;
@@ -15,6 +14,21 @@ img {
 
 html {
   scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer base {
@@ -121,6 +135,34 @@ html {
   h1, h2, h3, .font-playfair {
     letter-spacing: -0.02em;
   }
+
+  /* Visible focus for keyboard users */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+/* Skip to main content (keyboard a11y) */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100%;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 14px hsl(var(--primary) / 0.35);
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 1rem;
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
 
 /* Hide mobile bottom nav when video modal is open */
@@ -144,7 +186,6 @@ body[data-video-modal-open] .mobile-bottom-nav {
   background: hsl(var(--muted-foreground) / 0.45);
 }
 
-/* Horizontal row: hide scrollbar but keep scroll */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -165,7 +206,6 @@ body[data-video-modal-open] .mobile-bottom-nav {
   flex-shrink: 0;
 }
 
-/* Soft edge fades for horizontal rows */
 .media-row-edge {
   position: relative;
 }
@@ -196,7 +236,17 @@ body[data-video-modal-open] .mobile-bottom-nav {
   }
 }
 
-/* Smooth focus ring for interactive cards */
+/* Focus ring utility for cards / custom controls */
 .focus-ring {
   @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Touch press feedback (micro-interaction) */
+.pressable {
+  @apply transition-transform active:scale-[0.97];
+}
+@media (prefers-reduced-motion: reduce) {
+  .pressable {
+    transform: none !important;
+  }
 }
