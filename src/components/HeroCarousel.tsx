@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Play, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Star, Info } from 'lucide-react';
 import type { Movie } from '@/types/tmdb';
 
 const TMDB_ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
@@ -16,7 +17,7 @@ const fetchTrending = async (): Promise<Movie[]> => {
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const data = await response.json();
-  return data.results?.slice(0, 5) || [];
+  return data.results?.slice(0, 6) || [];
 };
 
 const fetchTrailerKey = async (movieId: number): Promise<string | null> => {
@@ -36,14 +37,15 @@ const fetchTrailerKey = async (movieId: number): Promise<string | null> => {
   }
 };
 
-/** Larger hero: readable on mobile, prominent on desktop */
+/** Cinematic hero proportions */
 const HERO_SHELL =
   'relative w-full overflow-hidden ' +
-  'aspect-[16/10] sm:aspect-[21/9] md:aspect-[2.35/1] ' +
-  'min-h-[260px] sm:min-h-[320px] md:min-h-[400px] lg:min-h-[460px] ' +
-  'max-h-[340px] sm:max-h-[400px] md:max-h-[500px] lg:max-h-[560px]';
+  'aspect-[16/11] sm:aspect-[21/9] md:aspect-[2.4/1] ' +
+  'min-h-[280px] sm:min-h-[340px] md:min-h-[420px] lg:min-h-[480px] ' +
+  'max-h-[380px] sm:max-h-[440px] md:max-h-[520px] lg:max-h-[580px]';
 
 export const HeroCarousel = () => {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [trailerKeys, setTrailerKeys] = useState<Record<number, string>>({});
   const [isPaused, setIsPaused] = useState(false);
@@ -64,7 +66,7 @@ export const HeroCarousel = () => {
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % movies.length);
-    }, 6000);
+    }, 6500);
     return () => clearInterval(interval);
   }, [movies, isPaused]);
 
@@ -81,7 +83,7 @@ export const HeroCarousel = () => {
     return (
       <div className={`${HERO_SHELL} bg-secondary animate-pulse`}>
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-muted-foreground text-sm">Loading...</div>
+          <div className="w-10 h-10 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -98,6 +100,10 @@ export const HeroCarousel = () => {
       if (key) setTrailerKeys((prev) => ({ ...prev, [id]: key! }));
     }
     if (key) window.open(`https://www.youtube.com/watch?v=${key}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDetails = () => {
+    navigate(`/movie/${currentMovie.id}`);
   };
 
   return (
@@ -120,7 +126,7 @@ export const HeroCarousel = () => {
             <img
               src={`https://image.tmdb.org/t/p/w1280${backdropPath}`}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700"
+              className="absolute inset-0 h-full w-full object-cover object-center scale-105 transition-transform duration-[8000ms] ease-out"
               decoding="async"
               loading="eager"
               fetchPriority="high"
@@ -131,40 +137,54 @@ export const HeroCarousel = () => {
         )}
       </picture>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/10 sm:via-background/35 sm:to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/30 to-transparent sm:from-background/70 sm:via-transparent" />
+      {/* Layered cinematic gradients */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/5" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent sm:from-background/80 sm:via-background/25" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent opacity-60" />
 
-      <div className="relative z-10 h-full flex items-end pb-8 sm:pb-9 md:pb-10 pt-4">
+      <div className="relative z-10 h-full flex items-end pb-10 sm:pb-12 md:pb-14 pt-6">
         <div className="container mx-auto px-4 sm:px-5">
-          <div className="max-w-[min(100%,20rem)] sm:max-w-lg md:max-w-xl space-y-1.5 sm:space-y-2">
+          <div className="max-w-[min(100%,22rem)] sm:max-w-lg md:max-w-xl lg:max-w-2xl space-y-2.5 sm:space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1 bg-primary/90 backdrop-blur-sm px-2 py-0.5 rounded-full">
+              <div className="flex items-center gap-1 bg-primary px-2.5 py-1 rounded-full shadow-md shadow-primary/30">
                 <Star className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
-                <span className="text-xs font-semibold text-primary-foreground">
+                <span className="text-xs font-bold text-primary-foreground tabular-nums">
                   {currentMovie.vote_average.toFixed(1)}
                 </span>
               </div>
-              <span className="text-xs font-medium text-foreground/70">
+              <span className="text-xs font-semibold text-foreground/80 bg-background/40 backdrop-blur-sm px-2 py-1 rounded-full border border-white/10">
                 {currentMovie.release_date?.substring(0, 4)}
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/15 px-2 py-1 rounded-full">
+                Trending
               </span>
             </div>
 
-            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-playfair font-bold text-foreground leading-tight line-clamp-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] font-playfair font-bold text-foreground leading-[1.15] line-clamp-2 drop-shadow-sm">
               {currentMovie.title}
             </h1>
 
-            <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2 max-w-xl hidden sm:block">
+            <p className="text-sm text-foreground/75 line-clamp-2 max-w-xl hidden sm:block leading-relaxed">
               {currentMovie.overview}
             </p>
 
-            <div className="flex gap-2 pt-1">
+            <div className="flex flex-wrap gap-2.5 pt-1.5">
               <Button
                 size="sm"
                 onClick={handleWatchTrailer}
-                className="rounded-full px-3 sm:px-4 h-8 sm:h-9 gap-1.5 text-xs sm:text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/25"
+                className="rounded-full px-5 h-10 gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/10"
               >
-                <Play className="h-3.5 w-3.5 fill-current" />
+                <Play className="h-4 w-4 fill-current" />
                 Trailer
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={handleDetails}
+                className="rounded-full px-5 h-10 gap-2 text-sm font-semibold bg-background/50 backdrop-blur-md border border-border/50 hover:bg-background/70"
+              >
+                <Info className="h-4 w-4" />
+                Details
               </Button>
             </div>
           </div>
@@ -174,31 +194,31 @@ export const HeroCarousel = () => {
       <button
         type="button"
         aria-label="Previous slide"
-        className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-background/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-background/60 active:scale-95 transition-all touch-manipulation"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-background/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-foreground hover:bg-background/70 active:scale-95 transition-all touch-manipulation shadow-md"
         onClick={prevSlide}
       >
-        <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+        <ChevronLeft className="h-5 w-5" />
       </button>
       <button
         type="button"
         aria-label="Next slide"
-        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-background/40 backdrop-blur-sm flex items-center justify-center text-foreground hover:bg-background/60 active:scale-95 transition-all touch-manipulation"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-background/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-foreground hover:bg-background/70 active:scale-95 transition-all touch-manipulation shadow-md"
         onClick={nextSlide}
       >
-        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+        <ChevronRight className="h-5 w-5" />
       </button>
 
-      <div className="absolute bottom-3 sm:bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+      <div className="absolute bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
         {movies.map((_, i) => (
           <button
             key={i}
             type="button"
             aria-label={`Go to slide ${i + 1}`}
             aria-current={i === currentIndex ? 'true' : undefined}
-            className={`h-1.5 rounded-full transition-all duration-300 touch-manipulation ${
+            className={`h-1.5 rounded-full transition-all duration-400 touch-manipulation ${
               i === currentIndex
-                ? 'w-5 sm:w-6 bg-primary'
-                : 'w-1.5 bg-foreground/30 hover:bg-foreground/50'
+                ? 'w-7 bg-primary shadow-sm shadow-primary/40'
+                : 'w-1.5 bg-foreground/25 hover:bg-foreground/45'
             }`}
             onClick={() => setCurrentIndex(i)}
           />
