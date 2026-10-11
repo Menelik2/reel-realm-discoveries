@@ -3,6 +3,7 @@ import { MovieCard } from '@/components/MovieCard';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import type { Movie } from '@/types/tmdb';
 import { pageWindow, canGoPrev, canGoNext, clampPage } from '@/utils/pagination';
+import { Search } from 'lucide-react';
 
 interface MovieGridContentProps {
   movies: Movie[];
@@ -16,15 +17,14 @@ interface MovieGridContentProps {
   currentCategory: string;
 }
 
-// Normal-sized cards for consistent look across the app
 const CARD_GRID = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4';
 
-export const MovieGridContent = ({ 
-  movies, 
-  loading, 
-  currentPage, 
-  totalPages, 
-  onMovieClick, 
+export const MovieGridContent = ({
+  movies,
+  loading,
+  currentPage,
+  totalPages,
+  onMovieClick,
   onPageChange,
   contentType,
   searchQuery,
@@ -34,7 +34,7 @@ export const MovieGridContent = ({
     return (
       <div className={CARD_GRID}>
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="aspect-[2/3] bg-muted animate-pulse rounded-xl" />
+          <div key={i} className="aspect-[2/3] bg-secondary/80 animate-pulse rounded-2xl" />
         ))}
       </div>
     );
@@ -42,16 +42,23 @@ export const MovieGridContent = ({
 
   if (movies.length === 0) {
     return (
-      <div className="text-center py-16 bg-white rounded-lg shadow">
-        <p className="text-muted-foreground text-lg font-semibold mb-2">
+      <div className="text-center py-16 rounded-2xl border border-border/50 bg-card/50">
+        <div className="mx-auto w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-4">
+          <Search className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <p className="text-foreground font-semibold mb-1.5">
           {searchQuery
-            ? `No results found for "${searchQuery}".`
+            ? `No results for “${searchQuery}”`
             : currentCategory === 'custom'
-            ? 'Your list is empty. Add new content from the admin page.'
-            : `No ${contentType === 'movie' ? 'movies' : contentType === 'tv' ? 'series' : 'content'} found. Try adjusting your filters.`}
+            ? 'Your list is empty'
+            : `No ${contentType === 'movie' ? 'movies' : contentType === 'tv' ? 'series' : 'content'} found`}
         </p>
-        <p className="text-muted-foreground text-sm">
-          Try another search or change category.
+        <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+          {searchQuery
+            ? 'Try another spelling or a different title.'
+            : currentCategory === 'custom'
+            ? 'Add content from the admin page.'
+            : 'Try adjusting your filters or category.'}
         </p>
       </div>
     );
@@ -64,24 +71,23 @@ export const MovieGridContent = ({
           <MovieCard key={movie.id} movie={movie} onMovieClick={onMovieClick} />
         ))}
       </div>
-      
-      {/* Pagination */}
+
       {totalPages > 1 && (
-        <div className="mt-8">
+        <div className="mt-10">
           <Pagination>
-            <PaginationContent>
+            <PaginationContent className="gap-1">
               <PaginationItem>
-                <PaginationPrevious 
+                <PaginationPrevious
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
                     if (canGoPrev(currentPage)) onPageChange(clampPage(currentPage - 1, totalPages));
                   }}
-                  className={!canGoPrev(currentPage) ? 'pointer-events-none opacity-50' : ''}
+                  className={`rounded-full ${!canGoPrev(currentPage) ? 'pointer-events-none opacity-50' : ''}`}
                   aria-disabled={!canGoPrev(currentPage)}
                 />
               </PaginationItem>
-              
+
               {pageWindow(currentPage, totalPages, 5).map((pageNum) => (
                 <PaginationItem key={pageNum}>
                   <PaginationLink
@@ -91,14 +97,15 @@ export const MovieGridContent = ({
                       onPageChange(pageNum);
                     }}
                     isActive={pageNum === currentPage}
+                    className="rounded-full"
                   >
                     {pageNum}
                   </PaginationLink>
                 </PaginationItem>
               ))}
-              
+
               <PaginationItem>
-                <PaginationNext 
+                <PaginationNext
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
@@ -106,14 +113,14 @@ export const MovieGridContent = ({
                       onPageChange(clampPage(currentPage + 1, totalPages));
                     }
                   }}
-                  className={!canGoNext(currentPage, totalPages) ? 'pointer-events-none opacity-50' : ''}
+                  className={`rounded-full ${!canGoNext(currentPage, totalPages) ? 'pointer-events-none opacity-50' : ''}`}
                   aria-disabled={!canGoNext(currentPage, totalPages)}
                 />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-          
-          <div className="text-center mt-4 text-sm text-muted-foreground">
+
+          <div className="text-center mt-4 text-xs text-muted-foreground tabular-nums">
             Page {currentPage} of {totalPages}
             {' · '}
             {searchQuery
