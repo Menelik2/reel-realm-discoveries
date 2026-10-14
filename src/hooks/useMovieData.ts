@@ -48,7 +48,8 @@ export const useMovieData = ({
 
   const queryFn = () => {
     if (searchQuery) {
-      return searchContent({ searchQuery, currentPage: page });
+      // Respect Movies / TV Series filter while searching
+      return searchContent({ searchQuery, currentPage: page, contentType });
     }
     if (isCustom) {
       return fetchCustomContent(userId);
@@ -85,7 +86,7 @@ export const useMovieData = ({
       queryKey: ['movies', { ...baseKey, currentPage: nextPage }],
       queryFn: () => {
         if (searchQuery) {
-          return searchContent({ searchQuery, currentPage: nextPage });
+          return searchContent({ searchQuery, currentPage: nextPage, contentType });
         }
         return fetchMovies({
           currentCategory,
