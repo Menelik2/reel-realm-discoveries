@@ -21,7 +21,7 @@
           "value": ".*(bot|crawl|spider|slurp|facebook|whatsapp|telegram|twitterbot|linkedinbot|discord|slack|pinterest|embedly|quora|outbrain|vkshare|facebookexternalhit|Facebot|W3C_Validator).*"
         }
       ],
-      "destination": "https://khwwpvctzyurngshagke.supabase.co/functions/v1/og-image/movie/:id"
+      "destination": "https://suxbqdcnidvdfmkrshem.supabase.co/functions/v1/og-image/movie/:id"
     },
     {
       "source": "/tv/:id",
@@ -32,11 +32,35 @@
           "value": ".*(bot|crawl|spider|slurp|facebook|whatsapp|telegram|twitterbot|linkedinbot|discord|slack|pinterest|embedly|quora|outbrain|vkshare|facebookexternalhit|Facebot|W3C_Validator).*"
         }
       ],
-      "destination": "https://khwwpvctzyurngshagke.supabase.co/functions/v1/og-image/tv/:id"
+      "destination": "https://suxbqdcnidvdfmkrshem.supabase.co/functions/v1/og-image/tv/:id"
     },
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
     }
   ]
 }
