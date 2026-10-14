@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 interface SearchOverlayProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Seed the overlay input when opened from the header search field */
+  initialQuery?: string;
 }
 
 const useDebounced = (value: string, delay = 300) => {
@@ -28,7 +30,15 @@ const useDebounced = (value: string, delay = 300) => {
 
 const year = (date: string | null) => (date ? date.slice(0, 4) : null);
 
-export const SearchOverlay = ({ open, onOpenChange }: SearchOverlayProps) => {
+/** Prefer TV when phono says SERIES/ASIAN series-like; otherwise movie. */
+const preferredMediaType = (item: PhonoSearchResult): 'movie' | 'tv' | undefined => {
+  const t = (item.content_type || '').toUpperCase();
+  if (t === 'SERIES' || t === 'TV') return 'tv';
+  if (t === 'MOVIE') return 'movie';
+  return undefined;
+};
+
+export const SearchOverlay = ({ open, onOpenChange, initialQuery = '' }: SearchOverlayProps) => {
   const [query, setQuery] = useState('');
   const [resolving, setResolving] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -40,13 +50,16 @@ export const SearchOverlay = ({ open, onOpenChange }: SearchOverlayProps) => {
   const { groups, results, loading, isError } = usePhonoSearch(debouncedQuery);
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50);
-    else {
+    if (open) {
+      // Seed from header if provided; otherwise keep empty for a fresh search
+      if (initialQuery.trim()) setQuery(initialQuery);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    } else {
       setQuery('');
       setResolving(null);
       setActiveIndex(-1);
     }
-  }, [open]);
+  }, [open, initialQuery]);
 
   useEffect(() => {
     setActiveIndex(-1);
@@ -73,22 +86,47 @@ export const SearchOverlay = ({ open, onOpenChange }: SearchOverlayProps) => {
     const id = String(item.content_id);
     setResolving(id);
     try {
-      const { movies } = await searchContent({ searchQuery: item.title, currentPage: 1 });
+      const prefer = preferredMediaType(item);
+      // Hint TMDB search toward the right media type when we know it
+      const { movies } = await searchContent({
+        searchQuery: item.title,
+        currentPage: 1,
+        contentType: prefer,
+      });
+
       const wantedYear = year(item.release_date);
-      const match =
-        movies.find(
-          m =>
-            m.title?.toLowerCase() === item.title.toLowerCase() &&
-            (!wantedYear || m.release_date?.startsWith(wantedYear))
-        ) ||
-        movies.find(m => m.title?.toLowerCase() === item.title.toLowerCase()) ||
-        movies[0];
+      const titleLower = item.title.toLowerCase();
+
+      const score = (m: (typeof movies)[0]) => {
+        let s = 0;
+        const mt = m.media_type === 'tv' ? 'tv' : 'movie';
+        if (prefer && mt === prefer) s += 10;
+        if (m.title?.toLowerCase() === titleLower) s += 5;
+        else if (m.title?.toLowerCase().includes(titleLower) || titleLower.includes((m.title || '').toLowerCase())) s += 2;
+        if (wantedYear && m.release_date?.startsWith(wantedYear)) s += 3;
+        return s;
+      };
+
+      const ranked = [...movies].sort((a, b) => score(b) - score(a));
+      const match = ranked[0];
 
       onOpenChange(false);
 
       if (match) {
-        const type = match.media_type === 'tv' ? 'tv' : 'movie';
-        navigate(`/${type}/${match.id}`);
+        const type =
+          match.media_type === 'tv' || prefer === 'tv'
+            ? 'tv'
+            : 'movie';
+        // If we preferred TV but multi returned a movie first, still honor prefer when scores are close
+        const finalType =
+          prefer === 'tv' && match.media_type !== 'tv' && ranked.some(m => m.media_type === 'tv' && score(m) >= score(match) - 2)
+            ? 'tv'
+            : type;
+        const finalMatch =
+          finalType === 'tv' && match.media_type !== 'tv'
+            ? ranked.find(m => m.media_type === 'tv') || match
+            : match;
+        navigate(`/${finalType}/${finalMatch.id}`);
       } else {
         navigate(`/?search=${encodeURIComponent(item.title)}`);
       }
@@ -111,6 +149,11 @@ export const SearchOverlay = ({ open, onOpenChange }: SearchOverlayProps) => {
     } else if (e.key === 'Enter' && activeIndex >= 0 && activeIndex < flatItems.length) {
       e.preventDefault();
       handleSelect(flatItems[activeIndex]);
+    } else if (e.key === 'Enter' && query.trim().length >= 2 && flatItems.length === 0 && !isSearching) {
+      // Fallback: page-level TMDB search when phono has no hits
+      e.preventDefault();
+      onOpenChange(false);
+      navigate(`/?search=${encodeURIComponent(query.trim())}`);
     } else if (e.key === 'Home') {
       e.preventDefault();
       setActiveIndex(0);
@@ -203,7 +246,7 @@ export const SearchOverlay = ({ open, onOpenChange }: SearchOverlayProps) => {
 
           {query.trim().length >= 2 && !isSearching && !isError && totalCount === 0 && (
             <p className="px-4 py-12 text-center text-sm text-muted-foreground">
-              No results for “{debouncedQuery}”.
+              No results for “{debouncedQuery}”. Press Enter to search TMDB.
             </p>
           )}
 
