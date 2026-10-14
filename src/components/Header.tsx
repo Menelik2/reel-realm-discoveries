@@ -38,6 +38,8 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  const openSearch = () => setIsSearchOverlayOpen(true);
+
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/?type=movie', label: 'Movies' },
@@ -87,17 +89,22 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
             <div className="hidden md:flex items-center flex-1 max-w-xs mx-5">
               <div className="relative w-full group">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 group-focus-within:text-primary transition-colors" aria-hidden="true" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 group-focus-within:text-primary transition-colors pointer-events-none" aria-hidden="true" />
+                {/*
+                  Header field is a trigger only. Typing here used to race the overlay
+                  (page searchQuery updated while overlay stayed empty). Open overlay instead.
+                */}
                 <Input
                   type="search"
                   placeholder="Search movies & shows…"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setIsSearchOverlayOpen(true)}
+                  readOnly
+                  onFocus={openSearch}
+                  onClick={openSearch}
                   aria-label="Search movies and shows"
-                  className="pl-10 h-9 bg-secondary/40 border-border/40 rounded-full text-sm focus-visible:ring-primary/25 focus-visible:border-primary/30 shadow-sm"
+                  className="pl-10 h-9 bg-secondary/40 border-border/40 rounded-full text-sm focus-visible:ring-primary/25 focus-visible:border-primary/30 shadow-sm cursor-pointer"
                 />
-                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden lg:inline-flex h-5 items-center gap-0.5 rounded border border-border/60 bg-muted/50 px-1.5 text-[10px] font-medium text-muted-foreground" aria-hidden="true">
+                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden lg:inline-flex h-5 items-center gap-0.5 rounded border border-border/60 bg-muted/50 px-1.5 text-[10px] font-medium text-muted-foreground pointer-events-none" aria-hidden="true">
                   ⌘K
                 </kbd>
               </div>
@@ -120,7 +127,7 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
                 size="icon"
                 className="h-9 w-9 rounded-full pressable"
                 aria-label="Open search"
-                onClick={() => setIsSearchOverlayOpen(true)}
+                onClick={openSearch}
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -153,15 +160,16 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
 
           <div className="md:hidden pb-3">
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" aria-hidden="true" />
               <Input
                 type="search"
                 placeholder="Search movies & shows…"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchOverlayOpen(true)}
+                readOnly
+                onFocus={openSearch}
+                onClick={openSearch}
                 aria-label="Search movies and shows"
-                className="pl-10 h-9 bg-secondary/40 border-border/40 rounded-full text-sm shadow-sm"
+                className="pl-10 h-9 bg-secondary/40 border-border/40 rounded-full text-sm shadow-sm cursor-pointer"
               />
             </div>
           </div>
@@ -206,7 +214,11 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
           )}
         </div>
 
-        <SearchOverlay open={isSearchOverlayOpen} onOpenChange={setIsSearchOverlayOpen} />
+        <SearchOverlay
+          open={isSearchOverlayOpen}
+          onOpenChange={setIsSearchOverlayOpen}
+          initialQuery={searchQuery}
+        />
       </header>
 
       <div className="w-full shrink-0 md:h-16 h-[7.25rem]" aria-hidden="true" />
