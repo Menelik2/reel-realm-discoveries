@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Film, Send, ExternalLink } from 'lucide-react';
+import { Send, ExternalLink } from 'lucide-react';
+import { BrandLogo } from '@/components/BrandLogo';
 
 const TELEGRAM_CHANNEL = 'https://t.me/yenimovie';
 
@@ -36,7 +37,7 @@ export const Footer = () => {
               Official Channel
             </p>
             <h3 className="text-lg sm:text-xl font-bold leading-tight tracking-tight">
-              Join YENI MOVIE on Telegram
+              Join Yeni Movie on Telegram
             </h3>
             <p className="mt-1 text-sm text-white/90">
               Latest movies, series & updates — free · @yenimovie
@@ -56,12 +57,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1 space-y-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm shadow-primary/25">
-                <Film className="h-3.5 w-3.5 text-primary-foreground" />
-              </div>
-              <span className="font-playfair font-bold text-foreground tracking-tight">YENI MOVIE</span>
-            </div>
+            <BrandLogo height={24} />
             <p className="text-sm text-muted-foreground leading-relaxed">
               Your ultimate destination for discovering movies and TV series.
             </p>
@@ -125,7 +121,7 @@ export const Footer = () => {
 
         <div className="mt-8 pt-6 border-t border-border/40 text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} YENI MOVIE. All rights reserved.
+            © {new Date().getFullYear()} Yeni Movie. All rights reserved.
           </p>
         </div>
       </div>
