@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Search, Menu, X, Moon, Sun, Film, Send } from 'lucide-react';
+import { Search, Menu, X, Moon, Sun, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { ActorSearch } from '@/components/ActorSearch';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { SearchOverlay } from '@/components/SearchOverlay';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useScrollHide } from '@/hooks/useScrollHide';
 
 const TELEGRAM_CHANNEL = 'https://t.me/yenimovie';
@@ -64,13 +65,12 @@ export const Header = ({ searchQuery, setSearchQuery, isDarkMode, setIsDarkMode 
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2.5 shrink-0 group pressable" aria-label="YENI MOVIE home">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
-                <Film className="text-primary-foreground" style={{ width: 18, height: 18 }} aria-hidden="true" />
-              </div>
-              <span className="font-playfair text-xl font-bold tracking-tight text-foreground">
-                YENI<span className="text-primary">MOVIE</span>
-              </span>
+            <Link
+              to="/"
+              className="flex items-center shrink-0 group pressable"
+              aria-label="Yeni Movie home"
+            >
+              <BrandLogo height={28} className="transition-opacity group-hover:opacity-90" />
             </Link>
 
             <nav className="hidden md:flex items-center gap-0.5" aria-label="Main">
