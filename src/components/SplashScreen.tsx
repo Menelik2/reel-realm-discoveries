@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Film } from 'lucide-react';
+import { BrandLogo } from '@/components/BrandLogo';
 
 const SPLASH_LOGO_SRC = '/splash-logo.jpg';
 
 const STORAGE_KEY = 'yeni-splash-seen';
 // Bump this string whenever branding/updates change so returning users see the splash again.
-const SPLASH_VERSION = '1.1.0';
+const SPLASH_VERSION = '1.2.0';
 
 export function SplashScreen() {
   const [phase, setPhase] = useState<'entering' | 'idle' | 'exiting' | 'done'>('entering');
@@ -92,7 +92,6 @@ export function SplashScreen() {
         (isExiting ? 'opacity-0 scale-[1.02] pointer-events-none' : 'opacity-100 scale-100')
       }
     >
-      {/* Soft ambient glow */}
       <div
         className="absolute inset-0 overflow-hidden pointer-events-none"
         aria-hidden
@@ -107,18 +106,11 @@ export function SplashScreen() {
         }
       >
         {logoFailed ? (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-xl shadow-primary/30">
-              <Film className="h-9 w-9 text-primary-foreground" />
-            </div>
-            <span className="font-playfair text-2xl font-bold tracking-tight">
-              YENI<span className="text-primary">MOVIE</span>
-            </span>
-          </div>
+          <BrandLogo height={48} className="drop-shadow-[0_0_32px_rgba(239,68,68,0.25)]" />
         ) : (
           <img
             src={SPLASH_LOGO_SRC}
-            alt="YENI MOVIE"
+            alt="Yeni Movie"
             width={320}
             height={320}
             decoding="async"
@@ -128,7 +120,6 @@ export function SplashScreen() {
           />
         )}
 
-        {/* Subtle progress line */}
         <div className="w-16 h-0.5 rounded-full bg-secondary overflow-hidden">
           <div
             className={
@@ -146,7 +137,7 @@ export function SplashScreen() {
         </div>
       </div>
 
-      <span className="sr-only">Loading YENI MOVIE</span>
+      <span className="sr-only">Loading Yeni Movie</span>
 
       <style>{`
         @keyframes splash-progress {
