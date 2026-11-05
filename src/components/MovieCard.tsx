@@ -2,7 +2,6 @@ import { memo, useMemo } from 'react';
 import { Star, Play } from 'lucide-react';
 import type { Movie } from '@/types/tmdb';
 import { movieGenres, tvGenres } from '@/constants/genres';
-import { cn } from '@/lib/utils';
 
 interface MovieCardProps {
   movie: Movie;
@@ -41,9 +40,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
   };
 
   const year = getReleaseYear(movie.release_date);
-  const isTv = movie.media_type === 'tv';
-  const mediaLabel = isTv ? 'TV series' : 'Movie';
-  const rating = movie.vote_average > 0 ? movie.vote_average.toFixed(1) : null;
+  const mediaLabel = movie.media_type === 'tv' ? 'TV series' : 'Movie';
 
   const genreNames = useMemo(() => {
     if (!movie.genre_ids?.length) return [];
@@ -56,7 +53,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
   const ariaLabel = [
     movie.title,
     year || null,
-    rating ? `rated ${rating}` : null,
+    movie.vote_average > 0 ? `rated ${movie.vote_average.toFixed(1)}` : null,
     mediaLabel,
   ]
     .filter(Boolean)
@@ -67,20 +64,16 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
       type="button"
       onClick={handleCardClick}
       aria-label={ariaLabel}
-      className={cn(
-        'group relative w-full text-left focus-ring pressable',
-        'rounded-2xl overflow-hidden',
-        'ring-1 ring-border/40 dark:ring-white/10',
-        'bg-card shadow-[0_8px_24px_-6px_rgba(0,0,0,0.25)]',
-        'transition-all duration-300 ease-out',
-        'hover:scale-[1.04] hover:z-10 hover:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.4)]',
-        'hover:ring-primary/30',
-        'active:scale-[0.98]',
-        className,
-      )}
+      className={`group relative rounded-2xl overflow-hidden bg-card text-left focus-ring pressable transition-all duration-300 ease-out hover:scale-[1.03] hover:z-10 ${className || 'w-full'}`}
+      style={{ boxShadow: 'var(--card-shadow)' }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow-hover)';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow)';
+      }}
     >
-      {/* Full-bleed poster */}
-      <div className="relative aspect-[2/3] overflow-hidden bg-secondary">
+      <div className="card-poster-host relative aspect-[2/3] overflow-hidden">
         <img
           src={posterUrl}
           srcSet={posterSrcSet}
@@ -91,80 +84,56 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
           width={342}
           height={513}
           className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/placeholder.svg';
-          }}
+          onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
         />
 
-        {/* Always-on bottom gradient for title readability */}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black via-black/70 to-transparent"
-          aria-hidden="true"
-        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:transition-none" aria-hidden="true" />
 
-        {/* Soft top vignette */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent"
-          aria-hidden="true"
-        />
-
-        {/* Hover play affordance */}
-        <div
-          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:transition-none"
-          aria-hidden="true"
-        >
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary flex items-center justify-center shadow-xl shadow-primary/40 ring-2 ring-white/25 scale-90 group-hover:scale-100 transition-transform duration-300">
-            <Play className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground fill-primary-foreground ml-0.5" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 motion-reduce:translate-y-0" aria-hidden="true">
+          <div className="w-12 h-12 rounded-full bg-primary/95 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-white/20">
+            <Play className="h-5 w-5 text-primary-foreground fill-primary-foreground ml-0.5" />
           </div>
         </div>
 
-        {/* Rating badge */}
-        {rating && (
-          <div
-            className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-full bg-black/75 backdrop-blur-md px-2 py-1 border border-white/15 shadow-md"
-            aria-hidden="true"
-          >
-            <Star className="h-3 w-3 text-amber-400 fill-amber-400 drop-shadow" />
-            <span className="text-[11px] font-bold text-white tabular-nums tracking-tight">
-              {rating}
+        {movie.vote_average > 0 && (
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/70 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-sm" aria-hidden="true">
+            <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+            <span className="text-[11px] font-semibold text-white tabular-nums tracking-tight">
+              {movie.vote_average.toFixed(1)}
             </span>
           </div>
         )}
 
-        {/* Media type chip */}
-        {isTv && (
-          <div
-            className="absolute top-2.5 left-2.5 rounded-md bg-primary/90 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground shadow-sm"
-            aria-hidden="true"
-          >
-            Series
-          </div>
-        )}
-
-        {/* Title + meta on poster */}
-        <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3 space-y-1.5">
-          <h3 className="font-bold text-[13px] sm:text-sm leading-snug text-white line-clamp-2 drop-shadow-md tracking-tight">
+        <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:block" aria-hidden="true">
+          <p className="text-white text-xs font-medium line-clamp-2 drop-shadow-sm">
             {movie.title}
-          </h3>
+          </p>
+          {year && (
+            <p className="text-white/70 text-[11px] mt-0.5">{year}</p>
+          )}
+        </div>
+      </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {year && (
-              <span className="text-[11px] font-medium text-white/80 tabular-nums">{year}</span>
-            )}
-            {genreNames.length > 0 && year && (
-              <span className="text-white/35 text-[10px]" aria-hidden="true">
-                ·
-              </span>
-            )}
-            {genreNames.map((name) => (
-              <span
-                key={name}
-                className="inline-flex items-center rounded-full bg-white/15 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white/90 ring-1 ring-white/10 leading-none"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
+      <div className="p-2.5 md:p-3 space-y-1.5 sm:group-hover:opacity-0 sm:group-hover:h-0 sm:group-hover:p-0 sm:group-hover:overflow-hidden transition-all duration-300">
+        <h3 className="font-semibold text-sm md:text-[15px] leading-snug text-card-foreground line-clamp-2 min-h-[2.5rem]">
+          {movie.title}
+        </h3>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {year && (
+            <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{year}</span>
+          )}
+          {genreNames.length > 0 && year && (
+            <span className="text-muted-foreground/40 text-xs" aria-hidden="true">·</span>
+          )}
+          {genreNames.map((name) => (
+            <span
+              key={name}
+              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-secondary/90 text-muted-foreground border border-border/50 leading-none"
+            >
+              {name}
+            </span>
+          ))}
         </div>
       </div>
     </button>
