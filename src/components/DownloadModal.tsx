@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Download, ExternalLink, AlertCircle, Search, Zap } from 'lucide-react';
-import { getDownloadLinks, type DownloadResult } from '@/api/downloadService';
+import { getDownloadLinks, type DownloadResult, type DownloadFile } from '@/api/downloadService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAdFreeStatus } from '@/hooks/useAdFreeStatus';
@@ -18,9 +18,21 @@ interface DownloadModalProps {
   title: string;
   contentType?: 'movie' | 'tv';
   imdbId?: string;
+  year?: string;
 }
 
-const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', imdbId }: DownloadModalProps) => {
+const isTelegramUrl = (link: string) =>
+  /^https?:\/\/(?:t\.me|telegram\.dog|telegram\.me)\//i.test(link);
+
+const DownloadModal = ({
+  open,
+  onClose,
+  tmdbId,
+  title,
+  contentType = 'movie',
+  imdbId,
+  year,
+}: DownloadModalProps) => {
   const [downloadData, setDownloadData] = useState<DownloadResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,19 +69,18 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
       fetchDownloadData();
       setSearchTerm('');
     }
-  }, [open, tmdbId, contentType, imdbId, title]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, tmdbId, contentType, imdbId, title, year]);
 
   const fetchDownloadData = async () => {
     setLoading(true);
     try {
-      const result = await getDownloadLinks(tmdbId, contentType, title, imdbId);
+      const result = await getDownloadLinks(tmdbId, contentType, title, imdbId, year);
       setDownloadData(result);
 
-      if (result.type === 'movie' && result.categories) {
-        const availableQualities = getAvailableQualities(result.categories);
-        if (availableQualities.length > 0) {
-          setActiveTab(availableQualities[0]);
-        }
+      if (result.type === 'movie') {
+        const qualities = getAvailableQualities(result);
+        if (qualities.length > 0) setActiveTab(qualities[0]);
       }
     } catch (error) {
       console.error('Error fetching download links:', error);
@@ -78,23 +89,40 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
         type: contentType,
         categories: contentType === 'movie' ? {} : undefined,
         downloadLinks: contentType === 'tv' ? [] : undefined,
-        error: 'Failed to fetch download links'
+        error: 'Failed to fetch download links',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const getAvailableQualities = (categories: { [key: string]: string[] }) => {
-    const preferredOrder = ['480p', '720p', '1080p', '1440p', '2160p'];
-    return Object.entries(categories)
+  const preferredOrder = ['2160p', '1440p', '1080p', '720p', '480p', '360p'];
+
+  const getAvailableQualities = (result: DownloadResult) => {
+    if (result.filesByQuality) {
+      return Object.entries(result.filesByQuality)
+        .filter(([, files]) => files && files.length > 0)
+        .sort(([a], [b]) => {
+          const ia = preferredOrder.indexOf(a);
+          const ib = preferredOrder.indexOf(b);
+          if (ia === -1 && ib === -1) return a.localeCompare(b);
+          if (ia === -1) return 1;
+          if (ib === -1) return -1;
+          return ia - ib;
+        })
+        .map(([q]) => q);
+    }
+
+    if (!result.categories) return [];
+    return Object.entries(result.categories)
       .filter(([_, links]) => {
         if (!links || !Array.isArray(links)) return false;
-        return links.some(link =>
-          link !== 'No links available' &&
-          link !== 'No message_id found' &&
-          link !== 'API Error - Please try again' &&
-          link.startsWith('https://telegram.dog/Phonofilmbot?start=')
+        return links.some(
+          (link) =>
+            link !== 'No links available' &&
+            link !== 'No message_id found' &&
+            link !== 'API Error - Please try again' &&
+            isTelegramUrl(link),
         );
       })
       .sort(([a], [b]) => {
@@ -108,54 +136,66 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
       .map(([category]) => category);
   };
 
-  const getValidLinks = (links: string[]) => {
-    return links.filter(link =>
-      link !== 'No links available' &&
-      link !== 'No message_id found' &&
-      link !== 'API Error - Please try again' &&
-      link.startsWith('https://telegram.dog/Phonofilmbot?start=')
-    );
-  };
-
-  const generateFileInfo = (quality: string, index: number) => {
-    const formats = ['WEBRip', 'BluRay', 'WEB-DL', 'HDTV'];
-    const codecs = ['x264', 'x265', 'HEVC'];
-    const groups = ['RARBG', 'YTS', 'ETRG', 'FGT'];
-    const sizes: Record<string, string[]> = {
-      '480p': ['650 MB', '800 MB', '950 MB'],
-      '720p': ['1.2 GB', '1.5 GB', '1.8 GB'],
-      '1080p': ['2.1 GB', '2.8 GB', '3.2 GB'],
-      '1440p': ['4.5 GB', '5.2 GB', '6.1 GB'],
-      '2160p': ['8.2 GB', '12.5 GB', '15.8 GB']
-    };
-
-    const format = formats[index % formats.length];
-    const codec = codecs[index % codecs.length];
-    const group = groups[index % groups.length];
-    const sizeOptions = sizes[quality] || sizes['720p'];
-    const size = sizeOptions[index % sizeOptions.length];
-
-    return {
-      name: `${title} ${quality} ${format} ${codec} [${group}]`,
-      size,
-      format: `${format} ${codec}`
-    };
-  };
-
   const handleLinkClick = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const renderMovieDownloads = () => {
-    if (!downloadData?.categories) return null;
+  const renderFileRow = (file: DownloadFile, index: number) => (
+    <div
+      key={`${file.url}-${index}`}
+      className="flex items-center justify-between gap-3 p-3.5 border border-border/50 rounded-2xl bg-card/50 hover:bg-accent/40 transition-colors"
+    >
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm truncate" title={file.name}>
+          {file.name}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-1.5">
+          <span>{file.format}</span>
+          {file.language && file.language !== 'English' && (
+            <>
+              <span className="text-muted-foreground/40">·</span>
+              <span>{file.language}</span>
+            </>
+          )}
+          {file.isHdr && (
+            <>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="text-amber-500 font-medium">HDR</span>
+            </>
+          )}
+        </p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        {file.size && (
+          <span className="text-xs text-muted-foreground font-medium tabular-nums hidden sm:inline">
+            {file.size}
+          </span>
+        )}
+        {renderFastDownloadButton(file.url, file.name)}
+        <Button
+          onClick={() => handleLinkClick(file.url)}
+          size="sm"
+          className="rounded-full h-9 gap-1.5 shadow-sm shadow-primary/20"
+        >
+          <Download className="h-4 w-4" />
+          {isMobile && <span>Download</span>}
+        </Button>
+      </div>
+    </div>
+  );
 
-    const availableQualities = getAvailableQualities(downloadData.categories);
+  const renderMovieDownloads = () => {
+    if (!downloadData) return null;
+
+    const availableQualities = getAvailableQualities(downloadData);
 
     if (availableQualities.length === 0) {
       return (
         <Alert className="rounded-2xl">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>No download links available for this content.</AlertDescription>
+          <AlertDescription>
+            {downloadData.error || 'No download links available for this content.'}
+          </AlertDescription>
         </Alert>
       );
     }
@@ -164,8 +204,10 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
       <div className="space-y-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full h-auto flex flex-wrap gap-1 p-1 rounded-2xl bg-secondary/50 mb-4">
-            {availableQualities.map(quality => {
-              const validLinks = getValidLinks(downloadData.categories![quality] || []);
+            {availableQualities.map((quality) => {
+              const count =
+                downloadData.filesByQuality?.[quality]?.length ??
+                (downloadData.categories?.[quality] || []).filter(isTelegramUrl).length;
               return (
                 <TabsTrigger
                   key={quality}
@@ -173,8 +215,11 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                   className="rounded-xl flex-1 min-w-[4.5rem] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
                 >
                   {quality}
-                  <Badge variant="secondary" className="ml-1.5 text-[10px] h-5 px-1.5 rounded-full bg-background/60">
-                    {validLinks.length}
+                  <Badge
+                    variant="secondary"
+                    className="ml-1.5 text-[10px] h-5 px-1.5 rounded-full bg-background/60"
+                  >
+                    {count}
                   </Badge>
                 </TabsTrigger>
               );
@@ -184,57 +229,75 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
           <div className="relative mb-4">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search files (e.g. BluRay, WEB-DL)"
+              placeholder="Search files (e.g. BluRay, WEB-DL, Pahe)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 h-10 rounded-full bg-secondary/40 border-border/50"
             />
           </div>
 
-          {availableQualities.map(quality => {
-            const validLinks = getValidLinks(downloadData.categories![quality] || []);
+          {availableQualities.map((quality) => {
+            const richFiles = downloadData.filesByQuality?.[quality] || [];
+            const term = searchTerm.trim().toLowerCase();
 
+            if (richFiles.length > 0) {
+              const filtered = term
+                ? richFiles.filter(
+                    (f) =>
+                      f.name.toLowerCase().includes(term) ||
+                      f.format.toLowerCase().includes(term) ||
+                      f.language.toLowerCase().includes(term),
+                  )
+                : richFiles;
+
+              return (
+                <TabsContent key={quality} value={quality} className="space-y-2 mt-0">
+                  {filtered.length === 0 ? (
+                    <Alert className="rounded-2xl">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>No files match “{searchTerm}”.</AlertDescription>
+                    </Alert>
+                  ) : (
+                    filtered.map((file, index) => renderFileRow(file, index))
+                  )}
+                </TabsContent>
+              );
+            }
+
+            // Legacy URL-only fallback
+            const links = (downloadData.categories?.[quality] || []).filter(isTelegramUrl);
             return (
               <TabsContent key={quality} value={quality} className="space-y-2 mt-0">
-                {validLinks.length === 0 ? (
+                {links.length === 0 ? (
                   <Alert className="rounded-2xl">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>No download links available for {quality}.</AlertDescription>
                   </Alert>
                 ) : (
-                  validLinks
-                    .map((link, index) => {
-                      const fileInfo = generateFileInfo(quality, index);
-                      return { ...fileInfo, link, index };
-                    })
-                    .filter(item =>
-                      searchTerm === '' ||
-                      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      item.format.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map(({ name, size, format, link, index }) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between gap-3 p-3.5 border border-border/50 rounded-2xl bg-card/50 hover:bg-accent/40 transition-colors"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{name}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{format}</p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs text-muted-foreground font-medium tabular-nums hidden sm:inline">{size}</span>
-                          {renderFastDownloadButton(link, name)}
-                          <Button
-                            onClick={() => handleLinkClick(link)}
-                            size="sm"
-                            className="rounded-full h-9 gap-1.5 shadow-sm shadow-primary/20"
-                          >
-                            <Download className="h-4 w-4" />
-                            {isMobile && <span>Download</span>}
-                          </Button>
-                        </div>
+                  links.map((link, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between gap-3 p-3.5 border border-border/50 rounded-2xl bg-card/50 hover:bg-accent/40 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {title} {quality}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Telegram</p>
                       </div>
-                    ))
+                      <div className="flex items-center gap-2 shrink-0">
+                        {renderFastDownloadButton(link, `${title} ${quality}`)}
+                        <Button
+                          onClick={() => handleLinkClick(link)}
+                          size="sm"
+                          className="rounded-full h-9 gap-1.5 shadow-sm shadow-primary/20"
+                        >
+                          <Download className="h-4 w-4" />
+                          {isMobile && <span>Download</span>}
+                        </Button>
+                      </div>
+                    </div>
+                  ))
                 )}
               </TabsContent>
             );
@@ -259,9 +322,7 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-1">
-          <h4 className="font-semibold text-sm tracking-tight">
-            Series download links
-          </h4>
+          <h4 className="font-semibold text-sm tracking-tight">Series download links</h4>
           <Badge variant="secondary" className="text-[10px] rounded-full">
             {downloadData.downloadLinks.length}
           </Badge>
@@ -270,7 +331,8 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
         {isMobile && (
           <Alert className="rounded-2xl border-border/50 bg-secondary/30">
             <AlertDescription className="text-sm text-muted-foreground">
-              Tap Download to open Telegram and access the series files. Telegram app is required for standard downloads.
+              Tap Download to open Telegram and access the series files. Telegram app is required for
+              standard downloads.
             </AlertDescription>
           </Alert>
         )}
@@ -333,7 +395,10 @@ const DownloadModal = ({ open, onClose, tmdbId, title, contentType = 'movie', im
                 {contentType === 'tv' ? 'Fetching series information…' : 'Fetching download links…'}
               </span>
             </div>
-          ) : downloadData?.error && (!downloadData.downloadLinks || downloadData.downloadLinks.length === 0) ? (
+          ) : downloadData?.error &&
+            (!downloadData.downloadLinks || downloadData.downloadLinks.length === 0) &&
+            (!downloadData.filesByQuality ||
+              Object.values(downloadData.filesByQuality).every((a) => !a?.length)) ? (
             <Alert variant="destructive" className="rounded-2xl">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{downloadData.error}</AlertDescription>
