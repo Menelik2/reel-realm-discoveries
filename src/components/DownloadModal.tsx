@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Download, ExternalLink, AlertCircle, Search, Zap } from 'lucide-react';
+import { Loader2, Download, ExternalLink, AlertCircle, Search, Zap, RefreshCw } from 'lucide-react';
 import { getDownloadLinks, type DownloadResult, type DownloadFile } from '@/api/downloadService';
+import { isCorsOrNetworkError, userFacingFetchError } from '@/utils/networkErrors';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAdFreeStatus } from '@/hooks/useAdFreeStatus';
@@ -84,12 +85,19 @@ const DownloadModal = ({
       }
     } catch (error) {
       console.error('Error fetching download links:', error);
+      const cors = isCorsOrNetworkError(error);
       setDownloadData({
         tmdbId,
         type: contentType,
         categories: contentType === 'movie' ? {} : undefined,
         downloadLinks: contentType === 'tv' ? [] : undefined,
-        error: 'Failed to fetch download links',
+        error: userFacingFetchError(
+          error,
+          cors
+            ? 'Browser blocked this request (CORS/network). Tap retry.'
+            : 'Failed to fetch download links',
+        ),
+        corsIssue: cors,
       });
     } finally {
       setLoading(false);
@@ -139,6 +147,25 @@ const DownloadModal = ({
   const handleLinkClick = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
+
+  const renderErrorState = (message: string, corsIssue?: boolean) => (
+    <div className="space-y-3">
+      <Alert variant="destructive" className="rounded-2xl">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{message}</AlertDescription>
+      </Alert>
+      {corsIssue && (
+        <p className="text-xs text-muted-foreground px-1">
+          Cross-origin requests to download hosts are blocked in the browser. The app tries a server
+          proxy first — retry often works once the proxy is available.
+        </p>
+      )}
+      <Button onClick={fetchDownloadData} variant="secondary" className="rounded-full gap-2">
+        <RefreshCw className="h-4 w-4" />
+        Retry
+      </Button>
+    </div>
+  );
 
   const renderFileRow = (file: DownloadFile, index: number) => (
     <div
@@ -190,13 +217,9 @@ const DownloadModal = ({
     const availableQualities = getAvailableQualities(downloadData);
 
     if (availableQualities.length === 0) {
-      return (
-        <Alert className="rounded-2xl">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {downloadData.error || 'No download links available for this content.'}
-          </AlertDescription>
-        </Alert>
+      return renderErrorState(
+        downloadData.error || 'No download links available for this content.',
+        downloadData.corsIssue,
       );
     }
 
@@ -264,7 +287,6 @@ const DownloadModal = ({
               );
             }
 
-            // Legacy URL-only fallback
             const links = (downloadData.categories?.[quality] || []).filter(isTelegramUrl);
             return (
               <TabsContent key={quality} value={quality} className="space-y-2 mt-0">
@@ -309,13 +331,9 @@ const DownloadModal = ({
 
   const renderTVDownloads = () => {
     if (!downloadData?.downloadLinks || downloadData.downloadLinks.length === 0) {
-      return (
-        <Alert className="rounded-2xl">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {downloadData?.error || 'No download links available for this TV series.'}
-          </AlertDescription>
-        </Alert>
+      return renderErrorState(
+        downloadData?.error || 'No download links available for this TV series.',
+        downloadData?.corsIssue,
       );
     }
 
@@ -375,6 +393,12 @@ const DownloadModal = ({
     );
   };
 
+  const showHardError =
+    !!downloadData?.error &&
+    (!downloadData.downloadLinks || downloadData.downloadLinks.length === 0) &&
+    (!downloadData.filesByQuality ||
+      Object.values(downloadData.filesByQuality).every((a) => !a?.length));
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col rounded-2xl border-border/50 p-0 gap-0">
@@ -395,14 +419,8 @@ const DownloadModal = ({
                 {contentType === 'tv' ? 'Fetching series information…' : 'Fetching download links…'}
               </span>
             </div>
-          ) : downloadData?.error &&
-            (!downloadData.downloadLinks || downloadData.downloadLinks.length === 0) &&
-            (!downloadData.filesByQuality ||
-              Object.values(downloadData.filesByQuality).every((a) => !a?.length)) ? (
-            <Alert variant="destructive" className="rounded-2xl">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{downloadData.error}</AlertDescription>
-            </Alert>
+          ) : showHardError ? (
+            renderErrorState(downloadData!.error!, downloadData!.corsIssue)
           ) : contentType === 'tv' ? (
             renderTVDownloads()
           ) : (
