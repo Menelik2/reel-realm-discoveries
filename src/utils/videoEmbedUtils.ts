@@ -1,3 +1,16 @@
+export interface EmbedSource {
+  name: string;
+  url: string;
+}
+
+/** Working VidSrc-style mirrors (ordered by preference). */
+export const EMBED_SOURCES: EmbedSource[] = [
+  { name: 'VidSrc', url: 'https://vidsrc.sh' },
+  { name: 'Buzz', url: 'https://vidsrc.buzz' },
+  { name: 'Party', url: 'https://vidsrc.party' },
+  { name: 'VidSrc TW', url: 'https://vidsrc.tw' },
+];
+
 interface EmbedUrlParams {
   tmdbId?: number;
   imdbId?: string;
@@ -11,10 +24,34 @@ interface EmbedUrlParams {
   source?: string;
 }
 
+const DEFAULT_SOURCE = EMBED_SOURCES[0].url;
+
+function mediaId({ tmdbId, imdbId }: { tmdbId?: number; imdbId?: string }): string | null {
+  if (tmdbId != null && Number.isFinite(tmdbId)) return String(tmdbId);
+  if (imdbId) return imdbId;
+  return null;
+}
+
+function withQuery(
+  base: string,
+  params: Record<string, string | undefined>,
+): string {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v != null && v !== '') qs.set(k, v);
+  }
+  const s = qs.toString();
+  return s ? `${base}?${s}` : base;
+}
+
+/**
+ * Build a VidSrc-family embed URL.
+ * Path style: /embed/movie/{id} and /embed/tv/{id}/{season}/{episode}
+ */
 export function getEmbedUrl({
   tmdbId,
   imdbId,
-  type = "movie",
+  type = 'movie',
   season,
   episode,
   dsLang,
@@ -23,201 +60,36 @@ export function getEmbedUrl({
   autoNext,
   source,
 }: EmbedUrlParams): string | null {
-  const baseUrl = source || "https://vidsrc.tw";
-  const isPathStyle = baseUrl.includes("vidsrc.sbs") || baseUrl.includes("vidsrc.tw") || baseUrl.includes("vidsrc.xyz");
+  const baseUrl = (source || DEFAULT_SOURCE).replace(/\/$/, '');
+  const id = mediaId({ tmdbId, imdbId });
+  if (!id) return null;
 
-  // MOVIE
-  if (type === "movie") {
-    if (isPathStyle) {
-      // path-style structure (vidsrc.tw / vidsrc.sbs / vidsrc.xyz)
-      if (tmdbId) {
-        if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
-          return `${baseUrl}/embed/movie/${tmdbId}`;
-        } else {
-          const params = new URLSearchParams({ tmdb: String(tmdbId) });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined") params.append("autoplay", String(autoPlay));
-          return `${baseUrl}/embed/movie?${params.toString()}`;
-        }
-      }
-      if (imdbId) {
-        if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
-          return `${baseUrl}/embed/movie/${imdbId}`;
-        } else {
-          const params = new URLSearchParams({ imdb: imdbId });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined") params.append("autoplay", String(autoPlay));
-          return `${baseUrl}/embed/movie?${params.toString()}`;
-        }
-      }
-    } else {
-      // vidsrc.net structure
-      if (tmdbId) {
-        if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
-          return `${baseUrl}/embed/movie/${tmdbId}`;
-        } else {
-          const params = new URLSearchParams({ tmdb: String(tmdbId) });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined") params.append("autoplay", String(autoPlay));
-          return `${baseUrl}/embed/movie?${params.toString()}`;
-        }
-      }
-      if (imdbId) {
-        if (!dsLang && !subUrl && typeof autoPlay === "undefined") {
-          return `${baseUrl}/embed/movie/${imdbId}`;
-        } else {
-          const params = new URLSearchParams({ imdb: imdbId });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined") params.append("autoplay", String(autoPlay));
-          return `${baseUrl}/embed/movie?${params.toString()}`;
-        }
-      }
-    }
-    return null;
+  const extra = {
+    ds_lang: dsLang,
+    sub_url: subUrl,
+    autoplay: typeof autoPlay !== 'undefined' ? String(autoPlay) : undefined,
+    autonext: typeof autoNext !== 'undefined' ? String(autoNext) : undefined,
+  };
+  const hasExtra = Object.values(extra).some((v) => v != null && v !== '');
+
+  if (type === 'movie') {
+    if (!hasExtra) return `${baseUrl}/embed/movie/${id}`;
+    return withQuery(`${baseUrl}/embed/movie`, {
+      ...(tmdbId != null ? { tmdb: String(tmdbId) } : { imdb: imdbId }),
+      ...extra,
+    });
   }
 
-  // TV SHOW - default to season 1, episode 1
-  if (type === "tv" && !season && !episode) {
-    if (isPathStyle) {
-      // path-style structure: /embed/tv/{id}/1/1
-      if (tmdbId) {
-        if (!dsLang) {
-          return `${baseUrl}/embed/tv/${tmdbId}/1/1`;
-        } else {
-          const params = new URLSearchParams({ tmdb: String(tmdbId), season: "1", episode: "1" });
-          params.append("ds_lang", dsLang);
-          return `${baseUrl}/embed/tv?${params.toString()}`;
-        }
-      }
-      if (imdbId) {
-        if (!dsLang) {
-          return `${baseUrl}/embed/tv/${imdbId}/1/1`;
-        } else {
-          const params = new URLSearchParams({ imdb: imdbId, season: "1", episode: "1" });
-          params.append("ds_lang", dsLang);
-          return `${baseUrl}/embed/tv?${params.toString()}`;
-        }
-      }
-    } else {
-      // vidsrc.net structure
-      if (tmdbId) {
-        if (!dsLang) {
-          return `${baseUrl}/embed/tv/${tmdbId}/1/1`;
-        } else {
-          const params = new URLSearchParams({ tmdb: String(tmdbId), season: "1", episode: "1" });
-          params.append("ds_lang", dsLang);
-          return `${baseUrl}/embed/tv?${params.toString()}`;
-        }
-      }
-      if (imdbId) {
-        if (!dsLang) {
-          return `${baseUrl}/embed/tv/${imdbId}/1/1`;
-        } else {
-          const params = new URLSearchParams({ imdb: imdbId, season: "1", episode: "1" });
-          params.append("ds_lang", dsLang);
-          return `${baseUrl}/embed/tv?${params.toString()}`;
-        }
-      }
-    }
-    return null;
-  }
+  // TV
+  const s = season && season > 0 ? season : 1;
+  const e = episode && episode > 0 ? episode : 1;
 
-  // TV SHOW with specific season/episode
-  if (type === "tv" && season && episode) {
-    if (isPathStyle) {
-      // path-style structure: /embed/tv/{id}/{season}/{episode}
-      if (tmdbId) {
-        if (
-          !dsLang &&
-          !subUrl &&
-          typeof autoPlay === "undefined" &&
-          typeof autoNext === "undefined"
-        ) {
-          return `${baseUrl}/embed/tv/${tmdbId}/${season}/${episode}`;
-        } else {
-          const params = new URLSearchParams({
-            tmdb: String(tmdbId),
-            season: String(season),
-            episode: String(episode),
-          });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined") params.append("autoplay", String(autoPlay));
-          if (typeof autoNext !== "undefined") params.append("autonext", String(autoNext));
-          return `${baseUrl}/embed/tv?${params.toString()}`;
-        }
-      }
-      if (imdbId) {
-        if (
-          !dsLang &&
-          !subUrl &&
-          typeof autoPlay === "undefined" &&
-          typeof autoNext === "undefined"
-        ) {
-          return `${baseUrl}/embed/tv/${imdbId}/${season}/${episode}`;
-        } else {
-          const params = new URLSearchParams({
-            imdb: imdbId,
-            season: String(season),
-            episode: String(episode),
-          });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined") params.append("autoplay", String(autoPlay));
-          if (typeof autoNext !== "undefined") params.append("autonext", String(autoNext));
-          return `${baseUrl}/embed/tv?${params.toString()}`;
-        }
-      }
-    } else {
-      // vidsrc.net structure  
-      if (tmdbId) {
-        if (
-          !dsLang &&
-          !subUrl &&
-          typeof autoPlay === "undefined" &&
-          typeof autoNext === "undefined"
-        ) {
-          return `${baseUrl}/embed/tv/${tmdbId}/${season}/${episode}`;
-        } else {
-          const params = new URLSearchParams({
-            tmdb: String(tmdbId),
-            season: String(season),
-            episode: String(episode),
-          });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined") params.append("autoplay", String(autoPlay));
-          if (typeof autoNext !== "undefined") params.append("autonext", String(autoNext));
-          return `${baseUrl}/embed/tv?${params.toString()}`;
-        }
-      }
-      if (imdbId) {
-        if (
-          !dsLang &&
-          !subUrl &&
-          typeof autoPlay === "undefined" &&
-          typeof autoNext === "undefined"
-        ) {
-          return `${baseUrl}/embed/tv/${imdbId}/${season}/${episode}`;
-        } else {
-          const params = new URLSearchParams({
-            imdb: imdbId,
-            season: String(season),
-            episode: String(episode),
-          });
-          if (dsLang) params.append("ds_lang", dsLang);
-          if (subUrl) params.append("sub_url", subUrl);
-          if (typeof autoPlay !== "undefined") params.append("autoplay", String(autoPlay));
-          if (typeof autoNext !== "undefined") params.append("autonext", String(autoNext));
-          return `${baseUrl}/embed/tv?${params.toString()}`;
-        }
-      }
-    }
-    return null;
-  }
-  return null;
+  if (!hasExtra) return `${baseUrl}/embed/tv/${id}/${s}/${e}`;
+
+  return withQuery(`${baseUrl}/embed/tv`, {
+    ...(tmdbId != null ? { tmdb: String(tmdbId) } : { imdb: imdbId }),
+    season: String(s),
+    episode: String(e),
+    ...extra,
+  });
 }
