@@ -1,3 +1,10 @@
+import {
+  isCorsOrNetworkError,
+  isTimeoutError,
+  safeFetch,
+  userFacingFetchError,
+} from '@/utils/networkErrors';
+
 export interface SeriesDownloadLink {
   label: string;
   url: string;
@@ -31,6 +38,8 @@ export interface DownloadResult {
   downloadLinks?: SeriesDownloadLink[];
   contentId?: number;
   error?: string;
+  /** True when a browser CORS/network block was detected and recovered or blocked the request. */
+  corsIssue?: boolean;
 }
 
 const TELEGRAM_BOT_BASE = 'https://t.me/phonofilmbot?start=';
@@ -71,6 +80,10 @@ const readCache = (key: string): DownloadResult | null => {
 };
 
 const writeCache = (key: string, value: DownloadResult) => {
+  // Don't cache hard network failures — allow quick retry
+  if (value.corsIssue && !hasFiles(value) && !(value.downloadLinks && value.downloadLinks.length)) {
+    return;
+  }
   const entry = { at: Date.now(), value };
   memoryCache.set(key, entry);
   try {
@@ -122,7 +135,7 @@ const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): 
   }
 };
 
-/** Fast path: Supabase edge does search + /content/{id}/files server-side (no CORS). */
+/** Fast path: Supabase edge does search + files server-side (avoids browser CORS to phono.cc). */
 const fetchViaEdge = async (
   tmdbId: string,
   title?: string,
@@ -135,10 +148,19 @@ const fetchViaEdge = async (
   if (imdbId) params.set('imdbId', imdbId);
   if (year) params.set('year', year);
 
-  const res = await fetch(`${SUPABASE_FUNCTIONS}/phono-download?${params.toString()}`, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
+  let res: Response;
+  try {
+    res = await safeFetch(`${SUPABASE_FUNCTIONS}/phono-download?${params.toString()}`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+  } catch (error) {
+    if (isCorsOrNetworkError(error) || String(error).includes('CORS_OR_NETWORK')) {
+      throw new Error('CORS_OR_NETWORK: edge function unreachable from browser');
+    }
+    throw error;
+  }
+
   if (!res.ok) throw new Error(`phono-download edge ${res.status}`);
   const json = await res.json();
   if (!json?.success || !json.data) throw new Error(json?.message || 'edge failed');
@@ -155,10 +177,22 @@ const fetchViaEdge = async (
 
 /** CORS-friendly single-request fallback (tmdb_id only). */
 const fetchViaT4tsa = async (tmdbId: string): Promise<DownloadResult> => {
-  const res = await fetch(`https://api.t4tsa.cc/get-movie/?tmdb_id=${encodeURIComponent(tmdbId)}`, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
+  let res: Response;
+  try {
+    res = await safeFetch(
+      `https://api.t4tsa.cc/get-movie/?tmdb_id=${encodeURIComponent(tmdbId)}`,
+      {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      },
+    );
+  } catch (error) {
+    if (isCorsOrNetworkError(error) || String(error).includes('CORS_OR_NETWORK')) {
+      throw new Error('CORS_OR_NETWORK: t4tsa blocked by browser');
+    }
+    throw error;
+  }
+
   if (!res.ok) throw new Error(`t4tsa ${res.status}`);
   const data = await res.json();
 
@@ -172,9 +206,7 @@ const fetchViaT4tsa = async (tmdbId: string): Promise<DownloadResult> => {
       if (messageId == null) continue;
       const url = `${TELEGRAM_BOT_BASE}${messageId}`;
       const name =
-        typeof row.file_name === 'string'
-          ? row.file_name
-          : `Download ${quality}`;
+        typeof row.file_name === 'string' ? row.file_name : `Download ${quality}`;
       const sizeBytes = Number(row.file_size || row.file_size_bytes || 0);
       const file: DownloadFile = {
         name,
@@ -212,11 +244,33 @@ const hasFiles = (r: DownloadResult | null | undefined) =>
   !!r.filesByQuality &&
   Object.values(r.filesByQuality).some((arr) => arr && arr.length > 0);
 
+const classifyCaught = (error: unknown): { corsIssue: boolean; message: string } => {
+  const raw = error instanceof Error ? error.message : String(error);
+  const corsIssue =
+    isCorsOrNetworkError(error) ||
+    raw.includes('CORS_OR_NETWORK') ||
+    raw.toLowerCase().includes('cors');
+  if (corsIssue) {
+    return {
+      corsIssue: true,
+      message:
+        'Browser blocked a cross-origin request. We use a server proxy when available — try again in a moment.',
+    };
+  }
+  if (isTimeoutError(error)) {
+    return {
+      corsIssue: false,
+      message: 'Request timed out. Check your connection and try again.',
+    };
+  }
+  return {
+    corsIssue: false,
+    message: userFacingFetchError(error, 'Failed to fetch download links'),
+  };
+};
+
 /**
- * Movie downloads — optimized:
- * 1) session/memory cache (instant on re-open)
- * 2) race edge phono-download vs t4tsa (first useful wins)
- * 3) never use AllOrigins (was ~20s failures)
+ * Movie downloads — edge-first (no browser→phono CORS), t4tsa fallback, explicit CORS handling.
  */
 export const fetchMovieDownloadLinks = async (
   tmdbId: string,
@@ -226,9 +280,11 @@ export const fetchMovieDownloadLinks = async (
 ): Promise<DownloadResult> => {
   const key = cacheKey(tmdbId, 'movie', title, imdbId, year);
   const cached = readCache(key);
-  if (cached && (hasFiles(cached) || cached.error)) {
+  if (cached && (hasFiles(cached) || (cached.error && !cached.corsIssue))) {
     return cached;
   }
+
+  let sawCors = false;
 
   try {
     const edgePromise = withTimeout(
@@ -236,24 +292,24 @@ export const fetchMovieDownloadLinks = async (
       EDGE_TIMEOUT_MS,
       'edge',
     ).catch((e) => {
-      console.warn('phono-download edge failed:', e);
+      const c = classifyCaught(e);
+      if (c.corsIssue) sawCors = true;
+      console.warn('phono-download edge failed:', c.message, e);
       return null;
     });
 
-    const t4tsaPromise = withTimeout(
-      fetchViaT4tsa(tmdbId),
-      T4TSA_TIMEOUT_MS,
-      't4tsa',
-    ).catch((e) => {
-      console.warn('t4tsa fallback failed:', e);
-      return null;
-    });
+    const t4tsaPromise = withTimeout(fetchViaT4tsa(tmdbId), T4TSA_TIMEOUT_MS, 't4tsa').catch(
+      (e) => {
+        const c = classifyCaught(e);
+        if (c.corsIssue) sawCors = true;
+        console.warn('t4tsa fallback failed:', c.message, e);
+        return null;
+      },
+    );
 
-    // Prefer edge as soon as it returns with files; otherwise take t4tsa.
     const edge = await edgePromise;
     if (hasFiles(edge)) {
       writeCache(key, edge!);
-      // Let t4tsa settle in background without blocking UI
       void t4tsaPromise;
       return edge!;
     }
@@ -264,7 +320,6 @@ export const fetchMovieDownloadLinks = async (
       return t4!;
     }
 
-    // Edge may have returned a soft error (no match) — surface that
     const result: DownloadResult =
       edge ||
       t4 || {
@@ -272,19 +327,32 @@ export const fetchMovieDownloadLinks = async (
         type: 'movie',
         categories: {},
         filesByQuality: {},
-        error: 'No download links available',
+        error: sawCors
+          ? 'Browser blocked download APIs (CORS/network). Please retry — server proxy may be warming up.'
+          : 'No download links available',
+        corsIssue: sawCors,
       };
+
+    if (sawCors && !result.corsIssue) {
+      result.corsIssue = true;
+      if (!result.error) {
+        result.error =
+          'Browser blocked a cross-origin request. Retry or wait for the server proxy.';
+      }
+    }
 
     writeCache(key, result);
     return result;
   } catch (error) {
     console.error('❌ Movie download error:', error);
+    const c = classifyCaught(error);
     return {
       tmdbId,
       type: 'movie',
       categories: {},
       filesByQuality: {},
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      error: c.message,
+      corsIssue: c.corsIssue,
     };
   }
 };
@@ -293,14 +361,23 @@ const fetchSeriesLinksDirect = async (imdbId: string): Promise<SeriesDownloadLin
   const formattedImdbId = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
   const directApiUrl = `https://api.t4tsa.cc/get-series/?imdb_id=${formattedImdbId}`;
 
-  const response = await withTimeout(
-    fetch(directApiUrl, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    }),
-    T4TSA_TIMEOUT_MS,
-    'series-api',
-  );
+  let response: Response;
+  try {
+    response = await withTimeout(
+      safeFetch(directApiUrl, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      }),
+      T4TSA_TIMEOUT_MS,
+      'series-api',
+    );
+  } catch (error) {
+    if (isCorsOrNetworkError(error) || String(error).includes('CORS_OR_NETWORK')) {
+      throw new Error('CORS_OR_NETWORK: series API blocked by browser');
+    }
+    throw error;
+  }
+
   if (!response.ok) throw new Error(`Series API status ${response.status}`);
   const data = await response.json();
   if (!data?.invite_link) return [];
@@ -318,12 +395,15 @@ const resolveSeriesImdbId = async (
   try {
     const TMDB_ACCESS_TOKEN =
       'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMTc3ZGU0OGNkNDQ5NDNlNjAyNDAzMzdiYWM4MDg3NyIsIm5iZiI6MTY3MjEyMTIxOS40NzksInN1YiI6IjYzYWE4YjgzN2VmMzgxMDA4MjM4ODkyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.sf2ZTREEsHrFWMtvGfms47vqB-WSRtaTXsnD1wHypZc';
-    const response = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}/external_ids`, {
-      headers: {
-        Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json;charset=utf-8',
+    const response = await safeFetch(
+      `https://api.themoviedb.org/3/tv/${tmdbId}/external_ids`,
+      {
+        headers: {
+          Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json;charset=utf-8',
+        },
       },
-    });
+    );
     if (!response.ok) return undefined;
     const externalIds = await response.json();
     return externalIds.imdb_id || undefined;
@@ -340,7 +420,11 @@ export const fetchSeriesDownloadLinks = async (
 ): Promise<DownloadResult> => {
   const key = cacheKey(tmdbId, 'tv', title, imdbId);
   const cached = readCache(key);
-  if (cached && ((cached.downloadLinks && cached.downloadLinks.length > 0) || cached.error)) {
+  if (
+    cached &&
+    ((cached.downloadLinks && cached.downloadLinks.length > 0) ||
+      (cached.error && !cached.corsIssue))
+  ) {
     return cached;
   }
 
@@ -366,8 +450,13 @@ export const fetchSeriesDownloadLinks = async (
         writeCache(key, result);
         return result;
       }
+
+      if (error) {
+        console.warn('fetch-series edge error:', error.message);
+      }
     } catch (edgeError) {
-      console.warn('Edge function series fetch failed, falling back:', edgeError);
+      const c = classifyCaught(edgeError);
+      console.warn('Edge function series fetch failed, falling back:', c.message);
     }
 
     const resolvedImdb = await resolveSeriesImdbId(tmdbId, imdbId);
@@ -395,11 +484,13 @@ export const fetchSeriesDownloadLinks = async (
     return result;
   } catch (error) {
     console.error('❌ Series download service error:', error);
+    const c = classifyCaught(error);
     return {
       tmdbId,
       type: 'tv',
       downloadLinks: [],
-      error: error instanceof Error ? error.message : 'Failed to fetch series download links',
+      error: c.message,
+      corsIssue: c.corsIssue,
     };
   }
 };
