@@ -1,4 +1,4 @@
-project_id = "khwwpvctzyurngshagke"
+project_id = "suxbqdcnidvdfmkrshem"
 
 [functions.create-payment-session]
 verify_jwt = true
@@ -28,4 +28,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.phono-franchise]
+verify_jwt = false
+
+[functions.phono-download]
 verify_jwt = false
