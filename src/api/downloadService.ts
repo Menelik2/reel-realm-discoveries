@@ -22,11 +22,9 @@ export interface DownloadFile {
 export interface DownloadResult {
   tmdbId: string;
   type: 'movie' | 'tv';
-  /** Quality → Telegram URL list (legacy shape for modal tabs). */
   categories?: {
     [key: string]: string[];
   };
-  /** Quality → rich file rows (preferred by DownloadModal). */
   filesByQuality?: {
     [quality: string]: DownloadFile[];
   };
@@ -35,8 +33,52 @@ export interface DownloadResult {
   error?: string;
 }
 
-const PHONO_API = 'https://phono.cc/svc/api';
 const TELEGRAM_BOT_BASE = 'https://t.me/phonofilmbot?start=';
+const SUPABASE_FUNCTIONS =
+  'https://suxbqdcnidvdfmkrshem.supabase.co/functions/v1';
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const EDGE_TIMEOUT_MS = 9000;
+const T4TSA_TIMEOUT_MS = 6000;
+
+const memoryCache = new Map<string, { at: number; value: DownloadResult }>();
+
+const cacheKey = (
+  tmdbId: string,
+  type: string,
+  title?: string,
+  imdbId?: string,
+  year?: string,
+) =>
+  `${type}:${tmdbId}:${(title || '').toLowerCase()}:${imdbId || ''}:${year || ''}`;
+
+const readCache = (key: string): DownloadResult | null => {
+  const mem = memoryCache.get(key);
+  if (mem && Date.now() - mem.at < CACHE_TTL_MS) return mem.value;
+
+  try {
+    const raw = sessionStorage.getItem(`dl-cache:${key}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { at: number; value: DownloadResult };
+    if (Date.now() - parsed.at > CACHE_TTL_MS) {
+      sessionStorage.removeItem(`dl-cache:${key}`);
+      return null;
+    }
+    memoryCache.set(key, parsed);
+    return parsed.value;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (key: string, value: DownloadResult) => {
+  const entry = { at: Date.now(), value };
+  memoryCache.set(key, entry);
+  try {
+    sessionStorage.setItem(`dl-cache:${key}`, JSON.stringify(entry));
+  } catch {
+    /* quota / private mode */
+  }
+};
 
 /** Extract every Telegram URL from invite_link text (supports multi-link lines with |). */
 export const parseSeriesInviteLinks = (inviteLink: string): SeriesDownloadLink[] => {
@@ -66,157 +108,115 @@ export const parseSeriesInviteLinks = (inviteLink: string): SeriesDownloadLink[]
   return links;
 };
 
-const formatBytes = (bytes?: number | null): string => {
-  if (!bytes || bytes <= 0) return '';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let n = bytes;
-  let i = 0;
-  while (n >= 1024 && i < units.length - 1) {
-    n /= 1024;
-    i++;
-  }
-  const digits = i === 0 ? 0 : i <= 2 ? 0 : 1;
-  return `${n.toFixed(digits)} ${units[i]}`;
-};
-
-/** Fetch JSON from phono.cc; falls back to AllOrigins when CORS blocks the browser. */
-const fetchPhonoJson = async <T,>(pathOrUrl: string): Promise<T> => {
-  const url = pathOrUrl.startsWith('http') ? pathOrUrl : `${PHONO_API}${pathOrUrl}`;
-
+const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) throw new Error(`Phono API ${res.status}`);
-    return (await res.json()) as T;
-  } catch (directErr) {
-    console.warn('Direct phono fetch failed, trying proxy:', directErr);
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const res = await fetch(proxyUrl, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) throw new Error(`Proxy ${res.status}`);
-    const body = await res.json();
-    if (!body?.contents) throw new Error('Empty proxy response');
-    return JSON.parse(body.contents) as T;
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 };
 
-interface PhonoSearchHit {
-  content_id: number;
-  content_type: string;
-  title: string;
-  release_date?: string | null;
-  imdb_id?: string | null;
-  alternative_titles?: string[];
-}
-
-interface PhonoSearchResponse {
-  results?: PhonoSearchHit[];
-  count?: number;
-}
-
-interface PhonoFileRow {
-  id?: number;
-  content_id?: number;
-  file_name?: string;
-  file_size_bytes?: number;
-  source?: string | null;
-  encoder_name?: string | null;
-  resolution_label?: string | null;
-  channel_id?: number | null;
-  message_id?: number | string | null;
-  is_hdr?: boolean;
-  download_url?: string | null;
-  languages?: string[];
-}
-
-/** language → resolution → files */
-type PhonoFilesResponse = Record<string, Record<string, PhonoFileRow[]>>;
-
-const normalizeTitle = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-const pickBestContent = (
-  hits: PhonoSearchHit[],
-  title: string,
-  year?: string,
+/** Fast path: Supabase edge does search + /content/{id}/files server-side (no CORS). */
+const fetchViaEdge = async (
+  tmdbId: string,
+  title?: string,
   imdbId?: string,
-): PhonoSearchHit | null => {
-  const movies = hits.filter((h) => (h.content_type || '').toUpperCase() === 'MOVIE');
-  const pool = movies.length > 0 ? movies : hits;
-  if (pool.length === 0) return null;
+  year?: string,
+): Promise<DownloadResult> => {
+  const params = new URLSearchParams();
+  if (tmdbId) params.set('tmdbId', tmdbId);
+  if (title) params.set('title', title);
+  if (imdbId) params.set('imdbId', imdbId);
+  if (year) params.set('year', year);
 
-  if (imdbId) {
-    const want = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
-    const byImdb = pool.find((h) => h.imdb_id === want);
-    if (byImdb) return byImdb;
-  }
+  const res = await fetch(`${SUPABASE_FUNCTIONS}/phono-download?${params.toString()}`, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) throw new Error(`phono-download edge ${res.status}`);
+  const json = await res.json();
+  if (!json?.success || !json.data) throw new Error(json?.message || 'edge failed');
 
-  const target = normalizeTitle(title);
-  let best: PhonoSearchHit | null = null;
-  let bestScore = -1;
+  return {
+    tmdbId,
+    type: 'movie',
+    categories: json.data.categories || {},
+    filesByQuality: json.data.filesByQuality || {},
+    contentId: json.data.contentId,
+    error: json.data.error,
+  };
+};
 
-  for (const hit of pool) {
-    const names = [hit.title, ...(hit.alternative_titles || [])].map(normalizeTitle);
-    let score = 0;
-    if (names.some((n) => n === target)) score += 100;
-    else if (names.some((n) => n.includes(target) || target.includes(n))) score += 40;
+/** CORS-friendly single-request fallback (tmdb_id only). */
+const fetchViaT4tsa = async (tmdbId: string): Promise<DownloadResult> => {
+  const res = await fetch(`https://api.t4tsa.cc/get-movie/?tmdb_id=${encodeURIComponent(tmdbId)}`, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) throw new Error(`t4tsa ${res.status}`);
+  const data = await res.json();
 
-    const hitYear = hit.release_date?.slice(0, 4);
-    if (year && hitYear) {
-      if (hitYear === year) score += 50;
-      else if (Math.abs(Number(hitYear) - Number(year)) <= 1) score += 15;
-      else score -= 20;
+  const categories: { [key: string]: string[] } = {};
+  const filesByQuality: { [key: string]: DownloadFile[] } = {};
+
+  for (const [quality, rows] of Object.entries(data || {})) {
+    if (quality === 'details' || !Array.isArray(rows)) continue;
+    for (const row of rows as Array<Record<string, unknown>>) {
+      const messageId = row.message_id ?? row.messageId;
+      if (messageId == null) continue;
+      const url = `${TELEGRAM_BOT_BASE}${messageId}`;
+      const name =
+        typeof row.file_name === 'string'
+          ? row.file_name
+          : `Download ${quality}`;
+      const sizeBytes = Number(row.file_size || row.file_size_bytes || 0);
+      const file: DownloadFile = {
+        name,
+        size: sizeBytes
+          ? sizeBytes >= 1e9
+            ? `${(sizeBytes / 1e9).toFixed(1)} GB`
+            : `${Math.round(sizeBytes / 1e6)} MB`
+          : '',
+        sizeBytes,
+        url,
+        format: quality,
+        quality,
+        language: 'English',
+        messageId: String(messageId),
+      };
+      if (!categories[quality]) categories[quality] = [];
+      categories[quality].push(url);
+      if (!filesByQuality[quality]) filesByQuality[quality] = [];
+      filesByQuality[quality].push(file);
     }
-
-    if (score > bestScore) {
-      bestScore = score;
-      best = hit;
-    }
   }
 
-  return bestScore >= 40 ? best : pool[0];
+  const hasAny = Object.values(filesByQuality).some((a) => a.length > 0);
+  return {
+    tmdbId,
+    type: 'movie',
+    categories,
+    filesByQuality,
+    ...(hasAny ? {} : { error: 'No download links available' }),
+  };
 };
 
-const resolveTelegramUrl = (file: PhonoFileRow): string | null => {
-  if (file.download_url && /^https?:\/\//i.test(file.download_url)) {
-    return file.download_url.replace('telegram.dog', 't.me');
-  }
-  if (file.message_id != null && String(file.message_id).length > 0) {
-    // Opaque tokens (e.g. 23RSL…) and numeric ids both work as ?start=
-    return `${TELEGRAM_BOT_BASE}${file.message_id}`;
-  }
-  return null;
-};
-
-const buildFormatLabel = (file: PhonoFileRow): string => {
-  const parts: string[] = [];
-  if (file.source) parts.push(String(file.source));
-  if (file.encoder_name) parts.push(String(file.encoder_name));
-  if (file.is_hdr) parts.push('HDR');
-  if (file.file_name) {
-    const lower = file.file_name.toLowerCase();
-    if (/\bx265\b|hevc/i.test(lower)) parts.push('x265');
-    else if (/\bx264\b/i.test(lower)) parts.push('x264');
-    if (/\bweb-?dl\b/i.test(lower)) parts.push('WEB-DL');
-    else if (/\bwebrip\b/i.test(lower)) parts.push('WEBRip');
-    else if (/\bbluray\b|blu-ray/i.test(lower)) parts.push('BluRay');
-  }
-  // de-dupe while preserving order
-  return [...new Set(parts)].join(' · ') || 'Video';
-};
+const hasFiles = (r: DownloadResult | null | undefined) =>
+  !!r &&
+  !!r.filesByQuality &&
+  Object.values(r.filesByQuality).some((arr) => arr && arr.length > 0);
 
 /**
- * Movie downloads via:
- *   1) GET https://phono.cc/svc/api/search?q={title}
- *   2) GET https://phono.cc/svc/api/content/{content_id}/files
+ * Movie downloads — optimized:
+ * 1) session/memory cache (instant on re-open)
+ * 2) race edge phono-download vs t4tsa (first useful wins)
+ * 3) never use AllOrigins (was ~20s failures)
  */
 export const fetchMovieDownloadLinks = async (
   tmdbId: string,
@@ -224,116 +224,61 @@ export const fetchMovieDownloadLinks = async (
   imdbId?: string,
   year?: string,
 ): Promise<DownloadResult> => {
+  const key = cacheKey(tmdbId, 'movie', title, imdbId, year);
+  const cached = readCache(key);
+  if (cached && (hasFiles(cached) || cached.error)) {
+    return cached;
+  }
+
   try {
-    const query = (title && title.trim()) || `tmdb ${tmdbId}`;
-    console.log('🔍 Phono search for movie downloads:', query);
-
-    const search = await fetchPhonoJson<PhonoSearchResponse>(
-      `/search?q=${encodeURIComponent(query)}`,
-    );
-    const hits = search.results || [];
-    if (hits.length === 0) {
-      return {
-        tmdbId,
-        type: 'movie',
-        categories: {},
-        filesByQuality: {},
-        error: 'No matching content found on Phono',
-      };
-    }
-
-    const best = pickBestContent(hits, title || '', year, imdbId);
-    if (!best?.content_id) {
-      return {
-        tmdbId,
-        type: 'movie',
-        categories: {},
-        filesByQuality: {},
-        error: 'Could not resolve Phono content id',
-      };
-    }
-
-    console.log('📦 Phono content_id:', best.content_id, best.title);
-
-    // Method requested: https://phono.cc/svc/api/content/{id}/files
-    const filesPayload = await fetchPhonoJson<PhonoFilesResponse>(
-      `/content/${best.content_id}/files`,
-    );
-
-    const categories: { [key: string]: string[] } = {};
-    const filesByQuality: { [key: string]: DownloadFile[] } = {};
-
-    // Prefer English group first, then remaining languages
-    const langKeys = Object.keys(filesPayload || {});
-    langKeys.sort((a, b) => {
-      if (a === 'English') return -1;
-      if (b === 'English') return 1;
-      return a.localeCompare(b);
+    const edgePromise = withTimeout(
+      fetchViaEdge(tmdbId, title, imdbId, year),
+      EDGE_TIMEOUT_MS,
+      'edge',
+    ).catch((e) => {
+      console.warn('phono-download edge failed:', e);
+      return null;
     });
 
-    for (const language of langKeys) {
-      const byRes = filesPayload[language] || {};
-      for (const [quality, rows] of Object.entries(byRes)) {
-        if (!Array.isArray(rows)) continue;
-        for (const row of rows) {
-          const url = resolveTelegramUrl(row);
-          if (!url) continue;
+    const t4tsaPromise = withTimeout(
+      fetchViaT4tsa(tmdbId),
+      T4TSA_TIMEOUT_MS,
+      't4tsa',
+    ).catch((e) => {
+      console.warn('t4tsa fallback failed:', e);
+      return null;
+    });
 
-          const name = row.file_name || `${best.title} ${quality}`;
-          const sizeBytes = row.file_size_bytes || 0;
-          const file: DownloadFile = {
-            name,
-            size: formatBytes(sizeBytes),
-            sizeBytes,
-            url,
-            format: buildFormatLabel(row),
-            source: row.source || undefined,
-            encoder: row.encoder_name || undefined,
-            quality: row.resolution_label || quality,
-            language,
-            isHdr: !!row.is_hdr,
-            messageId: row.message_id != null ? String(row.message_id) : undefined,
-            channelId: row.channel_id ?? null,
-          };
-
-          if (!filesByQuality[quality]) filesByQuality[quality] = [];
-          filesByQuality[quality].push(file);
-
-          if (!categories[quality]) categories[quality] = [];
-          categories[quality].push(url);
-        }
-      }
+    // Prefer edge as soon as it returns with files; otherwise take t4tsa.
+    const edge = await edgePromise;
+    if (hasFiles(edge)) {
+      writeCache(key, edge!);
+      // Let t4tsa settle in background without blocking UI
+      void t4tsaPromise;
+      return edge!;
     }
 
-    // Stable quality order for UI
-    const preferred = ['2160p', '1440p', '1080p', '720p', '480p', '360p'];
-    for (const q of preferred) {
-      if (filesByQuality[q]) {
-        filesByQuality[q].sort((a, b) => (b.sizeBytes || 0) - (a.sizeBytes || 0));
-      }
+    const t4 = await t4tsaPromise;
+    if (hasFiles(t4)) {
+      writeCache(key, t4!);
+      return t4!;
     }
 
-    const hasAny = Object.values(filesByQuality).some((arr) => arr.length > 0);
-    if (!hasAny) {
-      return {
+    // Edge may have returned a soft error (no match) — surface that
+    const result: DownloadResult =
+      edge ||
+      t4 || {
         tmdbId,
         type: 'movie',
-        categories,
-        filesByQuality,
-        contentId: best.content_id,
-        error: 'No downloadable files for this title',
+        categories: {},
+        filesByQuality: {},
+        error: 'No download links available',
       };
-    }
 
-    return {
-      tmdbId,
-      type: 'movie',
-      categories,
-      filesByQuality,
-      contentId: best.content_id,
-    };
+    writeCache(key, result);
+    return result;
   } catch (error) {
-    console.error('❌ Phono movie download error:', error);
+    console.error('❌ Movie download error:', error);
     return {
       tmdbId,
       type: 'movie',
@@ -348,41 +293,24 @@ const fetchSeriesLinksDirect = async (imdbId: string): Promise<SeriesDownloadLin
   const formattedImdbId = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
   const directApiUrl = `https://api.t4tsa.cc/get-series/?imdb_id=${formattedImdbId}`;
 
-  let data: { success?: boolean; invite_link?: string; message?: string };
-
-  try {
-    const response = await fetch(directApiUrl, {
+  const response = await withTimeout(
+    fetch(directApiUrl, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      throw new Error(`Series API status ${response.status}`);
-    }
-    data = await response.json();
-  } catch (directError) {
-    console.log('Direct series API failed, trying AllOrigins proxy:', directError);
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(directApiUrl)}`;
-    const response = await fetch(proxyUrl, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      throw new Error(`Proxy series API status ${response.status}`);
-    }
-    const responseData = await response.json();
-    if (!responseData.contents) {
-      throw new Error('No contents in proxy response');
-    }
-    data = JSON.parse(responseData.contents);
-  }
-
-  if (!data?.invite_link) {
-    return [];
-  }
+      headers: { Accept: 'application/json' },
+    }),
+    T4TSA_TIMEOUT_MS,
+    'series-api',
+  );
+  if (!response.ok) throw new Error(`Series API status ${response.status}`);
+  const data = await response.json();
+  if (!data?.invite_link) return [];
   return parseSeriesInviteLinks(data.invite_link);
 };
 
-const resolveSeriesImdbId = async (tmdbId: string, existingImdbId?: string): Promise<string | undefined> => {
+const resolveSeriesImdbId = async (
+  tmdbId: string,
+  existingImdbId?: string,
+): Promise<string | undefined> => {
   if (existingImdbId) {
     return existingImdbId.startsWith('tt') ? existingImdbId : `tt${existingImdbId}`;
   }
@@ -410,54 +338,61 @@ export const fetchSeriesDownloadLinks = async (
   title: string,
   imdbId?: string,
 ): Promise<DownloadResult> => {
-  try {
-    console.log('🔍 Fetching TV series download links for TMDB ID:', tmdbId);
+  const key = cacheKey(tmdbId, 'tv', title, imdbId);
+  const cached = readCache(key);
+  if (cached && ((cached.downloadLinks && cached.downloadLinks.length > 0) || cached.error)) {
+    return cached;
+  }
 
+  try {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
-
-      const { data, error } = await supabase.functions.invoke('fetch-series', {
-        body: {
-          tmdbId,
-          title,
-          imdbId,
-        },
-      });
+      const { data, error } = await withTimeout(
+        supabase.functions.invoke('fetch-series', {
+          body: { tmdbId, title, imdbId },
+        }),
+        EDGE_TIMEOUT_MS,
+        'fetch-series',
+      );
 
       if (!error && data?.success) {
         const links = data.data?.downloadLinks || [];
-        console.log('✅ Series data from edge function:', links.length, 'links');
-        return {
+        const result: DownloadResult = {
           tmdbId,
           type: 'tv',
           downloadLinks: links,
+          ...(links.length === 0 ? { error: 'No download links available for this series' } : {}),
         };
+        writeCache(key, result);
+        return result;
       }
-
-      console.warn('Edge function series fetch failed, falling back to client:', error?.message || data?.message);
     } catch (edgeError) {
-      console.warn('Edge function invoke error, falling back to client:', edgeError);
+      console.warn('Edge function series fetch failed, falling back:', edgeError);
     }
 
     const resolvedImdb = await resolveSeriesImdbId(tmdbId, imdbId);
     if (!resolvedImdb) {
-      return {
+      const result: DownloadResult = {
         tmdbId,
         type: 'tv',
         downloadLinks: [],
         error: 'No IMDb ID found for this series — cannot fetch download links',
       };
+      writeCache(key, result);
+      return result;
     }
 
     const downloadLinks = await fetchSeriesLinksDirect(resolvedImdb);
-    console.log('✅ Series links from client fallback:', downloadLinks.length);
-
-    return {
+    const result: DownloadResult = {
       tmdbId,
       type: 'tv',
       downloadLinks,
-      ...(downloadLinks.length === 0 ? { error: 'No download links available for this series' } : {}),
+      ...(downloadLinks.length === 0
+        ? { error: 'No download links available for this series' }
+        : {}),
     };
+    writeCache(key, result);
+    return result;
   } catch (error) {
     console.error('❌ Series download service error:', error);
     return {
