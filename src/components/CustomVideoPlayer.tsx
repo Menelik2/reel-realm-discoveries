@@ -5,6 +5,8 @@ interface CustomVideoPlayerProps {
   title?: string;
   poster?: string;
   controls?: boolean;
+  /** Fill the available modal/player area instead of enforcing a 16:9 box. */
+  fill?: boolean;
   onPlaybackStart?: () => void;
   onPlaybackError?: (message: string) => void;
 }
@@ -14,6 +16,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   title = 'Video Player',
   poster,
   controls = true,
+  fill = false,
   onPlaybackStart,
   onPlaybackError,
 }) => {
@@ -49,7 +52,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
 
   if (error) {
     return (
-      <div role="alert" className="flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-lg bg-black p-6 text-center text-white">
+      <div role="alert" className={`flex w-full flex-col items-center justify-center gap-3 rounded-lg bg-black p-6 text-center text-white ${fill ? 'h-full min-h-0' : 'aspect-video'}`}>
         <p className="text-base font-semibold">Unable to play this video</p>
         <p className="max-w-lg text-sm text-white/70">{error}</p>
       </div>
@@ -57,13 +60,13 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   }
 
   if (!src || !validatedSource()) {
-    return <div className="flex aspect-video items-center justify-center bg-black p-4 text-center text-white">A valid video stream URL is required.</div>;
+    return <div className={`flex w-full items-center justify-center bg-black p-4 text-center text-white ${fill ? 'h-full min-h-0' : 'aspect-video'}`}>A valid video stream URL is required.</div>;
   }
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
+    <div className={`relative w-full overflow-hidden rounded-lg bg-black ${fill ? 'h-full min-h-0' : 'aspect-video'}`}>
       {!isReady && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center text-sm text-white/70" aria-live="polite">
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-sm text-white/70" aria-live="polite">
           Preparing video…
         </div>
       )}
