@@ -35,6 +35,7 @@ const VideoEmbed = ({
   const [providerLoaded, setProviderLoaded] = useState(false);
   const [providerError, setProviderError] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   const embedUrl = useMemo(
     () => getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source }),
@@ -77,7 +78,7 @@ const VideoEmbed = ({
     <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
       {!providerLoaded && !providerError && <VideoPlayerLoader />}
       <iframe
-        key={embedUrl}
+        key={`${embedUrl}-${retryKey}`}
         src={embedUrl}
         className={`h-full w-full border-0 ${providerLoaded ? 'opacity-100' : 'opacity-0'}`}
         allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -95,7 +96,7 @@ const VideoEmbed = ({
             {providerError ? 'The browser could not load the provider frame.' : 'The provider took too long to load.'}
             {' '}An iframe load event cannot confirm that a stream is actually playing.
           </p>
-          <button type="button" className="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" onClick={() => { setProviderLoaded(false); setProviderError(false); setTimedOut(false); }}>
+          <button type="button" className="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" onClick={() => { setProviderLoaded(false); setProviderError(false); setTimedOut(false); setRetryKey((key) => key + 1); }}>
             Retry provider
           </button>
         </div>
