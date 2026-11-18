@@ -114,7 +114,18 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
         </div>
       </div>
 
-      <div className="p-2.5 md:p-3 space-y-1.5 sm:group-hover:opacity-0 sm:group-hover:h-0 sm:group-hover:p-0 sm:group-hover:overflow-hidden transition-all duration-300">
+      <div className="absolute inset-x-0 bottom-0 z-[1] p-2.5 sm:hidden" aria-hidden="true">
+        <h3 className="text-white text-[13px] font-bold leading-tight line-clamp-2 drop-shadow-lg">
+          {movie.title}
+        </h3>
+        <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-white/75">
+          {year && <span className="shrink-0">{year}</span>}
+          {year && genreNames.length > 0 && <span className="text-white/45">·</span>}
+          {genreNames.length > 0 && <span className="truncate">{genreNames[0]}</span>}
+        </div>
+      </div>
+
+      <div className="hidden sm:block p-2.5 md:p-3 space-y-1.5 sm:group-hover:opacity-0 sm:group-hover:h-0 sm:group-hover:p-0 sm:group-hover:overflow-hidden transition-all duration-300">
         <h3 className="font-semibold text-sm md:text-[15px] leading-snug text-card-foreground line-clamp-2 min-h-[2.5rem]">
           {movie.title}
         </h3>
