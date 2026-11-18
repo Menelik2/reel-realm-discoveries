@@ -53,7 +53,7 @@ const VideoEmbed = ({
     }, 15000);
 
     return () => window.clearTimeout(timer);
-  }, [embedUrl, videoUrl, providerLoaded]);
+  }, [embedUrl, videoUrl, providerLoaded, retryKey]);
 
   if (videoUrl) {
     return (
