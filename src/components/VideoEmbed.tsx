@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
 import VideoPlayerLoader from './video-embed/VideoPlayerLoader';
@@ -36,6 +36,7 @@ const VideoEmbed = ({
   const [providerError, setProviderError] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const timeoutRef = useRef<number | null>(null);
 
   const embedUrl = useMemo(
     () => getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source }),
@@ -48,12 +49,13 @@ const VideoEmbed = ({
     setTimedOut(false);
     if (!embedUrl || videoUrl) return;
 
-    const timer = window.setTimeout(() => {
-      if (!providerLoaded) setTimedOut(true);
-    }, 15000);
+    timeoutRef.current = window.setTimeout(() => setTimedOut(true), 15000);
 
-    return () => window.clearTimeout(timer);
-  }, [embedUrl, videoUrl, providerLoaded, retryKey]);
+    return () => {
+      if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    };
+  }, [embedUrl, videoUrl, retryKey]);
 
   if (videoUrl) {
     return (
@@ -86,7 +88,13 @@ const VideoEmbed = ({
         referrerPolicy="strict-origin-when-cross-origin"
         title={`Watch ${title}`}
         loading="eager"
-        onLoad={() => setProviderLoaded(true)}
+        onLoad={() => {
+          if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+          setProviderLoaded(true);
+          setProviderError(false);
+          setTimedOut(false);
+        }}
         onError={() => setProviderError(true)}
       />
       {(providerError || timedOut) && (
