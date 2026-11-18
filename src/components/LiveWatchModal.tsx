@@ -118,7 +118,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
       setProviderTimedOut(true);
     }, PROVIDER_LOAD_TIMEOUT_MS);
     return clearProviderTimer;
-  }, [open, embedUrl, videoUrl, resetProviderState, clearProviderTimer]);
+  }, [open, embedUrl, videoUrl, retryKey, resetProviderState, clearProviderTimer]);
 
   const toggleFullscreen = useCallback(async () => {
     const element = containerRef.current;
