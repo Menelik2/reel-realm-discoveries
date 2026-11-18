@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Maximize2, Minimize2, ArrowLeft, RefreshCw } from 'lucide-react';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
+import CustomVideoPlayer from '@/components/CustomVideoPlayer';
 import {
   activateAdInjectionGuard,
   deactivateAdInjectionGuard,
@@ -48,6 +49,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const [providerLoaded, setProviderLoaded] = useState(false);
   const [providerError, setProviderError] = useState(false);
   const [providerTimedOut, setProviderTimedOut] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -175,7 +177,6 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     setRetryKey((key) => key + 1);
   }, [resetProviderState]);
 
-  const [retryKey, setRetryKey] = useState(0);
 
   if (!open) return null;
 
@@ -222,15 +223,9 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
         <div className="relative min-h-0 flex-1 bg-black">
           {videoUrl ? (
-            <video
-              key={videoUrl}
-              src={videoUrl}
-              controls
-              playsInline
-              preload="metadata"
-              className="h-full w-full bg-black object-contain"
-              onError={() => setProviderError(true)}
-            />
+            <div className="flex h-full w-full items-center justify-center">
+              <CustomVideoPlayer src={videoUrl} title={title} />
+            </div>
           ) : embedUrl ? (
             <>
               <iframe
