@@ -1,11 +1,7 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import { getEmbedUrl } from '@/utils/videoEmbedUtils';
 import VideoPlayerLoader from './video-embed/VideoPlayerLoader';
-import VideoPlayerError from './video-embed/VideoPlayerError';
-import VideoIframe from './video-embed/VideoIframe';
-import { AdBanner } from './AdBanner';
 
 interface VideoEmbedProps {
   tmdbId?: number;
@@ -25,7 +21,7 @@ interface VideoEmbedProps {
 const VideoEmbed = ({
   tmdbId,
   imdbId,
-  type = "movie",
+  type = 'movie',
   title,
   dsLang,
   autoPlay,
@@ -36,84 +32,85 @@ const VideoEmbed = ({
   videoUrl,
   source,
 }: VideoEmbedProps) => {
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [debugUrl, setDebugUrl] = useState<string>('');
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const retryCount = useRef(0);
-  const maxRetries = 3;
+  const [providerLoaded, setProviderLoaded] = useState(false);
+  const [providerError, setProviderError] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+  const timeoutRef = useRef<number | null>(null);
 
-  // Debug: log embed url and render in UI
+  const embedUrl = useMemo(
+    () => getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source }),
+    [tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source],
+  );
+
   useEffect(() => {
-    const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
-    setDebugUrl(url || '');
-    if (!url) {
-      setHasError(true);
-      setIsLoading(false);
-    } else {
-      setHasError(false);
-      setIsLoading(true);
-      retryCount.current = 0;
-    }
-    // eslint-disable-next-line
-  }, [tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source]);
+    setProviderLoaded(false);
+    setProviderError(false);
+    setTimedOut(false);
+    if (!embedUrl || videoUrl) return;
 
-  const handleError = () => {
-    setIsLoading(true);
-    if (retryCount.current < maxRetries) {
-      retryCount.current += 1;
-      setTimeout(() => {
-        if (iframeRef.current) {
-          const url = getEmbedUrl({ tmdbId, imdbId, type, season, episode, dsLang, subUrl, autoPlay, autoNext, source });
-          iframeRef.current.src = url || '';
-          setHasError(false);
-        }
-      }, 1000 * retryCount.current);
-    } else {
-      setHasError(true);
-      setIsLoading(false);
-    }
-  };
+    timeoutRef.current = window.setTimeout(() => setTimedOut(true), 15000);
 
-  const handleLoad = () => setIsLoading(false);
+    return () => {
+      if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    };
+  }, [embedUrl, videoUrl, retryKey]);
 
-  // If a direct videoUrl is provided, use our custom video player instead of the embed iframe
   if (videoUrl) {
     return (
-      <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
+      <div className="w-full overflow-hidden rounded-lg bg-black">
         <CustomVideoPlayer src={videoUrl} title={title} />
-        <div className="absolute bottom-4 right-4 z-10 w-1/2 md:w-1/3 max-w-[300px]">
-          <AdBanner slot="4567890123" format="auto" />
-        </div>
+      </div>
+    );
+  }
+
+  if (!embedUrl) {
+    return (
+      <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-lg bg-black p-6 text-center text-white">
+        <p className="font-semibold">Streaming provider not configured</p>
+        <p className="max-w-lg text-sm text-white/65">
+          Add VITE_VIDEO_EMBED_BASE_URL for a streaming provider you are authorised to use. TMDB provides catalogue information, not full-movie streams.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden">
-      {/* The debug URL display has been removed to avoid confusing users. */}
-      
-      {isLoading && <VideoPlayerLoader />}
-
-      {hasError && !isLoading ? (
-        <VideoPlayerError maxRetries={maxRetries} />
-      ) : (
-        <>
-          <VideoIframe
-            key={debugUrl}
-            ref={iframeRef}
-            src={debugUrl}
-            title={title}
-            isLoading={isLoading}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-          {!isLoading && !hasError && (
-             <div className="absolute bottom-4 right-4 z-10 w-1/2 md:w-1/3 max-w-[300px]">
-                <AdBanner slot="4567890123" format="auto" />
-             </div>
-          )}
-        </>
+    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
+      {!providerLoaded && !providerError && <VideoPlayerLoader />}
+      <iframe
+        key={`${embedUrl}-${retryKey}`}
+        src={embedUrl}
+        className={`h-full w-full border-0 ${providerLoaded ? 'opacity-100' : 'opacity-0'}`}
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+        allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
+        title={`Watch ${title}`}
+        loading="eager"
+        onLoad={() => {
+          if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+          setProviderLoaded(true);
+          setProviderError(false);
+          setTimedOut(false);
+        }}
+        onError={() => setProviderError(true)}
+      />
+      {(providerError || timedOut) && (
+        <div role="alert" className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black p-6 text-center text-white">
+          <p className="font-semibold">The streaming provider did not respond</p>
+          <p className="max-w-lg text-sm text-white/70">
+            {providerError ? 'The browser could not load the provider frame.' : 'The provider took too long to load.'}
+            {' '}An iframe load event cannot confirm that a stream is actually playing.
+          </p>
+          <button type="button" className="rounded-full bg-white/15 px-4 py-2 text-sm hover:bg-white/25" onClick={() => { setProviderLoaded(false); setProviderError(false); setTimedOut(false); setRetryKey((key) => key + 1); }}>
+            Retry provider
+          </button>
+        </div>
+      )}
+      {providerLoaded && !providerError && (
+        <p className="sr-only" aria-live="polite">Provider frame loaded. Playback status is controlled by the provider.</p>
       )}
     </div>
   );
