@@ -124,11 +124,21 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     const element = containerRef.current;
     if (!element) return;
     try {
-      if (!document.fullscreenElement) {
-        await element.requestFullscreen?.();
-      } else {
+      if (document.fullscreenElement) {
         await document.exitFullscreen?.();
+        return;
       }
+
+      // iPhone Safari does not support requestFullscreen() on arbitrary elements.
+      // Its native video fullscreen API is the supported fallback for direct streams.
+      if (typeof element.requestFullscreen === 'function') {
+        await element.requestFullscreen();
+        return;
+      }
+      const video = element.querySelector('video') as (HTMLVideoElement & {
+        webkitEnterFullscreen?: () => void;
+      }) | null;
+      video?.webkitEnterFullscreen?.();
     } catch {
       // Fullscreen may be unavailable in embedded browsers or denied by the OS.
     }
@@ -181,14 +191,14 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black" data-video-player-root="true">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden overscroll-none bg-black" data-video-player-root="true">
       <div
         ref={containerRef}
-        className="relative flex h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] flex-col bg-black"
+        className="relative flex h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] min-h-0 flex-col overflow-hidden bg-black"
         data-video-player-root="true"
       >
-        <div className="z-20 flex flex-wrap items-center gap-2 border-b border-white/10 bg-black/90 px-3 pb-2 pt-[calc(env(safe-area-inset-top)+8px)] backdrop-blur-md">
-          <button type="button" onClick={() => void handleBack()} className="flex h-9 items-center gap-2 rounded-full bg-white/10 px-3 text-sm text-white hover:bg-white/20" aria-label="Close player">
+        <div className="z-20 flex shrink-0 flex-wrap items-center gap-2 border-b border-white/10 bg-black/90 px-[max(12px,env(safe-area-inset-left))] pb-2 pr-[max(12px,env(safe-area-inset-right))] pt-[calc(env(safe-area-inset-top)+8px)] backdrop-blur-md">
+          <button type="button" onClick={() => void handleBack()} className="flex min-h-11 items-center gap-2 rounded-full bg-white/10 px-3 text-sm text-white hover:bg-white/20" aria-label="Close player">
             <ArrowLeft className="h-4 w-4" />
             <span className="max-w-[160px] truncate">{title}</span>
           </button>
@@ -196,7 +206,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           {type === 'tv' && seasons.length > 0 && (
             <div className="ml-auto flex items-center gap-2">
               <Select value={String(selectedSeason)} onValueChange={(value) => { setSelectedSeason(Number(value)); setSelectedEpisode(1); resetProviderState(); }}>
-                <SelectTrigger className="h-9 w-[105px] rounded-full border-white/15 bg-white/10 text-xs text-white">
+                <SelectTrigger className="h-11 w-[105px] rounded-full border-white/15 bg-white/10 text-xs text-white">
                   <SelectValue placeholder="Season" />
                 </SelectTrigger>
                 <SelectContent className="z-[10000] max-h-64">
@@ -208,7 +218,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                 </SelectContent>
               </Select>
               <Select value={String(selectedEpisode)} onValueChange={(value) => { setSelectedEpisode(Number(value)); resetProviderState(); }}>
-                <SelectTrigger className="h-9 w-[100px] rounded-full border-white/15 bg-white/10 text-xs text-white">
+                <SelectTrigger className="h-11 w-[100px] rounded-full border-white/15 bg-white/10 text-xs text-white">
                   <SelectValue placeholder="Episode" />
                 </SelectTrigger>
                 <SelectContent className="z-[10000] max-h-64">
@@ -221,7 +231,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
           )}
         </div>
 
-        <div className="relative min-h-0 flex-1 bg-black">
+        <div className="relative min-h-0 flex-1 overflow-hidden bg-black">
           {videoUrl ? (
             <div className="flex h-full w-full items-center justify-center">
               <CustomVideoPlayer src={videoUrl} title={title} />
@@ -265,7 +275,7 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
             </div>
           )}
 
-          <button type="button" onClick={() => void toggleFullscreen()} className="absolute bottom-[calc(env(safe-area-inset-bottom)+16px)] right-4 z-40 rounded-full border border-white/15 bg-black/75 p-3 text-white shadow-lg backdrop-blur-md hover:bg-black" title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+          <button type="button" onClick={() => void toggleFullscreen()} className="absolute bottom-[calc(env(safe-area-inset-bottom)+16px)] right-[max(16px,env(safe-area-inset-right))] z-40 flex min-h-12 min-w-12 items-center justify-center rounded-full border border-white/15 bg-black/75 p-3 text-white shadow-lg backdrop-blur-md hover:bg-black" title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
             {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
           </button>
         </div>
