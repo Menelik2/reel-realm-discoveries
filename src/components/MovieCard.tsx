@@ -64,7 +64,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
       type="button"
       onClick={handleCardClick}
       aria-label={ariaLabel}
-      className={`group relative rounded-2xl overflow-hidden bg-card text-left focus-ring pressable transition-all duration-300 ease-out hover:scale-[1.03] hover:z-10 ${className || 'w-full'}`}
+      className={`group relative isolate rounded-2xl sm:rounded-2xl overflow-hidden border border-white/10 bg-card text-left focus-ring pressable transition-all duration-300 ease-out sm:hover:scale-[1.03] sm:hover:z-10 active:scale-[0.98] ${className || 'w-full'}`}
       style={{ boxShadow: 'var(--card-shadow)' }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow-hover)';
@@ -73,7 +73,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
         (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow)';
       }}
     >
-      <div className="card-poster-host relative aspect-[2/3] overflow-hidden">
+      <div className="card-poster-host relative aspect-[2/3] overflow-hidden bg-zinc-900">
         <img
           src={posterUrl}
           srcSet={posterSrcSet}
@@ -83,20 +83,20 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
           decoding="async"
           width={342}
           height={513}
-          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          className="w-full h-full object-cover transition-transform duration-500 ease-out sm:group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:transition-none" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/15 to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 motion-reduce:transition-none" aria-hidden="true" />
 
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 motion-reduce:translate-y-0" aria-hidden="true">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 sm:group-hover:opacity-100 transition-all duration-300 translate-y-2 sm:group-hover:translate-y-0 motion-reduce:translate-y-0" aria-hidden="true">
           <div className="w-12 h-12 rounded-full bg-primary/95 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-white/20">
             <Play className="h-5 w-5 text-primary-foreground fill-primary-foreground ml-0.5" />
           </div>
         </div>
 
         {movie.vote_average > 0 && (
-          <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/70 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-sm" aria-hidden="true">
+          <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 flex items-center gap-1 bg-black/75 backdrop-blur-md px-2 py-1 rounded-full border border-white/15 shadow-lg" aria-hidden="true">
             <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
             <span className="text-[11px] font-semibold text-white tabular-nums tracking-tight">
               {movie.vote_average.toFixed(1)}
@@ -104,7 +104,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:block" aria-hidden="true">
+        <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 hidden sm:block" aria-hidden="true">
           <p className="text-white text-xs font-medium line-clamp-2 drop-shadow-sm">
             {movie.title}
           </p>
