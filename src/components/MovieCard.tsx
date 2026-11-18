@@ -64,7 +64,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
       type="button"
       onClick={handleCardClick}
       aria-label={ariaLabel}
-      className={`group relative isolate rounded-2xl sm:rounded-2xl overflow-hidden border border-white/10 bg-card text-left focus-ring pressable transition-all duration-300 ease-out sm:hover:scale-[1.03] sm:hover:z-10 active:scale-[0.98] ${className || 'w-full'}`}
+      className={`group relative isolate flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-card text-left focus-ring pressable transition-all duration-300 ease-out sm:hover:scale-[1.03] sm:hover:z-10 active:scale-[0.98] ${className || 'w-full'}`}
       style={{ boxShadow: 'var(--card-shadow)' }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow-hover)';
@@ -114,23 +114,23 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
         </div>
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-[1] p-2.5 sm:hidden" aria-hidden="true">
-        <h3 className="text-white text-[13px] font-bold leading-tight line-clamp-2 drop-shadow-lg">
+      <div className="absolute inset-x-0 bottom-0 z-[1] flex min-h-[76px] flex-col justify-end p-2.5 text-left sm:hidden" aria-hidden="true">
+        <h3 className="min-h-[2.35em] text-left text-[13px] font-bold leading-[1.18] tracking-[-0.01em] text-white line-clamp-2 [overflow-wrap:anywhere] drop-shadow-lg">
           {movie.title}
         </h3>
-        <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-white/75">
-          {year && <span className="shrink-0">{year}</span>}
-          {year && genreNames.length > 0 && <span className="text-white/45">·</span>}
+        <div className="mt-1.5 flex h-4 min-w-0 items-center gap-1.5 overflow-hidden text-left text-[10px] font-medium leading-none tracking-wide text-white/75">
+          {year && <span className="shrink-0 tabular-nums">{year}</span>}
+          {year && genreNames.length > 0 && <span className="shrink-0 text-white/45">·</span>}
           {genreNames.length > 0 && <span className="truncate">{genreNames[0]}</span>}
         </div>
       </div>
 
-      <div className="hidden sm:block p-2.5 md:p-3 space-y-1.5 sm:group-hover:opacity-0 sm:group-hover:h-0 sm:group-hover:p-0 sm:group-hover:overflow-hidden transition-all duration-300">
-        <h3 className="font-semibold text-sm md:text-[15px] leading-snug text-card-foreground line-clamp-2 min-h-[2.5rem]">
+      <div className="hidden min-h-[88px] flex-1 flex-col p-3 text-left sm:flex md:p-3.5 sm:group-hover:opacity-0 sm:group-hover:h-0 sm:group-hover:min-h-0 sm:group-hover:p-0 sm:group-hover:overflow-hidden transition-all duration-300">
+        <h3 className="min-h-[2.6rem] text-left text-[14px] font-semibold leading-[1.3] tracking-[-0.015em] text-card-foreground line-clamp-2 [overflow-wrap:anywhere]">
           {movie.title}
         </h3>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="mt-auto flex min-h-5 flex-nowrap items-center gap-1.5 overflow-hidden pt-2">
           {year && (
             <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{year}</span>
           )}
@@ -140,7 +140,7 @@ export const MovieCard = memo(({ movie, onMovieClick, fullPosterUrl, className }
           {genreNames.map((name) => (
             <span
               key={name}
-              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-secondary/90 text-muted-foreground border border-border/50 leading-none"
+              className="inline-flex max-w-[92px] shrink-0 items-center truncate rounded-md border border-border/50 bg-secondary/90 px-1.5 py-1 text-[10px] font-medium leading-none text-muted-foreground"
             >
               {name}
             </span>
