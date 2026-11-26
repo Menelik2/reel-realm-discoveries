@@ -3,14 +3,6 @@ export interface EmbedSource {
   url: string;
 }
 
-/** Working VidSrc-style mirrors (ordered by preference). */
-export const EMBED_SOURCES: EmbedSource[] = [
-  { name: 'VidSrc', url: 'https://vidsrc.sh' },
-  { name: 'Buzz', url: 'https://vidsrc.buzz' },
-  { name: 'Party', url: 'https://vidsrc.party' },
-  { name: 'VidSrc TW', url: 'https://vidsrc.tw' },
-];
-
 interface EmbedUrlParams {
   tmdbId?: number;
   imdbId?: string;
@@ -24,30 +16,40 @@ interface EmbedUrlParams {
   source?: string;
 }
 
-const DEFAULT_SOURCE = EMBED_SOURCES[0].url;
+/**
+ * A single explicitly configured streaming provider is used.
+ * TMDB supplies metadata only; it does not provide feature-film streams.
+ * Set VITE_VIDEO_EMBED_BASE_URL to the base URL of a provider you are
+ * authorised to embed. No public mirror domains are used as fallbacks.
+ */
+const configuredBaseUrl = import.meta.env.VITE_VIDEO_EMBED_BASE_URL?.trim();
 
-function mediaId({ tmdbId, imdbId }: { tmdbId?: number; imdbId?: string }): string | null {
-  if (tmdbId != null && Number.isFinite(tmdbId)) return String(tmdbId);
-  if (imdbId) return imdbId;
+function normaliseProviderUrl(value?: string): string | null {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password) return null;
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return null;
+  }
+}
+
+const DEFAULT_SOURCE = normaliseProviderUrl(configuredBaseUrl);
+
+export const EMBED_SOURCES: EmbedSource[] = DEFAULT_SOURCE
+  ? [{ name: 'Configured provider', url: DEFAULT_SOURCE }]
+  : [];
+
+function getMediaId({ tmdbId, imdbId }: { tmdbId?: number; imdbId?: string }): string | null {
+  if (tmdbId != null && Number.isSafeInteger(tmdbId) && tmdbId > 0) {
+    return String(tmdbId);
+  }
+  if (imdbId && /^tt\d+$/.test(imdbId)) return imdbId;
   return null;
 }
 
-function withQuery(
-  base: string,
-  params: Record<string, string | undefined>,
-): string {
-  const qs = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v != null && v !== '') qs.set(k, v);
-  }
-  const s = qs.toString();
-  return s ? `${base}?${s}` : base;
-}
-
-/**
- * Build a VidSrc-family embed URL.
- * Path style: /embed/movie/{id} and /embed/tv/{id}/{season}/{episode}
- */
 export function getEmbedUrl({
   tmdbId,
   imdbId,
@@ -60,36 +62,20 @@ export function getEmbedUrl({
   autoNext,
   source,
 }: EmbedUrlParams): string | null {
-  const baseUrl = (source || DEFAULT_SOURCE).replace(/\/$/, '');
-  const id = mediaId({ tmdbId, imdbId });
-  if (!id) return null;
+  const baseUrl = normaliseProviderUrl(source) || DEFAULT_SOURCE;
+  const id = getMediaId({ tmdbId, imdbId });
+  if (!baseUrl || !id) return null;
 
-  const extra = {
-    ds_lang: dsLang,
-    sub_url: subUrl,
-    autoplay: typeof autoPlay !== 'undefined' ? String(autoPlay) : undefined,
-    autonext: typeof autoNext !== 'undefined' ? String(autoNext) : undefined,
-  };
-  const hasExtra = Object.values(extra).some((v) => v != null && v !== '');
+  const url = new URL(
+    type === 'tv'
+      ? `${baseUrl}/embed/tv/${encodeURIComponent(id)}/${Math.max(1, Math.floor(season || 1))}/${Math.max(1, Math.floor(episode || 1))}`
+      : `${baseUrl}/embed/movie/${encodeURIComponent(id)}`,
+  );
 
-  if (type === 'movie') {
-    if (!hasExtra) return `${baseUrl}/embed/movie/${id}`;
-    return withQuery(`${baseUrl}/embed/movie`, {
-      ...(tmdbId != null ? { tmdb: String(tmdbId) } : { imdb: imdbId }),
-      ...extra,
-    });
-  }
+  if (dsLang) url.searchParams.set('ds_lang', dsLang);
+  if (subUrl) url.searchParams.set('sub_url', subUrl);
+  if (autoPlay != null) url.searchParams.set('autoplay', String(autoPlay));
+  if (autoNext != null) url.searchParams.set('autonext', String(autoNext));
 
-  // TV
-  const s = season && season > 0 ? season : 1;
-  const e = episode && episode > 0 ? episode : 1;
-
-  if (!hasExtra) return `${baseUrl}/embed/tv/${id}/${s}/${e}`;
-
-  return withQuery(`${baseUrl}/embed/tv`, {
-    ...(tmdbId != null ? { tmdb: String(tmdbId) } : { imdb: imdbId }),
-    season: String(s),
-    episode: String(e),
-    ...extra,
-  });
+  return url.toString();
 }
