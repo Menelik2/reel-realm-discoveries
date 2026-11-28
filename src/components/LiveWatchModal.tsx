@@ -9,15 +9,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Maximize2, Minimize2, ArrowLeft, RefreshCw } from 'lucide-react';
-import { getEmbedUrl } from '@/utils/videoEmbedUtils';
+import { Maximize2, Minimize2, ArrowLeft, RefreshCw, Loader2 } from 'lucide-react';
+import { getEmbedUrl, EMBED_SOURCES } from '@/utils/videoEmbedUtils';
 import CustomVideoPlayer from '@/components/CustomVideoPlayer';
 import {
   activateAdInjectionGuard,
   deactivateAdInjectionGuard,
 } from '@/utils/adInjectionGuard';
 
-const PROVIDER_LOAD_TIMEOUT_MS = 15_000;
+const PROVIDER_LOAD_TIMEOUT_MS = 12_000;
 
 interface SeasonLite {
   id?: number;
@@ -46,14 +46,19 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   videoUrl,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const [failedSources, setFailedSources] = useState<Set<string>>(() => new Set());
   const [providerLoaded, setProviderLoaded] = useState(false);
-  const [providerError, setProviderError] = useState(false);
-  const [providerTimedOut, setProviderTimedOut] = useState(false);
+  const [allFailed, setAllFailed] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const providerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sourceIndexRef = useRef(0);
+  const loadedRef = useRef(false);
 
   const seasons = useMemo(() => {
     const raw = content?.seasons;
@@ -65,15 +70,27 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
   const currentSeason = seasons.find((season) => season.season_number === selectedSeason);
   const episodeCount = currentSeason?.episode_count ?? 1;
 
+  const selectedSource = EMBED_SOURCES[sourceIndex]?.url || EMBED_SOURCES[0]?.url || '';
+
+  useEffect(() => {
+    sourceIndexRef.current = sourceIndex;
+  }, [sourceIndex]);
+
   const numericId = Number(id);
   const isNumeric = Number.isSafeInteger(numericId) && numericId > 0 && String(numericId) === id;
-  const embedUrl = useMemo(() => getEmbedUrl({
-    tmdbId: isNumeric ? numericId : undefined,
-    imdbId: isNumeric ? undefined : id,
-    type,
-    season: type === 'tv' ? selectedSeason : undefined,
-    episode: type === 'tv' ? selectedEpisode : undefined,
-  }), [id, isNumeric, numericId, type, selectedSeason, selectedEpisode]);
+
+  const embedUrl = useMemo(
+    () =>
+      getEmbedUrl({
+        tmdbId: isNumeric ? numericId : undefined,
+        imdbId: isNumeric ? undefined : id,
+        type,
+        season: type === 'tv' ? selectedSeason : undefined,
+        episode: type === 'tv' ? selectedEpisode : undefined,
+        source: selectedSource,
+      }),
+    [id, isNumeric, numericId, type, selectedSeason, selectedEpisode, selectedSource],
+  );
 
   const clearProviderTimer = useCallback(() => {
     if (providerTimerRef.current) {
@@ -82,12 +99,52 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
     }
   }, []);
 
-  const resetProviderState = useCallback(() => {
-    clearProviderTimer();
-    setProviderLoaded(false);
-    setProviderError(false);
-    setProviderTimedOut(false);
-  }, [clearProviderTimer]);
+  const tryNextSource = useCallback(
+    (fromUrl: string) => {
+      setFailedSources((prev) => {
+        const next = new Set(prev);
+        next.add(fromUrl);
+
+        const nextIdx = EMBED_SOURCES.findIndex(
+          (s, i) => i > sourceIndexRef.current && !next.has(s.url),
+        );
+        const wrapIdx =
+          nextIdx === -1 ? EMBED_SOURCES.findIndex((s) => !next.has(s.url)) : nextIdx;
+
+        if (wrapIdx === -1 || EMBED_SOURCES.length === 0) {
+          setAllFailed(true);
+          setIsSwitching(false);
+          return next;
+        }
+
+        setIsSwitching(true);
+        setAllFailed(false);
+        setProviderLoaded(false);
+        loadedRef.current = false;
+        setSourceIndex(wrapIdx);
+        setRetryKey((k) => k + 1);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const startWatchdog = useCallback(
+    (sourceUrl: string) => {
+      clearProviderTimer();
+      loadedRef.current = false;
+      setProviderLoaded(false);
+
+      if (!sourceUrl) return;
+
+      providerTimerRef.current = setTimeout(() => {
+        if (loadedRef.current) return;
+        console.warn('[LiveWatch] provider timeout, failing over from', sourceUrl);
+        tryNextSource(sourceUrl);
+      }, PROVIDER_LOAD_TIMEOUT_MS);
+    },
+    [clearProviderTimer, tryNextSource],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -106,19 +163,22 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
 
   useEffect(() => {
     if (!open) return;
+    setSourceIndex(0);
+    setFailedSources(new Set());
+    setAllFailed(false);
+    setIsSwitching(false);
+    setProviderLoaded(false);
+    loadedRef.current = false;
     setSelectedSeason(seasons[0]?.season_number ?? 1);
     setSelectedEpisode(1);
-    resetProviderState();
-  }, [open, id, type, seasons, resetProviderState]);
+    setRetryKey((k) => k + 1);
+  }, [open, id, type, seasons]);
 
   useEffect(() => {
-    if (!open || videoUrl || !embedUrl) return;
-    resetProviderState();
-    providerTimerRef.current = setTimeout(() => {
-      setProviderTimedOut(true);
-    }, PROVIDER_LOAD_TIMEOUT_MS);
+    if (!open || videoUrl || !selectedSource) return;
+    startWatchdog(selectedSource);
     return clearProviderTimer;
-  }, [open, embedUrl, videoUrl, retryKey, resetProviderState, clearProviderTimer]);
+  }, [open, selectedSource, selectedSeason, selectedEpisode, retryKey, videoUrl, startWatchdog, clearProviderTimer]);
 
   const toggleFullscreen = useCallback(async () => {
     const element = containerRef.current;
@@ -128,19 +188,16 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
         await document.exitFullscreen?.();
         return;
       }
-
-      // iPhone Safari does not support requestFullscreen() on arbitrary elements.
-      // Its native video fullscreen API is the supported fallback for direct streams.
       if (typeof element.requestFullscreen === 'function') {
         await element.requestFullscreen();
         return;
       }
-      const video = element.querySelector('video') as (HTMLVideoElement & {
-        webkitEnterFullscreen?: () => void;
-      }) | null;
+      const video = element.querySelector('video') as
+        | (HTMLVideoElement & { webkitEnterFullscreen?: () => void })
+        | null;
       video?.webkitEnterFullscreen?.();
     } catch {
-      // Fullscreen may be unavailable in embedded browsers or denied by the OS.
+      // Fullscreen may be unavailable
     }
   }, []);
 
@@ -168,44 +225,106 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
       try {
         await document.exitFullscreen?.();
       } catch {
-        // Continue closing if fullscreen exit is unavailable.
+        // ignore
       }
     }
     onClose();
   }, [onClose]);
 
   const handleProviderLoad = useCallback(() => {
+    loadedRef.current = true;
     clearProviderTimer();
     setProviderLoaded(true);
-    setProviderError(false);
-    setProviderTimedOut(false);
+    setIsSwitching(false);
+    setAllFailed(false);
   }, [clearProviderTimer]);
 
-  const retryProvider = useCallback(() => {
-    resetProviderState();
-    // Changing a keyed iframe forces a clean navigation without cycling mirrors.
-    setRetryKey((key) => key + 1);
-  }, [resetProviderState]);
+  const handleProviderError = useCallback(() => {
+    tryNextSource(selectedSource);
+  }, [selectedSource, tryNextSource]);
 
+  const selectSourceManual = useCallback((url: string) => {
+    const idx = EMBED_SOURCES.findIndex((s) => s.url === url);
+    if (idx < 0) return;
+    setFailedSources((prev) => {
+      const next = new Set(prev);
+      next.delete(url);
+      return next;
+    });
+    setAllFailed(false);
+    setIsSwitching(false);
+    setProviderLoaded(false);
+    loadedRef.current = false;
+    setSourceIndex(idx);
+    setRetryKey((k) => k + 1);
+  }, []);
+
+  const retryAll = useCallback(() => {
+    setFailedSources(new Set());
+    setAllFailed(false);
+    setIsSwitching(false);
+    setProviderLoaded(false);
+    loadedRef.current = false;
+    setSourceIndex(0);
+    setRetryKey((k) => k + 1);
+  }, []);
 
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden overscroll-none bg-black" data-video-player-root="true">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden overscroll-none bg-black"
+      data-video-player-root="true"
+    >
       <div
         ref={containerRef}
         className="relative flex h-[100dvh] max-h-[100dvh] w-full max-w-[100vw] min-h-0 flex-col overflow-hidden bg-black"
         data-video-player-root="true"
       >
         <div className="z-20 flex shrink-0 flex-wrap items-center gap-2 border-b border-white/10 bg-black/90 px-[max(12px,env(safe-area-inset-left))] pb-2 pr-[max(12px,env(safe-area-inset-right))] pt-[calc(env(safe-area-inset-top)+8px)] backdrop-blur-md">
-          <button type="button" onClick={() => void handleBack()} className="flex min-h-11 items-center gap-2 rounded-full bg-white/10 px-3 text-sm text-white hover:bg-white/20" aria-label="Close player">
+          <button
+            type="button"
+            onClick={() => void handleBack()}
+            className="flex min-h-11 items-center gap-2 rounded-full bg-white/10 px-3 text-sm text-white hover:bg-white/20"
+            aria-label="Close player"
+          >
             <ArrowLeft className="h-4 w-4" />
-            <span className="max-w-[160px] truncate">{title}</span>
+            <span className="max-w-[140px] truncate">{title}</span>
           </button>
+
+          {EMBED_SOURCES.length > 1 && (
+            <div className="flex flex-wrap gap-1">
+              {EMBED_SOURCES.map((source) => {
+                const failed = failedSources.has(source.url);
+                const active = selectedSource === source.url;
+                return (
+                  <Button
+                    key={source.url}
+                    variant={active ? 'default' : 'outline'}
+                    size="sm"
+                    className={`h-8 rounded-full ${failed ? 'opacity-50' : ''}`}
+                    onClick={() => selectSourceManual(source.url)}
+                    title={failed ? 'Timed out — click to retry' : source.url}
+                  >
+                    {source.name}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
 
           {type === 'tv' && seasons.length > 0 && (
             <div className="ml-auto flex items-center gap-2">
-              <Select value={String(selectedSeason)} onValueChange={(value) => { setSelectedSeason(Number(value)); setSelectedEpisode(1); resetProviderState(); }}>
+              <Select
+                value={String(selectedSeason)}
+                onValueChange={(value) => {
+                  setSelectedSeason(Number(value));
+                  setSelectedEpisode(1);
+                  setFailedSources(new Set());
+                  setSourceIndex(0);
+                  setRetryKey((k) => k + 1);
+                }}
+              >
                 <SelectTrigger className="h-11 w-[105px] rounded-full border-white/15 bg-white/10 text-xs text-white">
                   <SelectValue placeholder="Season" />
                 </SelectTrigger>
@@ -217,13 +336,23 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={String(selectedEpisode)} onValueChange={(value) => { setSelectedEpisode(Number(value)); resetProviderState(); }}>
+              <Select
+                value={String(selectedEpisode)}
+                onValueChange={(value) => {
+                  setSelectedEpisode(Number(value));
+                  setFailedSources(new Set());
+                  setSourceIndex(0);
+                  setRetryKey((k) => k + 1);
+                }}
+              >
                 <SelectTrigger className="h-11 w-[100px] rounded-full border-white/15 bg-white/10 text-xs text-white">
                   <SelectValue placeholder="Episode" />
                 </SelectTrigger>
                 <SelectContent className="z-[10000] max-h-64">
                   {Array.from({ length: episodeCount }, (_, index) => index + 1).map((episode) => (
-                    <SelectItem key={episode} value={String(episode)}>Episode {episode}</SelectItem>
+                    <SelectItem key={episode} value={String(episode)}>
+                      Episode {episode}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -244,38 +373,56 @@ const LiveWatchModal: React.FC<LiveWatchModalProps> = ({
                 className="h-full w-full border-0"
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
+                referrerPolicy="no-referrer"
                 title={`Watch ${title}`}
                 loading="eager"
                 onLoad={handleProviderLoad}
-                onError={() => { clearProviderTimer(); setProviderError(true); }}
+                onError={handleProviderError}
               />
-              {!providerLoaded && !providerError && !providerTimedOut && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/70 text-sm text-white/75">Connecting to configured provider…</div>
+              {!providerLoaded && !allFailed && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/70 text-sm text-white/75">
+                  {isSwitching ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Trying another server…
+                    </span>
+                  ) : (
+                    'Connecting…'
+                  )}
+                </div>
               )}
-              {(providerError || providerTimedOut) && (
-                <div role="alert" className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/95 px-6 text-center text-white">
-                  <p className="font-semibold">Provider unavailable</p>
+              {allFailed && (
+                <div
+                  role="alert"
+                  className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/95 px-6 text-center text-white"
+                >
+                  <p className="font-semibold">All servers timed out</p>
                   <p className="max-w-md text-sm text-white/65">
-                    {providerError ? 'The browser could not load the provider frame.' : 'The provider did not load within 15 seconds.'}
-                    {' '}A loaded iframe does not confirm that the video itself is playing.
+                    Streams can be blocked by network or region. Try another source button above, or
+                    retry.
                   </p>
-                  <Button onClick={retryProvider} variant="secondary" className="gap-2 rounded-full">
-                    <RefreshCw className="h-4 w-4" /> Retry
+                  <Button onClick={retryAll} variant="secondary" className="gap-2 rounded-full">
+                    <RefreshCw className="h-4 w-4" /> Retry all servers
                   </Button>
                 </div>
               )}
             </>
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-white">
-              <p className="text-lg font-semibold">No streaming provider configured</p>
+              <p className="text-lg font-semibold">Unable to build player URL</p>
               <p className="max-w-lg text-sm text-white/65">
-                Add VITE_VIDEO_EMBED_BASE_URL for a provider you are authorised to use, or pass a licensed direct MP4/HLS stream URL. TMDB does not supply full-movie video streams.
+                Missing TMDB/IMDb id for this title. Open the title from the catalogue and try again.
               </p>
             </div>
           )}
 
-          <button type="button" onClick={() => void toggleFullscreen()} className="absolute bottom-[calc(env(safe-area-inset-bottom)+16px)] right-[max(16px,env(safe-area-inset-right))] z-40 flex min-h-12 min-w-12 items-center justify-center rounded-full border border-white/15 bg-black/75 p-3 text-white shadow-lg backdrop-blur-md hover:bg-black" title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+          <button
+            type="button"
+            onClick={() => void toggleFullscreen()}
+            className="absolute bottom-[calc(env(safe-area-inset-bottom)+16px)] right-[max(16px,env(safe-area-inset-right))] z-40 flex min-h-12 min-w-12 items-center justify-center rounded-full border border-white/15 bg-black/75 p-3 text-white shadow-lg backdrop-blur-md hover:bg-black"
+            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          >
             {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
           </button>
         </div>
